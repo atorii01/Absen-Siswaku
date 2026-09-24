@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/nav_presensi"
+        android:icon="@drawable/ic_nav_presensi"
+        android:title="Presensi" />
+
+    <item
+        android:id="@+id/nav_riwayat"
+        android:icon="@drawable/ic_nav_riwayat"
+        android:title="Riwayat" />
+
+    <item
+        android:id="@+id/nav_pengajuan"
+        android:icon="@drawable/ic_nav_pengajuan"
+        android:title="Pengajuan" />
+
+    <item
+        android:id="@+id/nav_setelan"
+        android:icon="@drawable/ic_nav_setelan"
+        android:title="Setelan" />
+
+</menu>

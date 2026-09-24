@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="transparent">#00000000</color>
+
+    <!-- Brand Colors -->
+    <color name="primary_teal">#00685F</color>
+    <color name="deep_teal">#004D40</color>
+    <color name="secondary_blue">#2563EB</color>
+    <color name="surface_bg">#F8F9FF</color>
+    <color name="card_bg">#FFFFFF</color>
+    <color name="card_stroke">#E2E8F0</color>
+    <color name="input_bg">#F0F4FA</color>
+    <color name="input_stroke">#CBD5E1</color>
+
+    <!-- Text Colors -->
+    <color name="text_primary">#0B1C30</color>
+    <color name="text_secondary">#64748B</color>
+    <color name="text_muted">#94A3B8</color>
+
+    <!-- Status Badges -->
+    <color name="status_unread_bg">#FEE2E2</color>
+    <color name="status_unread_text">#DC2626</color>
+    <color name="status_success_bg">#D1FAE5</color>
+    <color name="status_success_text">#059669</color>
+    <color name="badge_soft_blue">#EFF6FF</color>
+    <color name="badge_coral_red">#EF4444</color>
+
+    <!-- Camera Overlay & AI Chips -->
+    <color name="chip_camera_bg">#A0000000</color>
+    <color name="chip_ai_bg">#D0064E3B</color>
+    <color name="emerald_green">#10B981</color>
+    <color name="camera_btn_bg">#80000000</color>
+    <color name="biometric_frame_green">#34D399</color>
+
+    <!-- GPS & Time Card -->
+    <color name="info_bg">#EFF4FF</color>
+    <color name="info_border">#BFDBFE</color>
+    <color name="info_text">#1E40AF</color>
+    <color name="verified_card_bg">#EBF5FF</color>
+    <color name="verified_card_border">#BAE6FD</color>
+
+    <!-- Button & Accent States -->
+    <color name="btn_disabled_bg">#CBD5E1</color>
+    <color name="btn_disabled_text">#64748B</color>
+    <color name="btn_orange_late">#D97706</color>
+    <color name="tab_bg">#E5EEFF</color>
+</resources>
