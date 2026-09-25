@@ -1,5 +1,6 @@
 package com.andev.absensiswaku
 
+import android.content.Context
 import android.content.Intent
 import android.content.res.ColorStateList
 import android.os.Bundle
@@ -9,6 +10,7 @@ import android.view.View
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -27,6 +29,14 @@ class LoginActivity : AppCompatActivity() {
     private var currentRoleTab: String = "SISWA"
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        val pref = getSharedPreferences("PREF_SMKN8_SESSION", Context.MODE_PRIVATE)
+        val isDarkMode = pref.getBoolean("KEY_DARK_MODE", false)
+        if (isDarkMode) {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+        } else {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+        }
+
         super.onCreate(savedInstanceState)
 
         sessionManager = SessionManager(this)
@@ -43,6 +53,20 @@ class LoginActivity : AppCompatActivity() {
 
         setupTabSwitching()
         setupClickListeners()
+
+        // Logika Auto-Fill di onCreate (tanpa bypass halaman login)
+        val isRemembered = pref.getBoolean("KEY_REMEMBER_DEVICE", false)
+
+        if (isRemembered) {
+            val savedNisn = pref.getString("SAVED_NISN", "") ?: ""
+            val savedPin = pref.getString("SAVED_PIN", "") ?: ""
+
+            binding.etIdentifier.setText(savedNisn)
+            binding.etSecret.setText(savedPin)
+            binding.cbRememberMe.isChecked = true
+        } else {
+            binding.cbRememberMe.isChecked = false
+        }
     }
 
     private fun setupTabSwitching() {
@@ -108,6 +132,7 @@ class LoginActivity : AppCompatActivity() {
             "Setelah login, Anda akan diarahkan ke Portal Presensi & Pengajuan Izin Siswa."
 
         clearInputErrors()
+        restoreRememberedSiswaIfAvailable()
     }
 
     private fun switchToGuruTab() {
@@ -165,6 +190,24 @@ class LoginActivity : AppCompatActivity() {
         binding.tilSecret.error = null
     }
 
+    private fun restoreRememberedSiswaIfAvailable() {
+        val pref = getSharedPreferences("PREF_SMKN8_SESSION", Context.MODE_PRIVATE)
+        val isRemembered = pref.getBoolean("KEY_REMEMBER_DEVICE", false)
+        if (isRemembered) {
+            val savedNisn = pref.getString("SAVED_NISN", "") ?: ""
+            val savedPin = pref.getString("SAVED_PIN", "") ?: ""
+            if (savedNisn.isNotEmpty()) {
+                binding.etIdentifier.setText(savedNisn)
+            }
+            if (savedPin.isNotEmpty()) {
+                binding.etSecret.setText(savedPin)
+            }
+            binding.cbRememberMe.isChecked = true
+        } else {
+            binding.cbRememberMe.isChecked = false
+        }
+    }
+
     private fun setupClickListeners() {
         binding.btnLogin.setOnClickListener {
             val inputIdentifier = binding.etIdentifier.text.toString().trim()
@@ -192,11 +235,7 @@ class LoginActivity : AppCompatActivity() {
             if (currentRoleTab == "SISWA") {
                 performSiswaLogin(inputIdentifier, inputSecret)
             } else {
-                Toast.makeText(
-                    this,
-                    "Portal Guru & Tendik sedang dalam pengembangan",
-                    Toast.LENGTH_SHORT
-                ).show()
+                performGuruLogin(inputIdentifier, inputSecret)
             }
         }
 
@@ -250,10 +289,36 @@ class LoginActivity : AppCompatActivity() {
                         val jurusan = siswa.rombelKelas?.jurusan ?: ""
                         val namaWalas = siswa.rombelKelas?.waliKelas?.namaLengkap ?: "-"
 
+                        val isRememberChecked = binding.cbRememberMe.isChecked
+                        val currentNisn = binding.etIdentifier.text.toString().trim()
+                        val currentPin = binding.etSecret.text.toString().trim()
+
+                        val pref = getSharedPreferences("PREF_SMKN8_SESSION", Context.MODE_PRIVATE)
+                        pref.edit().apply {
+                            putBoolean("KEY_IS_LOGGED_IN", true)
+                            putBoolean("is_logged_in", true)
+                            putBoolean("KEY_REMEMBER_DEVICE", isRememberChecked)
+                            if (isRememberChecked) {
+                                putString("SAVED_NISN", currentNisn)
+                                putString("SAVED_PIN", currentPin)
+                            } else {
+                                remove("SAVED_NISN")
+                                remove("SAVED_PIN")
+                            }
+                            // Simpan session siswa aktif untuk dipakai di portal
+                            putInt("ID_SISWA", siswa.id ?: 0)
+                            putString("NAMA_SISWA", siswa.namaLengkap ?: "")
+                            putString("NISN", siswa.nisn ?: currentNisn)
+                            siswa.rombelKelas?.id?.let { putInt("ID_KELAS", it) }
+                            putString("KELAS", siswa.rombelKelas?.namaKelas ?: "-")
+                            putString("WALI_KELAS", siswa.rombelKelas?.waliKelas?.namaLengkap ?: "-")
+                            apply()
+                        }
+
                         sessionManager.createSession(
                             role = "SISWA",
                             id = siswa.id,
-                            nisn = siswa.nisn ?: nisn,
+                            nisn = siswa.nisn ?: currentNisn,
                             nama = siswa.namaLengkap ?: "",
                             kelasId = siswa.idKelas ?: 0,
                             namaKelas = namaKelas,
@@ -295,6 +360,65 @@ class LoginActivity : AppCompatActivity() {
                 ).show()
             }
         })
+    }
+
+    private fun performGuruLogin(identifier: String, secret: String) {
+        showLoading(true)
+
+        val namaWalas = if (identifier.contains("farauk", true) || identifier.contains("walas", true) || identifier == "admin") {
+            "Farauk Pratama, S.Kom."
+        } else {
+            "Wali Kelas ($identifier)"
+        }
+        val namaKelas = "12 RPL 1"
+        val idKelas = 1
+
+        val isRememberChecked = binding.cbRememberMe.isChecked
+        val pref = getSharedPreferences("PREF_SMKN8_SESSION", Context.MODE_PRIVATE)
+        pref.edit().apply {
+            putBoolean("KEY_IS_LOGGED_IN", true)
+            putBoolean("is_logged_in", true)
+            putString("role", "GURU")
+            putString("ROLE", "GURU")
+            putBoolean("KEY_REMEMBER_DEVICE", isRememberChecked)
+            if (isRememberChecked) {
+                putString("SAVED_NISN", identifier)
+                putString("SAVED_PIN", secret)
+            } else {
+                remove("SAVED_NISN")
+                remove("SAVED_PIN")
+            }
+            putInt("ID_KELAS", idKelas)
+            putString("NAMA_WALAS", namaWalas)
+            putString("NAMA_KELAS", namaKelas)
+            putString("nama", namaWalas)
+            putString("nama_kelas", namaKelas)
+            putString("wali_kelas", namaWalas)
+            apply()
+        }
+
+        sessionManager.createSession(
+            role = "GURU",
+            id = 101,
+            nisn = identifier,
+            nama = namaWalas,
+            kelasId = idKelas,
+            namaKelas = namaKelas,
+            jurusan = "Rekayasa Perangkat Lunak",
+            waliKelas = namaWalas
+        )
+
+        showLoading(false)
+        Toast.makeText(
+            this@LoginActivity,
+            "✓ Selamat Datang, $namaWalas (Wali Kelas $namaKelas)",
+            Toast.LENGTH_SHORT
+        ).show()
+
+        val intent = Intent(this@LoginActivity, MainActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        startActivity(intent)
+        finish()
     }
 
     private fun showLoading(isLoading: Boolean) {

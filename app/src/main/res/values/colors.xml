@@ -8,8 +8,10 @@
     <color name="primary_teal">#00685F</color>
     <color name="deep_teal">#004D40</color>
     <color name="secondary_blue">#2563EB</color>
+    <color name="screen_bg">#F8F9FF</color>
     <color name="surface_bg">#F8F9FF</color>
     <color name="card_bg">#FFFFFF</color>
+    <color name="border_stroke">#E2E8F0</color>
     <color name="card_stroke">#E2E8F0</color>
     <color name="input_bg">#F0F4FA</color>
     <color name="input_stroke">#CBD5E1</color>
@@ -26,6 +28,22 @@
     <color name="status_success_text">#059669</color>
     <color name="badge_soft_blue">#EFF6FF</color>
     <color name="badge_coral_red">#EF4444</color>
+
+    <!-- Status Badges for Riwayat -->
+    <color name="badge_hadir_bg">#E6F4EA</color>
+    <color name="badge_hadir_text">#137333</color>
+    <color name="badge_pending_bg">#FEF7E0</color>
+    <color name="badge_pending_text">#B06000</color>
+    <color name="badge_terlambat_bg">#FFF0D4</color>
+    <color name="badge_terlambat_text">#935A00</color>
+    <color name="badge_izin_bg">#E8F0FE</color>
+    <color name="badge_izin_text">#1A73E8</color>
+
+    <!-- Dots -->
+    <color name="dot_hadir">#10B981</color>
+    <color name="dot_terlambat">#D97706</color>
+    <color name="dot_izin">#2563EB</color>
+    <color name="dot_alpa">#94A3B8</color>
 
     <!-- Camera Overlay & AI Chips -->
     <color name="chip_camera_bg">#A0000000</color>
@@ -46,4 +64,19 @@
     <color name="btn_disabled_text">#64748B</color>
     <color name="btn_orange_late">#D97706</color>
     <color name="tab_bg">#E5EEFF</color>
+
+    <!-- Setelan Portal Siswa Theme Tokens -->
+    <color name="action_blue_bg">#EFF4FF</color>
+    <color name="action_blue_text">#0051D5</color>
+    <color name="metric_orange">#D97706</color>
+    <color name="metric_slate">#64748B</color>
+    <color name="status_active_green_bg">#E6F4EA</color>
+    <color name="status_active_green_text">#137333</color>
+    <color name="status_pill_gray_bg">#F1F5F9</color>
+    <color name="status_pill_gray_text">#64748B</color>
+    <color name="rerata_box_bg">#EBF5FF</color>
+    <color name="rerata_box_title">#1E40AF</color>
+    <color name="setting_item_bg">#F8FAFC</color>
+    <color name="logout_btn_bg">#FEE2E2</color>
+    <color name="logout_btn_text">#DC2626</color>
 </resources>

@@ -40,4 +40,10 @@ interface ApiService {
         @Field("tipe") tipe: String = "MASUK",
         @Field("status") status: String = "HADIR"
     ): Call<PresensiResponse>
+
+    @FormUrlEncoded
+    @POST("get_riwayat.php")
+    fun getRiwayatPresensi(
+        @Field("siswa_id") siswaId: Int
+    ): Call<List<RiwayatModel>>
 }

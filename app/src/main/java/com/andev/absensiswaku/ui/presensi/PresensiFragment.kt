@@ -2,6 +2,7 @@ package com.andev.absensiswaku.ui.presensi
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Color
@@ -27,9 +28,6 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.andev.absensiswaku.R
-import com.andev.absensiswaku.data.network.ApiClient
-import com.andev.absensiswaku.data.network.PresensiRequest
-import com.andev.absensiswaku.data.network.PresensiResponse
 import com.andev.absensiswaku.data.network.SupabaseClient
 import com.andev.absensiswaku.data.pref.SessionManager
 import com.andev.absensiswaku.databinding.FragmentPresensiBinding
@@ -42,6 +40,7 @@ import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.CancellationTokenSource
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.mlkit.vision.common.InputImage
+import com.google.mlkit.vision.face.Face
 import com.google.mlkit.vision.face.FaceDetection
 import com.google.mlkit.vision.face.FaceDetector
 import com.google.mlkit.vision.face.FaceDetectorOptions
@@ -49,6 +48,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import okhttp3.ResponseBody
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -57,6 +57,7 @@ import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
+import java.util.UUID
 import kotlin.math.roundToInt
 
 class PresensiFragment : Fragment() {
@@ -80,6 +81,7 @@ class PresensiFragment : Fragment() {
     // Google ML Kit Face Detector
     private lateinit var faceDetector: FaceDetector
     private var isFaceDetected: Boolean = false
+    private var isFaceInsideCircle: Boolean = false
     private var lastBiometricScore: Double = 0.0
 
     private var isAlreadyPresensi: Boolean = false
@@ -149,6 +151,65 @@ class PresensiFragment : Fragment() {
         setupSubmitButton()
         startLiveClock()
         checkAndRequestPermissions()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        checkDailyPresensiStatus()
+    }
+
+    private fun checkDailyPresensiStatus() {
+        if (!isAdded || _binding == null) return
+
+        val pref = context?.getSharedPreferences("PREF_SMKN8_SESSION", Context.MODE_PRIVATE)
+        val siswaIdInt = try {
+            pref?.getInt("user_id", 0)?.takeIf { it != 0 }
+                ?: pref?.getInt("ID_SISWA", 0)?.takeIf { it != 0 }
+                ?: pref?.getString("user_id", "0")?.toIntOrNull()
+                ?: pref?.getString("ID_SISWA", "0")?.toIntOrNull()
+                ?: sessionManager.getUserId().takeIf { it != 0 }
+                ?: 1
+        } catch (e: Exception) { 1 }
+
+        val todayDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+
+        SupabaseClient.instance.checkPresensiHariIni(
+            filterSiswa = "eq.$siswaIdInt",
+            filterTanggal = "eq.$todayDate"
+        ).enqueue(object : Callback<List<Map<String, Any>>> {
+            override fun onResponse(
+                call: Call<List<Map<String, Any>>>,
+                response: Response<List<Map<String, Any>>>
+            ) {
+                if (!isAdded || _binding == null) return
+
+                if (response.isSuccessful && !response.body().isNullOrEmpty()) {
+                    val record = response.body()!![0]
+                    val statusText = record["status"]?.toString() ?: "Hadir"
+                    val statusMsg = if (statusText.equals("Hadir", true)) "HADIR" else "TERLAMBAT"
+
+                    isAlreadyPresensi = true
+
+                    binding.tvBadgeStatusPresensi.apply {
+                        text = "SUDAH PRESENSI ($statusMsg)"
+                        setBackgroundResource(R.drawable.bg_badge_pill_blue)
+                        val ctx = context ?: return@apply
+                        setTextColor(ContextCompat.getColor(ctx, R.color.primary_teal))
+                    }
+
+                    binding.btnSubmitPresensi.apply {
+                        isEnabled = false
+                        text = "✓ Anda Sudah Presensi Hari Ini"
+                        val ctx = context ?: return@apply
+                        setBackgroundColor(ContextCompat.getColor(ctx, R.color.btn_disabled_bg))
+                    }
+                }
+            }
+
+            override fun onFailure(call: Call<List<Map<String, Any>>>, t: Throwable) {
+                // Biarkan status normal jika offline / koneksi gagal
+            }
+        })
     }
 
     private fun setupFaceDetector() {
@@ -233,15 +294,36 @@ class PresensiFragment : Fragment() {
         }
     }
 
+    private fun isFaceInCircle(face: Face, frameWidth: Int, frameHeight: Int): Boolean {
+        if (frameWidth <= 0 || frameHeight <= 0) return true
+
+        val faceCenterX = face.boundingBox.centerX().toFloat()
+        val faceCenterY = face.boundingBox.centerY().toFloat()
+
+        val ovalWidth = frameWidth * 0.65f
+        val ovalHeight = frameHeight * 0.68f
+        val ovalLeft = (frameWidth - ovalWidth) / 2f
+        val ovalTop = (frameHeight - ovalHeight) / 2f
+        val ovalRight = ovalLeft + ovalWidth
+        val ovalBottom = ovalTop + ovalHeight
+
+        // Margin toleransi (12%)
+        val marginX = ovalWidth * 0.12f
+        val marginY = ovalHeight * 0.12f
+
+        return faceCenterX in (ovalLeft - marginX)..(ovalRight + marginX) &&
+               faceCenterY in (ovalTop - marginY)..(ovalBottom + marginY)
+    }
+
     private fun evaluatePresensiState(currentMinuteOfDay: Int) {
         if (!isAdded || _binding == null) return
 
         if (isAlreadyPresensi) {
             binding.btnSubmitPresensi.apply {
                 isEnabled = false
-                text = "✓ Presensi Berhasil Tercatat"
+                text = "✓ Anda Sudah Presensi Hari Ini"
                 val ctx = context ?: return@apply
-                setBackgroundColor(ContextCompat.getColor(ctx, R.color.primary_teal))
+                setBackgroundColor(ContextCompat.getColor(ctx, R.color.btn_disabled_bg))
             }
             binding.tvBadgeStatusPresensi.apply {
                 text = "SUDAH PRESENSI DATANG"
@@ -267,7 +349,15 @@ class PresensiFragment : Fragment() {
             !isFaceDetected -> {
                 binding.btnSubmitPresensi.apply {
                     isEnabled = false
-                    text = "Wajah Tidak Terdeteksi di Kamera"
+                    text = "✕ Wajah Tidak Terdeteksi"
+                    val ctx = context ?: return@apply
+                    setBackgroundColor(ContextCompat.getColor(ctx, R.color.btn_disabled_bg))
+                }
+            }
+            !isFaceInsideCircle -> {
+                binding.btnSubmitPresensi.apply {
+                    isEnabled = false
+                    text = "✕ Wajah Di Luar Radius Lingkaran Panduan"
                     val ctx = context ?: return@apply
                     setBackgroundColor(ContextCompat.getColor(ctx, R.color.btn_disabled_bg))
                 }
@@ -291,7 +381,7 @@ class PresensiFragment : Fragment() {
             currentMinuteOfDay <= JAM_BATAS_MINUTES -> {
                 binding.btnSubmitPresensi.apply {
                     isEnabled = true
-                    text = "✓ Presensi Masuk (Tepat Waktu)"
+                    text = "✓ Presensi Sekarang (Tepat Waktu)"
                     val ctx = context ?: return@apply
                     setBackgroundColor(ContextCompat.getColor(ctx, R.color.primary_teal))
                 }
@@ -299,7 +389,7 @@ class PresensiFragment : Fragment() {
             else -> {
                 binding.btnSubmitPresensi.apply {
                     isEnabled = true
-                    text = "✓ Presensi Masuk (Terlambat)"
+                    text = "✓ Presensi Sekarang (Terlambat)"
                     val ctx = context ?: return@apply
                     setBackgroundColor(ContextCompat.getColor(ctx, R.color.btn_orange_late))
                 }
@@ -471,6 +561,7 @@ class PresensiFragment : Fragment() {
                 if (faces.isNotEmpty()) {
                     val face = faces[0]
                     isFaceDetected = true
+                    isFaceInsideCircle = isFaceInCircle(face, inputImage.width, inputImage.height)
 
                     val faceWidth = face.boundingBox.width().toFloat()
                     val faceHeight = face.boundingBox.height().toFloat()
@@ -484,15 +575,22 @@ class PresensiFragment : Fragment() {
                     lastBiometricScore = (baseScore + eyeBonus + smileBonus).coerceIn(85.0, 99.2)
                     val scoreStr = String.format(Locale.US, "%.1f", lastBiometricScore)
 
-                    binding.tvStatusKameraChip.text = "• Kamera Aktif • Wajah Terdeteksi"
-                    binding.tvStatusAiChip.text = "✓ AI Face Match $scoreStr%"
-                    binding.tvStatusAiChip.setBackgroundResource(R.drawable.bg_chip_ai)
+                    if (isFaceInsideCircle) {
+                        binding.tvStatusKameraChip.text = "• Kamera Aktif • Wajah Terdeteksi"
+                        binding.tvStatusAiChip.text = "✓ AI Face Match $scoreStr%"
+                        binding.tvStatusAiChip.setBackgroundResource(R.drawable.bg_chip_ai)
+                    } else {
+                        binding.tvStatusKameraChip.text = "• Kamera Aktif • Wajah Di Luar Radius"
+                        binding.tvStatusAiChip.text = "⚠ Wajah Di Luar Lingkaran"
+                        binding.tvStatusAiChip.setBackgroundResource(R.drawable.bg_badge_pill_red)
+                    }
                 } else {
                     isFaceDetected = false
+                    isFaceInsideCircle = false
                     lastBiometricScore = 0.0
 
                     binding.tvStatusKameraChip.text = "• Kamera Aktif • Wajah Tidak Terdeteksi"
-                    binding.tvStatusAiChip.text = "✗ Wajah Tidak Terdeteksi"
+                    binding.tvStatusAiChip.text = "✕ Wajah Tidak Terdeteksi"
                     binding.tvStatusAiChip.setBackgroundResource(R.drawable.bg_badge_pill_red)
                 }
 
@@ -504,6 +602,7 @@ class PresensiFragment : Fragment() {
             .addOnFailureListener {
                 if (!isAdded || _binding == null) return@addOnFailureListener
                 isFaceDetected = false
+                isFaceInsideCircle = false
             }
             .addOnCompleteListener {
                 imageProxy.close()
@@ -520,10 +619,12 @@ class PresensiFragment : Fragment() {
                 val ctx = context ?: return@addOnSuccessListener
                 if (faces.isNotEmpty()) {
                     isFaceDetected = true
+                    isFaceInsideCircle = true
                     lastBiometricScore = 95.0
                     Toast.makeText(ctx, "Wajah Terdeteksi dari foto!", Toast.LENGTH_SHORT).show()
                 } else {
                     isFaceDetected = false
+                    isFaceInsideCircle = false
                     lastBiometricScore = 0.0
                     Toast.makeText(ctx, "Wajah tidak terdeteksi dalam foto!", Toast.LENGTH_LONG).show()
                 }
@@ -531,6 +632,7 @@ class PresensiFragment : Fragment() {
             .addOnFailureListener {
                 if (!isAdded || _binding == null) return@addOnFailureListener
                 isFaceDetected = false
+                isFaceInsideCircle = false
             }
     }
 
@@ -560,9 +662,11 @@ class PresensiFragment : Fragment() {
 
         binding.btnShutter.setOnClickListener {
             val ctx = context ?: return@setOnClickListener
-            if (isFaceDetected) {
+            if (isFaceDetected && isFaceInsideCircle) {
                 val scoreStr = String.format(Locale.US, "%.1f", lastBiometricScore)
                 Toast.makeText(ctx, "Wajah Terdeteksi! Skor AI Match: $scoreStr%", Toast.LENGTH_SHORT).show()
+            } else if (isFaceDetected && !isFaceInsideCircle) {
+                Toast.makeText(ctx, "Posisikan wajah Anda tepat di dalam lingkaran panduan hijau!", Toast.LENGTH_LONG).show()
             } else {
                 takePictureLauncher.launch(null)
             }
@@ -572,6 +676,11 @@ class PresensiFragment : Fragment() {
     private fun setupSubmitButton() {
         binding.btnSubmitPresensi.setOnClickListener {
             val ctx = context ?: return@setOnClickListener
+
+            if (isAlreadyPresensi) {
+                Toast.makeText(ctx, "Anda sudah melakukan presensi masuk untuk hari ini. Presensi dibuka kembali besok pagi.", Toast.LENGTH_LONG).show()
+                return@setOnClickListener
+            }
 
             if (isMockLocationDetected) {
                 Toast.makeText(ctx, "Presensi ditolak: Terdeteksi penggunaan Fake GPS / Lokasi Tiruan!", Toast.LENGTH_LONG).show()
@@ -583,68 +692,106 @@ class PresensiFragment : Fragment() {
                 return@setOnClickListener
             }
 
+            if (!isFaceInsideCircle) {
+                Toast.makeText(ctx, "Presensi ditolak: Posisikan wajah Anda tepat di dalam lingkaran panduan hijau!", Toast.LENGTH_LONG).show()
+                return@setOnClickListener
+            }
+
             val calendar = Calendar.getInstance(TimeZone.getTimeZone("Asia/Jakarta"))
             val hour = calendar.get(Calendar.HOUR_OF_DAY)
             val minute = calendar.get(Calendar.MINUTE)
             val currentMinuteOfDay = hour * 60 + minute
 
-            val statusPresensi = if (currentMinuteOfDay <= JAM_BATAS_MINUTES) "HADIR" else "TERLAMBAT"
+            val statusPresensi = if (currentMinuteOfDay <= JAM_BATAS_MINUTES) "Hadir" else "Terlambat"
 
             sendPresensiData(statusPresensi)
         }
     }
 
     private fun sendPresensiData(status: String) {
-        val siswaId = sessionManager.getUserId().let { if (it == 0) 1 else it }
-        val idKelas = sessionManager.getIdKelas().let { if (it == 0) 1 else it }
+        val pref = context?.getSharedPreferences("PREF_SMKN8_SESSION", Context.MODE_PRIVATE)
+
+        val siswaIdInt = try {
+            pref?.getInt("user_id", 0)?.takeIf { it != 0 }
+                ?: pref?.getInt("ID_SISWA", 0)?.takeIf { it != 0 }
+                ?: pref?.getString("user_id", "0")?.toIntOrNull()
+                ?: pref?.getString("ID_SISWA", "0")?.toIntOrNull()
+                ?: sessionManager.getUserId().takeIf { it != 0 }
+                ?: 1
+        } catch (e: Exception) { 1 }
+
+        val kelasIdInt = try {
+            pref?.getInt("id_kelas", 0)?.takeIf { it != 0 }
+                ?: pref?.getInt("ID_KELAS", 0)?.takeIf { it != 0 }
+                ?: pref?.getString("id_kelas", "0")?.toIntOrNull()
+                ?: pref?.getString("ID_KELAS", "0")?.toIntOrNull()
+                ?: sessionManager.getIdKelas().takeIf { it != 0 }
+                ?: 9
+        } catch (e: Exception) { 9 }
+
         val distanceInt = currentDistanceMeters.roundToInt()
         val scoreToSubmit = if (lastBiometricScore > 0) lastBiometricScore else 95.0
+
+        val sdfTanggal = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val sdfWaktu = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
+        val now = Date()
+
+        val jamSekarang = sdfWaktu.format(now)
+        val statusHadir = if (jamSekarang <= "06:40:00") "Hadir" else "Terlambat"
+
+        val dataMap: Map<String, Any> = mapOf(
+            "id" to UUID.randomUUID().toString(),
+            "siswa_id" to siswaIdInt,
+            "id_kelas" to kelasIdInt,
+            "tanggal" to sdfTanggal.format(now),
+            "waktu_masuk" to jamSekarang,
+            "status" to statusHadir,
+            "jarak_gerbang_meter" to distanceInt,
+            "biometrik_match_score" to scoreToSubmit
+        )
 
         binding.btnSubmitPresensi.isEnabled = false
         binding.btnSubmitPresensi.text = "Memproses Presensi..."
 
-        ApiClient.instance.simpanPresensi(
-            siswaId = siswaId,
-            idKelas = idKelas,
-            jarakMeter = distanceInt,
-            matchScore = scoreToSubmit,
-            tipe = "MASUK",
-            status = status
-        ).enqueue(object : Callback<PresensiResponse> {
-            override fun onResponse(call: Call<PresensiResponse>, response: Response<PresensiResponse>) {
+        SupabaseClient.instance.simpanPresensi(dataMap).enqueue(object : Callback<ResponseBody> {
+            override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
                 if (!isAdded || _binding == null) return
-                handleSuccessPresensi(status)
+
+                if (response.isSuccessful) {
+                    Toast.makeText(requireContext(), "Presensi Berhasil Tercatat!", Toast.LENGTH_SHORT).show()
+                    handleSuccessPresensi(statusHadir)
+                } else if (response.code() == 409 || (response.errorBody()?.string()?.contains("duplicate", true) == true)) {
+                    isAlreadyPresensi = true
+                    binding.btnSubmitPresensi.isEnabled = false
+                    binding.btnSubmitPresensi.text = "✓ Anda Sudah Presensi Hari Ini"
+                    binding.tvBadgeStatusPresensi.text = "SUDAH PRESENSI DATANG"
+
+                    MaterialAlertDialogBuilder(requireContext())
+                        .setTitle("Peringatan")
+                        .setMessage("Presensi hari ini sudah pernah tercatat.")
+                        .setPositiveButton("OK") { dialog, _ -> dialog.dismiss() }
+                        .show()
+                } else {
+                    val errorBody = response.errorBody()?.string() ?: ""
+                    Toast.makeText(requireContext(), "Gagal simpan ke Supabase (${response.code()}): $errorBody", Toast.LENGTH_LONG).show()
+                    binding.btnSubmitPresensi.isEnabled = true
+                    val calendar = Calendar.getInstance(TimeZone.getTimeZone("Asia/Jakarta"))
+                    val hour = calendar.get(Calendar.HOUR_OF_DAY)
+                    val minute = calendar.get(Calendar.MINUTE)
+                    evaluatePresensiState(hour * 60 + minute)
+                }
             }
 
-            override fun onFailure(call: Call<PresensiResponse>, t: Throwable) {
+            override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
                 if (!isAdded || _binding == null) return
-                sendSupabasePresensi(siswaId, idKelas, distanceInt, scoreToSubmit, status)
+                Toast.makeText(requireContext(), "Koneksi Error: ${t.localizedMessage ?: t.message}", Toast.LENGTH_LONG).show()
+                binding.btnSubmitPresensi.isEnabled = true
+                val calendar = Calendar.getInstance(TimeZone.getTimeZone("Asia/Jakarta"))
+                val hour = calendar.get(Calendar.HOUR_OF_DAY)
+                val minute = calendar.get(Calendar.MINUTE)
+                evaluatePresensiState(hour * 60 + minute)
             }
         })
-    }
-
-    private fun sendSupabasePresensi(siswaId: Int, idKelas: Int, distanceInt: Int, matchScore: Double, status: String) {
-        val request = PresensiRequest(
-            siswaId = siswaId,
-            idKelas = idKelas,
-            jarakMeter = distanceInt,
-            biometrikMatchScore = matchScore,
-            tipe = "MASUK",
-            status = status
-        )
-
-        SupabaseClient.instance.simpanPresensiSupabase(request)
-            .enqueue(object : Callback<List<PresensiResponse>> {
-                override fun onResponse(call: Call<List<PresensiResponse>>, response: Response<List<PresensiResponse>>) {
-                    if (!isAdded || _binding == null) return
-                    handleSuccessPresensi(status)
-                }
-
-                override fun onFailure(call: Call<List<PresensiResponse>>, t: Throwable) {
-                    if (!isAdded || _binding == null) return
-                    handleSuccessPresensi(status)
-                }
-            })
     }
 
     private fun handleSuccessPresensi(status: String) {
@@ -653,7 +800,7 @@ class PresensiFragment : Fragment() {
         val ctx = context ?: return
         isAlreadyPresensi = true
 
-        val statusMsg = if (status == "HADIR") "Tepat Waktu" else "Terlambat"
+        val statusMsg = if (status.equals("Hadir", true)) "Tepat Waktu" else "Terlambat"
         val scoreStr = String.format(Locale.US, "%.1f", if (lastBiometricScore > 0) lastBiometricScore else 95.0)
 
         binding.tvBadgeStatusPresensi.apply {
@@ -664,8 +811,8 @@ class PresensiFragment : Fragment() {
 
         binding.btnSubmitPresensi.apply {
             isEnabled = false
-            text = "✓ Presensi Berhasil ($statusMsg)"
-            setBackgroundColor(ContextCompat.getColor(ctx, R.color.primary_teal))
+            text = "✓ Anda Sudah Presensi Hari Ini"
+            setBackgroundColor(ContextCompat.getColor(ctx, R.color.btn_disabled_bg))
         }
 
         MaterialAlertDialogBuilder(ctx)

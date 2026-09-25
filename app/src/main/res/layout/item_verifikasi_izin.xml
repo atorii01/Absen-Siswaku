@@ -1,0 +1,287 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="12dp"
+    android:background="@drawable/bg_card_surface"
+    android:orientation="horizontal">
+
+    <!-- Garis Aksen Vertikal Kiri (Status Stripe) -->
+    <View
+        android:id="@+id/viewAccentStripe"
+        android:layout_width="5dp"
+        android:layout_height="match_parent"
+        android:background="@drawable/bg_stripe_sakit" />
+
+    <!-- Konten Utama Kartu -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:padding="14dp">
+
+        <!-- Baris Atas: Nomor Urut Bulat, Nama Siswa, Badge Status, NISN & Waktu -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <!-- Nomor Urut Bulat -->
+            <FrameLayout
+                android:id="@+id/frameNomorUrut"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:background="@drawable/bg_circle_num_red">
+
+                <TextView
+                    android:id="@+id/tvNomorUrut"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:textColor="#DC2626"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    tools:text="03" />
+            </FrameLayout>
+
+            <!-- Nama & Subteks -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/tvNamaSiswa"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        android:textColor="@color/text_primary"
+                        android:textSize="15sp"
+                        android:textStyle="bold"
+                        tools:text="Bagas Wahyu Santoso" />
+
+                    <TextView
+                        android:id="@+id/tvBadgeJenisIzin"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:background="@drawable/bg_badge_pill_sakit"
+                        android:paddingHorizontal="8dp"
+                        android:paddingVertical="2dp"
+                        android:textColor="@color/white"
+                        android:textSize="10sp"
+                        android:textStyle="bold"
+                        tools:text="Sakit" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/tvNisnWaktu"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="11sp"
+                    tools:text="NISN: 0067821903 • Diajukan 06:45 WIB" />
+            </LinearLayout>
+
+            <!-- Tombol Hubungi Ortu (Hanya Tampil untuk Siswa Alpa) -->
+            <LinearLayout
+                android:id="@+id/btnHubungiOrtu"
+                android:layout_width="wrap_content"
+                android:layout_height="32dp"
+                android:background="@drawable/bg_btn_view_surat"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingHorizontal="10dp"
+                android:visibility="gone"
+                tools:visibility="visible">
+
+                <ImageView
+                    android:layout_width="14dp"
+                    android:layout_height="14dp"
+                    android:contentDescription="Telepon"
+                    android:src="@drawable/ic_contact_phone"
+                    app:tint="@color/secondary_blue" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="5dp"
+                    android:text="Hubungi Ortu"
+                    android:textColor="@color/secondary_blue"
+                    android:textSize="11sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- Kotak Alasan & Lampiran Surat (Hanya untuk Izin/Sakit/Dispensasi) -->
+        <LinearLayout
+            android:id="@+id/layoutAlasanDanBerkas"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/bg_quote_box"
+            android:orientation="vertical"
+            android:padding="10dp">
+
+            <!-- Baris Kutipan Keterangan Siswa -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:layout_width="14dp"
+                    android:layout_height="14dp"
+                    android:layout_marginTop="2dp"
+                    android:contentDescription="Kutipan"
+                    android:src="@drawable/ic_quote"
+                    app:tint="@color/text_secondary" />
+
+                <TextView
+                    android:id="@+id/tvKeteranganAlasan"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:layout_weight="1"
+                    android:textColor="@color/text_primary"
+                    android:textSize="12sp"
+                    tools:text="“Demam tinggi sejak semalam, istirahat dokter 2 hari.”" />
+            </LinearLayout>
+
+            <!-- Baris Lampiran Berkas Bukti -->
+            <LinearLayout
+                android:id="@+id/layoutAttachment"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:layout_width="14dp"
+                    android:layout_height="14dp"
+                    android:contentDescription="Lampiran"
+                    android:src="@drawable/ic_paperclip"
+                    app:tint="@color/secondary_blue" />
+
+                <TextView
+                    android:id="@+id/tvNamaBerkas"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:layout_weight="1"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:textColor="@color/secondary_blue"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    tools:text="Surat_Dokter_RSUD_Bagas.pdf" />
+
+                <!-- Tombol Lihat Surat -->
+                <LinearLayout
+                    android:id="@+id/btnLihatSurat"
+                    android:layout_width="wrap_content"
+                    android:layout_height="28dp"
+                    android:background="@drawable/bg_btn_view_surat"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingHorizontal="8dp">
+
+                    <ImageView
+                        android:layout_width="12dp"
+                        android:layout_height="12dp"
+                        android:contentDescription="Lihat"
+                        android:src="@drawable/ic_eye"
+                        app:tint="@color/secondary_blue" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="4dp"
+                        android:text="Lihat Surat"
+                        android:textColor="@color/secondary_blue"
+                        android:textSize="10sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- 2 Tombol Aksi Berdampingan: Tolak / Review vs Setujui -->
+        <LinearLayout
+            android:id="@+id/layoutActionButtons"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:orientation="horizontal">
+
+            <!-- Tombol Kiri: ✕ Tolak / Review -->
+            <LinearLayout
+                android:id="@+id/btnTolak"
+                android:layout_width="0dp"
+                android:layout_height="38dp"
+                android:layout_marginEnd="6dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_btn_soft_gray"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="✕ Tolak / Review"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <!-- Tombol Kanan: ✓ Setujui [Jenis Izin] -->
+            <LinearLayout
+                android:id="@+id/btnSetujui"
+                android:layout_width="0dp"
+                android:layout_height="38dp"
+                android:layout_marginStart="6dp"
+                android:layout_weight="1.2"
+                android:background="@drawable/bg_btn_solid_teal"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/tvLabelSetujui"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/white"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    tools:text="✓ Setujui Sakit" />
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</LinearLayout>

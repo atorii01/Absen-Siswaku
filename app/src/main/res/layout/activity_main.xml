@@ -9,7 +9,6 @@
 
     <androidx.fragment.app.FragmentContainerView
         android:id="@+id/fragmentContainer"
-        android:name="com.andev.absensiswaku.ui.presensi.PresensiFragment"
         android:layout_width="0dp"
         android:layout_height="0dp"
         app:layout_constraintBottom_toTopOf="@id/bottomNavigation"
@@ -24,9 +23,9 @@
         android:layout_height="wrap_content"
         android:background="@color/card_bg"
         app:elevation="8dp"
-        app:itemIconTint="@color/primary_teal"
+        app:itemIconTint="@color/nav_item_color"
         app:itemRippleColor="@color/tab_bg"
-        app:itemTextColor="@color/primary_teal"
+        app:itemTextColor="@color/nav_item_color"
         app:labelVisibilityMode="labeled"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"

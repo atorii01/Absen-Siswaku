@@ -7,14 +7,18 @@ data class PresensiRequest(
     val siswaId: Int,
     @SerializedName("id_kelas")
     val idKelas: Int,
-    @SerializedName("jarak_meter")
-    val jarakMeter: Int,
+    @SerializedName("tanggal")
+    val tanggal: String,
+    @SerializedName("waktu_masuk")
+    val waktuMasuk: String,
+    @SerializedName("status")
+    val status: String,
+    @SerializedName("jarak_gerbang_meter")
+    val jarakGerbangMeter: Int,
     @SerializedName("biometrik_match_score")
     val biometrikMatchScore: Double = 95.0,
     @SerializedName("tipe")
-    val tipe: String = "MASUK",
-    @SerializedName("status")
-    val status: String = "HADIR"
+    val tipe: String = "MASUK"
 )
 
 data class PresensiResponse(

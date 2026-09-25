@@ -1,8 +1,11 @@
 package com.andev.absensiswaku.data.network
 
+import okhttp3.ResponseBody
 import retrofit2.Call
 import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.Headers
+import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.Query
 
@@ -15,8 +18,71 @@ interface SupabaseService {
         @Query("select") select: String = "id,nisn,nama_lengkap,id_kelas,rombel_kelas(id,nama_kelas,jurusan,users(nama_lengkap))"
     ): Call<List<SiswaResponse>>
 
+    @Headers("Prefer: return=representation")
+    @POST("presensi_harian")
+    fun simpanPresensi(
+        @Body payload: Map<String, @JvmSuppressWildcards Any>
+    ): Call<ResponseBody>
+
+    @Headers("Prefer: return=representation")
     @POST("presensi_harian")
     fun simpanPresensiSupabase(
         @Body request: PresensiRequest
     ): Call<List<PresensiResponse>>
+
+    @Headers("Prefer: return=representation")
+    @POST("pengajuan_izin")
+    fun kirimPengajuanIzin(
+        @Body payload: Map<String, @JvmSuppressWildcards Any>
+    ): Call<ResponseBody>
+
+    @GET("presensi_harian")
+    fun checkPresensiHariIni(
+        @Query("siswa_id") filterSiswa: String,
+        @Query("tanggal") filterTanggal: String,
+        @Query("select") select: String = "id,status,waktu_masuk"
+    ): Call<List<Map<String, Any>>>
+
+    @GET("presensi_harian")
+    fun getRiwayatPresensiSupabase(
+        @Query("siswa_id") siswaIdFilter: String,
+        @Query("select") select: String = "*",
+        @Query("order") order: String = "tanggal.desc,created_at.desc"
+    ): Call<List<RiwayatModel>>
+
+    @GET("pengajuan_izin")
+    fun getRiwayatIzinSupabase(
+        @Query("siswa_id") siswaIdFilter: String,
+        @Query("select") select: String = "*",
+        @Query("order") order: String = "tanggal_mulai.desc"
+    ): Call<List<PengajuanIzinModel>>
+
+    // ================= WALAS DASHBOARD ENDPOINTS =================
+    @GET("pengajuan_izin")
+    fun getAntreanIzinWalas(
+        @Query("status_verifikasi") status: String = "eq.Pending",
+        @Query("select") select: String = "*,siswa(id,nama_lengkap,nisn,id_kelas)",
+        @Query("order") order: String = "created_at.desc,tanggal_mulai.desc"
+    ): Call<List<PengajuanIzinResponse>>
+
+    @Headers("Prefer: return=representation")
+    @PATCH("pengajuan_izin")
+    fun updateStatusIzin(
+        @Query("id") filterId: String,
+        @Body payload: Map<String, @JvmSuppressWildcards Any>
+    ): Call<ResponseBody>
+
+    @GET("presensi_harian")
+    fun getPresensiHariIniWalas(
+        @Query("tanggal") filterTanggal: String,
+        @Query("select") select: String = "*,siswa(id,nama_lengkap,nisn,id_kelas)",
+        @Query("order") order: String = "waktu_masuk.asc"
+    ): Call<List<RiwayatModel>>
+
+    @GET("siswa")
+    fun getSiswaByKelas(
+        @Query("id_kelas") filterKelas: String,
+        @Query("select") select: String = "id,nama_lengkap,nisn,id_kelas",
+        @Query("order") order: String = "nama_lengkap.asc"
+    ): Call<List<SiswaMiniResponse>>
 }

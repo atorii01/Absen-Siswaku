@@ -33,6 +33,7 @@ class SessionManager(context: Context) {
         waliKelas: String?
     ) {
         editor.putBoolean(KEY_IS_LOGGED_IN, true)
+        editor.putBoolean("KEY_IS_LOGGED_IN", true)
         editor.putString(KEY_ROLE, role ?: "")
         editor.putInt(KEY_USER_ID, id ?: 0)
         editor.putString(KEY_NISN, nisn ?: "")
@@ -44,7 +45,8 @@ class SessionManager(context: Context) {
         editor.apply()
     }
 
-    fun isLoggedIn(): Boolean = pref.getBoolean(KEY_IS_LOGGED_IN, false)
+    fun isLoggedIn(): Boolean =
+        pref.getBoolean(KEY_IS_LOGGED_IN, false) || pref.getBoolean("KEY_IS_LOGGED_IN", false)
 
     fun getUserId(): Int = pref.getInt(KEY_USER_ID, 0)
     fun getNisn(): String = pref.getString(KEY_NISN, "") ?: ""
@@ -56,7 +58,16 @@ class SessionManager(context: Context) {
     fun getRole(): String = pref.getString(KEY_ROLE, "") ?: ""
 
     fun clearSession() {
+        val isRemembered = pref.getBoolean("KEY_REMEMBER_DEVICE", false)
+        val savedNisn = pref.getString("SAVED_NISN", "")
+        val savedPin = pref.getString("SAVED_PIN", "")
+
         editor.clear()
+        if (isRemembered) {
+            editor.putBoolean("KEY_REMEMBER_DEVICE", true)
+            editor.putString("SAVED_NISN", savedNisn)
+            editor.putString("SAVED_PIN", savedPin)
+        }
         editor.apply()
     }
 }
