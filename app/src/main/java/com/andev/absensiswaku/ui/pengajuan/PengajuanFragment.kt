@@ -1,13 +1,17 @@
 package com.andev.absensiswaku.ui.pengajuan
 
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
 import android.provider.OpenableColumns
+import android.util.Base64
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import java.io.ByteArrayOutputStream
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.core.util.Pair
@@ -288,6 +292,33 @@ class PengajuanFragment : Fragment() {
         }
     }
 
+    /**
+     * Konversi URI gambar ke string Base64 dengan kompresi proporsional (max width 800px)
+     */
+    private fun uriToBase64(uri: Uri): String? {
+        return try {
+            val inputStream = requireContext().contentResolver.openInputStream(uri)
+            val originalBitmap = BitmapFactory.decodeStream(inputStream) ?: return null
+
+            // Resize proporsional dengan lebar maksimal 800px
+            val targetWidth = 800
+            val finalBitmap = if (originalBitmap.width > targetWidth) {
+                val targetHeight = (originalBitmap.height * (targetWidth.toFloat() / originalBitmap.width)).toInt().coerceAtLeast(1)
+                Bitmap.createScaledBitmap(originalBitmap, targetWidth, targetHeight, true)
+            } else {
+                originalBitmap
+            }
+
+            val outputStream = ByteArrayOutputStream()
+            finalBitmap.compress(Bitmap.CompressFormat.JPEG, 70, outputStream)
+            val byteArray = outputStream.toByteArray()
+            "data:image/jpeg;base64," + Base64.encodeToString(byteArray, Base64.NO_WRAP)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
+
     private fun submitPengajuanForm() {
         val ctx = context ?: return
 
@@ -331,6 +362,9 @@ class PengajuanFragment : Fragment() {
             else -> jenisIzinDipilih.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
         }
 
+        // Konversi berkas bukti foto ke Base64 agar dapat langsung dipratinjau oleh Wali Kelas
+        val base64Bukti = attachedFileUri?.let { uriToBase64(it) } ?: (attachedFileName.ifEmpty { "surat_keterangan.jpg" })
+
         val payload: Map<String, Any> = mapOf(
             "id" to "iz-" + System.currentTimeMillis(),
             "siswa_id" to siswaIdInt,
@@ -338,7 +372,7 @@ class PengajuanFragment : Fragment() {
             "tanggal_mulai" to tanggalMulaiStr,
             "tanggal_selesai" to tanggalSelesaiStr,
             "keterangan" to keteranganText,
-            "bukti_berkas_url" to (attachedFileName.ifEmpty { "surat_keterangan.jpg" }),
+            "bukti_berkas_url" to base64Bukti, // Kirim data foto asli base64
             "status_verifikasi" to "Pending"
         )
 

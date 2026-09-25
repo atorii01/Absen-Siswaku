@@ -87,4 +87,10 @@ interface SupabaseService {
         @Query("select") select: String = "id,nama_lengkap,nisn,id_kelas",
         @Query("order") order: String = "nama_lengkap.asc"
     ): Call<List<SiswaMiniResponse>>
+
+    @GET("users")
+    fun loginGuru(
+        @Query("username") usernameFilter: String,
+        @Query("select") select: String = "id,username,nama_lengkap,role,rombel_kelas(id,nama_kelas,jurusan)"
+    ): Call<List<UserResponse>>
 }

@@ -1,0 +1,131 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="240dp"
+    android:height="280dp"
+    android:viewportWidth="240"
+    android:viewportHeight="280">
+
+    <!-- Paper Sheet Background -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:strokeColor="#CBD5E1"
+        android:strokeWidth="1.5"
+        android:pathData="M30,10 h140 l30,30 v220 a10,10 0 0,1 -10,10 H30 a10,10 0 0,1 -10,-10 V20 a10,10 0 0,1 10,-10 Z" />
+
+    <!-- Corner Fold -->
+    <path
+        android:fillColor="#E2E8F0"
+        android:strokeColor="#CBD5E1"
+        android:strokeWidth="1"
+        android:pathData="M170,10 v30 h30 Z" />
+
+    <!-- Medical Emblem Circle -->
+    <path
+        android:fillColor="#FEE2E2"
+        android:pathData="M55,33 a12,12 0 1,0 0.01,0 Z" />
+
+    <!-- Medical Red Cross -->
+    <path
+        android:fillColor="#DC2626"
+        android:pathData="M49,43 h12 v4 h-12 Z" />
+    <path
+        android:fillColor="#DC2626"
+        android:pathData="M53,39 h4 v12 h-4 Z" />
+
+    <!-- Clinic / Hospital Letterhead -->
+    <path
+        android:fillColor="#0F172A"
+        android:pathData="M75,38 h85 a2,2 0 0,1 0,4 h-85 a2,2 0 0,1 0,-4 Z" />
+    <path
+        android:fillColor="#64748B"
+        android:pathData="M75,46 h60 a1.5,1.5 0 0,1 0,3 h-60 a1.5,1.5 0 0,1 0,-3 Z" />
+
+    <!-- Letterhead Underline -->
+    <path
+        android:fillColor="#00685F"
+        android:pathData="M38,62 h164 a1,1 0 0,1 0,2 h-164 a1,1 0 0,1 0,-2 Z" />
+
+    <!-- Document Title Badge -->
+    <path
+        android:fillColor="#EFF6FF"
+        android:strokeColor="#BFDBFE"
+        android:strokeWidth="1"
+        android:pathData="M55,73 h130 a3,3 0 0,1 3,3 v10 a3,3 0 0,1 -3,3 H55 a3,3 0 0,1 -3,-3 v-10 a3,3 0 0,1 3,-3 Z" />
+    <path
+        android:fillColor="#1E40AF"
+        android:pathData="M70,80 h100 a2,2 0 0,1 0,4 h-100 a2,2 0 0,1 0,-4 Z" />
+
+    <!-- Student & Record Rows -->
+    <path
+        android:fillColor="#64748B"
+        android:pathData="M40,102 h45 a2,2 0 0,1 0,4 h-45 a2,2 0 0,1 0,-4 Z" />
+    <path
+        android:fillColor="#0F172A"
+        android:pathData="M95,102 h95 a2,2 0 0,1 0,4 h-95 a2,2 0 0,1 0,-4 Z" />
+
+    <path
+        android:fillColor="#64748B"
+        android:pathData="M40,114 h40 a2,2 0 0,1 0,4 h-40 a2,2 0 0,1 0,-4 Z" />
+    <path
+        android:fillColor="#0F172A"
+        android:pathData="M95,114 h80 a2,2 0 0,1 0,4 h-80 a2,2 0 0,1 0,-4 Z" />
+
+    <path
+        android:fillColor="#64748B"
+        android:pathData="M40,126 h48 a2,2 0 0,1 0,4 h-48 a2,2 0 0,1 0,-4 Z" />
+    <path
+        android:fillColor="#0F172A"
+        android:pathData="M95,126 h85 a2,2 0 0,1 0,4 h-85 a2,2 0 0,1 0,-4 Z" />
+
+    <!-- Medical Diagnosis Highlight Box -->
+    <path
+        android:fillColor="#FEF2F2"
+        android:strokeColor="#FECACA"
+        android:strokeWidth="1"
+        android:pathData="M38,138 h164 a4,4 0 0,1 4,4 v24 a4,4 0 0,1 -4,4 H38 a4,4 0 0,1 -4,-4 v-24 a4,4 0 0,1 4,-4 Z" />
+    <path
+        android:fillColor="#DC2626"
+        android:pathData="M48,147 h144 a2,2 0 0,1 0,4 h-144 a2,2 0 0,1 0,-4 Z" />
+    <path
+        android:fillColor="#EF4444"
+        android:pathData="M48,157 h95 a2,2 0 0,1 0,4 h-95 a2,2 0 0,1 0,-4 Z" />
+
+    <!-- Note Paragraph Lines -->
+    <path
+        android:fillColor="#94A3B8"
+        android:pathData="M40,180 h160 a1.5,1.5 0 0,1 0,3 h-160 a1.5,1.5 0 0,1 0,-3 Z" />
+    <path
+        android:fillColor="#94A3B8"
+        android:pathData="M40,188 h145 a1.5,1.5 0 0,1 0,3 h-145 a1.5,1.5 0 0,1 0,-3 Z" />
+    <path
+        android:fillColor="#CBD5E1"
+        android:pathData="M40,196 h110 a1.5,1.5 0 0,1 0,3 h-110 a1.5,1.5 0 0,1 0,-3 Z" />
+
+    <!-- Doctor Signature & Stamp Area -->
+    <!-- Signature Line -->
+    <path
+        android:strokeColor="#1E293B"
+        android:strokeWidth="1.8"
+        android:strokeLineCap="round"
+        android:pathData="M45,225 c10,-12 18,8 28,-4 c8,-8 16,8 25,-2" />
+
+    <path
+        android:fillColor="#475569"
+        android:pathData="M45,236 h60 a1.5,1.5 0 0,1 0,3 h-60 a1.5,1.5 0 0,1 0,-3 Z" />
+    <path
+        android:fillColor="#94A3B8"
+        android:pathData="M45,243 h42 a1,1 0 0,1 0,2 h-42 a1,1 0 0,1 0,-2 Z" />
+
+    <!-- Circular Verified Stamp -->
+    <path
+        android:strokeColor="#00685F"
+        android:strokeWidth="1.8"
+        android:fillColor="#0D00685F"
+        android:pathData="M165,212 a18,18 0 1,0 0.01,0 Z" />
+
+    <path
+        android:strokeColor="#00685F"
+        android:strokeWidth="1.2"
+        android:strokeLineCap="round"
+        android:pathData="M158,229 l5,5 l11,-11" />
+
+</vector>

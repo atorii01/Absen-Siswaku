@@ -1,27 +1,41 @@
 package com.andev.absensiswaku.ui.walas
 
+import android.app.Dialog
 import android.content.Context
 import android.content.Intent
+import android.graphics.BitmapFactory
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.net.Uri
 import android.os.Bundle
+import android.util.Base64
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.Window
+import android.widget.ImageView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.andev.absensiswaku.R
 import com.andev.absensiswaku.data.network.PengajuanIzinResponse
 import com.andev.absensiswaku.data.network.RiwayatModel
 import com.andev.absensiswaku.data.network.SiswaHadirWalasModel
 import com.andev.absensiswaku.data.network.SiswaMiniResponse
 import com.andev.absensiswaku.data.network.SupabaseClient
 import com.andev.absensiswaku.data.pref.SessionManager
+import com.andev.absensiswaku.databinding.DialogPreviewSuratBinding
 import com.andev.absensiswaku.databinding.FragmentWalasPresensiBinding
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import okhttp3.ResponseBody
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import java.net.URL
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -36,9 +50,9 @@ class WalasPresensiFragment : Fragment() {
     private lateinit var antreanAdapter: AntreanIzinAdapter
     private lateinit var siswaHadirAdapter: SiswaHadirWalasAdapter
 
-    private var namaWalas: String = "Herlina, S.E"
-    private var namaKelas: String = "XII AKL 1"
-    private var idKelas: Int = 1
+    private var namaWalas: String = "Wali Kelas"
+    private var namaKelas: String = "XII RPL"
+    private var idKelas: Int = 9
 
     private var countTotalSiswa = 36
     private var countHadir = 0
@@ -82,30 +96,14 @@ class WalasPresensiFragment : Fragment() {
     }
 
     private fun loadSessionData() {
-        val ctx = context ?: return
-        val pref = ctx.getSharedPreferences(PREF_SESSION_NAME, Context.MODE_PRIVATE)
+        val pref = requireContext().getSharedPreferences(PREF_SESSION_NAME, Context.MODE_PRIVATE)
+        namaWalas = pref.getString("NAMA_WALAS", "Wali Kelas") ?: "Wali Kelas"
+        idKelas = pref.getInt("ID_KELAS", 9)
+        namaKelas = pref.getString("NAMA_KELAS", "XII RPL") ?: "XII RPL"
 
-        val prefWalas = pref.getString("NAMA_WALAS", null)
-        namaWalas = when {
-            !prefWalas.isNullOrEmpty() && !prefWalas.contains("Farauk", true) -> prefWalas
-            sessionManager.getWaliKelas().isNotEmpty() && !sessionManager.getWaliKelas().contains("Farauk", true) -> sessionManager.getWaliKelas()
-            sessionManager.getNama().isNotEmpty() && !sessionManager.getNama().contains("Farauk", true) -> sessionManager.getNama()
-            else -> "Herlina, S.E"
-        }
-
-        val prefKelas = pref.getString("NAMA_KELAS", null)
-        namaKelas = when {
-            !prefKelas.isNullOrEmpty() && !prefKelas.contains("RPL", true) -> prefKelas
-            sessionManager.getNamaKelas().isNotEmpty() && !sessionManager.getNamaKelas().contains("RPL", true) -> sessionManager.getNamaKelas()
-            else -> "XII AKL 1"
-        }
-
-        idKelas = pref.getInt("ID_KELAS", 1).takeIf { it != 0 }
-            ?: sessionManager.getIdKelas().takeIf { it != 0 }
-            ?: 1
-
+        // Terapkan ke Header UI secara dinamis
         binding.tvGreetingWalas.text = "Selamat Pagi, $namaWalas"
-        binding.tvSubJudulKelas.text = "Wali Kelas $namaKelas • Rekap Masuk Otomatis"
+        binding.tvSubHeaderKelas.text = "Wali Kelas $namaKelas • Rekap Masuk Otomatis"
     }
 
     private fun setupHeaderAndDate() {
@@ -443,33 +441,108 @@ class WalasPresensiFragment : Fragment() {
     }
 
     /**
-     * Pratinjau Surat / Berkas Bukti
+     * Pratinjau Surat / Berkas Bukti (Membuka In-App Custom Modal Dialog)
      */
     private fun handleLihatSurat(item: PengajuanIzinResponse) {
-        val fileName = item.buktiBerkasUrl?.substringAfterLast("/")?.takeIf { it.isNotEmpty() }
-            ?: "Surat_Keterangan_${item.jenisIzin}.pdf"
+        tampilkanDialogPreview(requireContext(), item)
+    }
 
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Pratinjau Berkas Bukti")
-            .setMessage("Berkas: $fileName\n\nStatus Digital: Terverifikasi oleh sistem SMKN 8 Jakarta.\nPengaju: ${item.siswa?.namaLengkap ?: siswaKelasMap[item.siswaId]?.namaLengkap ?: "Siswa"}\nKeterangan: ${item.keterangan}")
-            .setPositiveButton("Buka Dokumen") { dialog, _ ->
-                dialog.dismiss()
-                val url = item.buktiBerkasUrl
-                if (!url.isNullOrEmpty() && (url.startsWith("http://") || url.startsWith("https://"))) {
-                    try {
-                        val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-                        startActivity(browserIntent)
-                    } catch (e: Exception) {
-                        Toast.makeText(requireContext(), "Tidak dapat membuka berkas browser", Toast.LENGTH_SHORT).show()
-                    }
+    /**
+     * Menampilkan Modal Dialog Pratinjau Surat Bukti In-App
+     */
+    fun tampilkanDialogPreview(context: Context, item: PengajuanIzinResponse) {
+        val dialog = Dialog(context)
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
+        val dialogBinding = DialogPreviewSuratBinding.inflate(LayoutInflater.from(context))
+        dialog.setContentView(dialogBinding.root)
+
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        val displayWidth = (context.resources.displayMetrics.widthPixels * 0.90).toInt()
+        dialog.window?.setLayout(displayWidth, ViewGroup.LayoutParams.WRAP_CONTENT)
+
+        // 1. Data Siswa & Kelas
+        val namaSiswa = item.siswa?.namaLengkap ?: siswaKelasMap[item.siswaId]?.namaLengkap ?: "Siswa"
+        dialogBinding.tvNamaSiswa.text = "$namaSiswa • Kelas $namaKelas"
+
+        // 2. Badge Jenis Izin
+        val jenis = item.jenisIzin.trim()
+        dialogBinding.tvJenisIzin.text = jenis
+        when (jenis.uppercase()) {
+            "SAKIT" -> dialogBinding.tvJenisIzin.setBackgroundResource(R.drawable.bg_badge_pill_sakit)
+            "IZIN" -> dialogBinding.tvJenisIzin.setBackgroundResource(R.drawable.bg_badge_pill_amber)
+            "DISPENSASI" -> dialogBinding.tvJenisIzin.setBackgroundResource(R.drawable.bg_badge_pill_dispensasi)
+            else -> dialogBinding.tvJenisIzin.setBackgroundResource(R.drawable.bg_badge_pill_gray)
+        }
+
+        // 3. Nama File
+        val isBase64 = item.buktiBerkasUrl?.startsWith("data:image") == true || (item.buktiBerkasUrl?.length ?: 0) > 500
+        val rawFileName = if (isBase64) {
+            "Foto_Bukti_Fisik_${item.jenisIzin}.jpg"
+        } else {
+            item.buktiBerkasUrl?.substringAfterLast("/")?.takeIf { it.isNotEmpty() }
+                ?: "Surat_Keterangan_${item.jenisIzin}.jpg"
+        }
+        dialogBinding.tvNamaFile.text = "📄 $rawFileName"
+
+        // 4. Keterangan / Alasan Siswa
+        val quote = item.keterangan?.takeIf { it.isNotBlank() } ?: "Tidak ada keterangan tambahan."
+        dialogBinding.tvKeterangan.text = "\"$quote\""
+
+        // 5. Muat Gambar: Cek apakah Base64, URL eksternal, Content/File URI, atau Ilustrasi Surat Resmi
+        val berkasUrl = item.buktiBerkasUrl.orEmpty()
+        if (berkasUrl.startsWith("data:image") || berkasUrl.length > 500) {
+            // Gambar berupa data Base64: Decode dan pasang langsung ke ImageView
+            try {
+                val cleanBase64 = berkasUrl.substringAfter("base64,")
+                val decodedBytes = Base64.decode(cleanBase64, Base64.DEFAULT)
+                val bitmap = BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
+                if (bitmap != null) {
+                    dialogBinding.ivPreviewSurat.setImageBitmap(bitmap)
+                    dialogBinding.ivPreviewSurat.scaleType = ImageView.ScaleType.FIT_CENTER
+                    dialogBinding.ivPreviewSurat.setBackgroundColor(Color.TRANSPARENT)
                 } else {
-                    Toast.makeText(requireContext(), "Membuka salinan berkas: $fileName", Toast.LENGTH_SHORT).show()
+                    dialogBinding.ivPreviewSurat.setImageResource(R.drawable.ic_surat_dokter_preview)
+                }
+            } catch (e: Exception) {
+                dialogBinding.ivPreviewSurat.setImageResource(R.drawable.ic_surat_dokter_preview)
+            }
+        } else if (berkasUrl.startsWith("http://") || berkasUrl.startsWith("https://")) {
+            viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+                try {
+                    val input = URL(berkasUrl).openStream()
+                    val bitmap = BitmapFactory.decodeStream(input)
+                    withContext(Dispatchers.Main) {
+                        if (bitmap != null) {
+                            dialogBinding.ivPreviewSurat.setImageBitmap(bitmap)
+                            dialogBinding.ivPreviewSurat.scaleType = ImageView.ScaleType.FIT_CENTER
+                            dialogBinding.ivPreviewSurat.setBackgroundColor(Color.TRANSPARENT)
+                        } else {
+                            dialogBinding.ivPreviewSurat.setImageResource(R.drawable.ic_surat_dokter_preview)
+                        }
+                    }
+                } catch (e: Exception) {
+                    withContext(Dispatchers.Main) {
+                        dialogBinding.ivPreviewSurat.setImageResource(R.drawable.ic_surat_dokter_preview)
+                    }
                 }
             }
-            .setNegativeButton("Tutup") { dialog, _ ->
-                dialog.dismiss()
+        } else if (berkasUrl.startsWith("content://") || berkasUrl.startsWith("file://")) {
+            try {
+                dialogBinding.ivPreviewSurat.setImageURI(Uri.parse(berkasUrl))
+                dialogBinding.ivPreviewSurat.scaleType = ImageView.ScaleType.FIT_CENTER
+                dialogBinding.ivPreviewSurat.setBackgroundColor(Color.TRANSPARENT)
+            } catch (e: Exception) {
+                dialogBinding.ivPreviewSurat.setImageResource(R.drawable.ic_surat_dokter_preview)
             }
-            .show()
+        } else {
+            dialogBinding.ivPreviewSurat.setImageResource(R.drawable.ic_surat_dokter_preview)
+        }
+
+        // 6. Action Dismiss Listeners
+        dialogBinding.btnTutup.setOnClickListener { dialog.dismiss() }
+        dialogBinding.btnCloseHeader.setOnClickListener { dialog.dismiss() }
+
+        dialog.show()
     }
 
     /**

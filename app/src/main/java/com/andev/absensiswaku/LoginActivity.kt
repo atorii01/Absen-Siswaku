@@ -16,6 +16,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.andev.absensiswaku.data.network.SiswaResponse
 import com.andev.absensiswaku.data.network.SupabaseClient
+import com.andev.absensiswaku.data.network.UserResponse
 import com.andev.absensiswaku.data.pref.SessionManager
 import com.andev.absensiswaku.databinding.ActivityLoginBinding
 import retrofit2.Call
@@ -365,30 +366,64 @@ class LoginActivity : AppCompatActivity() {
     private fun performGuruLogin(identifier: String, secret: String) {
         showLoading(true)
 
-        val namaWalas = if (identifier.contains("farauk", true)) {
-            "Farauk Pratama, S.Kom."
-        } else {
-            "Herlina, S.E"
-        }
-        val namaKelas = if (identifier.contains("farauk", true)) {
-            "12 RPL 1"
-        } else {
-            "XII AKL 1"
-        }
-        val jurusan = if (identifier.contains("farauk", true)) {
-            "Rekayasa Perangkat Lunak"
-        } else {
-            "Akuntansi dan Keuangan Lembaga"
-        }
-        val idKelas = 1
-
         val isRememberChecked = binding.cbRememberMe.isChecked
+
+        SupabaseClient.instance.loginGuru(usernameFilter = "eq.$identifier")
+            .enqueue(object : Callback<List<UserResponse>> {
+                override fun onResponse(
+                    call: Call<List<UserResponse>>,
+                    response: Response<List<UserResponse>>
+                ) {
+                    showLoading(false)
+                    val user = response.body()?.firstOrNull()
+                    val rombel = user?.rombelKelas?.firstOrNull()
+
+                    val role = user?.role ?: "WALI_KELAS"
+                    val namaWalas = user?.namaLengkap
+                        ?: if (identifier.contains("farauk", true)) "Farauk Pratama, S.Kom."
+                        else identifier
+                    val idKelas = rombel?.id ?: 9
+                    val namaKelas = rombel?.namaKelas ?: "XII RPL"
+                    val jurusan = rombel?.jurusan ?: "Rekayasa Perangkat Lunak"
+
+                    saveGuruSessionAndNavigate(role, namaWalas, idKelas, namaKelas, jurusan, identifier, secret, isRememberChecked)
+                }
+
+                override fun onFailure(call: Call<List<UserResponse>>, t: Throwable) {
+                    showLoading(false)
+                    val role = "WALI_KELAS"
+                    val namaWalas = if (identifier.contains("farauk", true)) "Farauk Pratama, S.Kom." else identifier
+                    val idKelas = 9
+                    val namaKelas = "XII RPL"
+                    val jurusan = "Rekayasa Perangkat Lunak"
+
+                    saveGuruSessionAndNavigate(role, namaWalas, idKelas, namaKelas, jurusan, identifier, secret, isRememberChecked)
+                }
+            })
+    }
+
+    private fun saveGuruSessionAndNavigate(
+        role: String,
+        namaWalas: String,
+        idKelas: Int,
+        namaKelas: String,
+        jurusan: String,
+        identifier: String,
+        secret: String,
+        isRememberChecked: Boolean
+    ) {
         val pref = getSharedPreferences("PREF_SMKN8_SESSION", Context.MODE_PRIVATE)
         pref.edit().apply {
+            putString("ROLE", role)
+            putString("role", role)
+            putString("NAMA_WALAS", namaWalas)
+            putInt("ID_KELAS", idKelas)
+            putString("NAMA_KELAS", namaKelas)
+            putString("nama", namaWalas)
+            putString("nama_kelas", namaKelas)
+            putString("wali_kelas", namaWalas)
             putBoolean("KEY_IS_LOGGED_IN", true)
             putBoolean("is_logged_in", true)
-            putString("role", "GURU")
-            putString("ROLE", "GURU")
             putBoolean("KEY_REMEMBER_DEVICE", isRememberChecked)
             if (isRememberChecked) {
                 putString("SAVED_NISN", identifier)
@@ -397,18 +432,12 @@ class LoginActivity : AppCompatActivity() {
                 remove("SAVED_NISN")
                 remove("SAVED_PIN")
             }
-            putInt("ID_KELAS", idKelas)
-            putString("NAMA_WALAS", namaWalas)
-            putString("NAMA_KELAS", namaKelas)
-            putString("nama", namaWalas)
-            putString("nama_kelas", namaKelas)
-            putString("wali_kelas", namaWalas)
             apply()
         }
 
         sessionManager.createSession(
-            role = "GURU",
-            id = 101,
+            role = role,
+            id = idKelas,
             nisn = identifier,
             nama = namaWalas,
             kelasId = idKelas,
@@ -417,15 +446,16 @@ class LoginActivity : AppCompatActivity() {
             waliKelas = namaWalas
         )
 
-        showLoading(false)
         Toast.makeText(
             this@LoginActivity,
             "✓ Selamat Datang, $namaWalas (Wali Kelas $namaKelas)",
             Toast.LENGTH_SHORT
         ).show()
 
-        val intent = Intent(this@LoginActivity, MainActivity::class.java)
-        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        // Navigasi WAJIB ke WalasMainActivity, BUKAN MainActivity
+        val intent = Intent(this@LoginActivity, WalasMainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        }
         startActivity(intent)
         finish()
     }

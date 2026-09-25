@@ -126,11 +126,16 @@ class AntreanIzinAdapter(
             binding.tvKeteranganAlasan.text = "“$quote”"
 
             // 5. Lampiran Berkas Bukti
-            val fileName = item.buktiBerkasUrl?.substringAfterLast("/")?.takeIf { it.isNotEmpty() }
-                ?: if (jenis.equals("SAKIT", true)) "Surat_Keterangan_Sakit.pdf"
-                else if (jenis.equals("IZIN", true)) "Surat_Permohonan_Izin.jpg"
-                else if (jenis.equals("DISPENSASI", true)) "Surat_Tugas_Kesiswaan.pdf"
-                else null
+            val berkasRaw = item.buktiBerkasUrl.orEmpty()
+            val fileName = if (berkasRaw.startsWith("data:image") || berkasRaw.length > 500) {
+                "Foto_Bukti_Fisik_${jenis.lowercase().replaceFirstChar { it.uppercase() }}.jpg"
+            } else {
+                berkasRaw.substringAfterLast("/").takeIf { it.isNotEmpty() }
+                    ?: if (jenis.equals("SAKIT", true)) "Surat_Keterangan_Sakit.pdf"
+                    else if (jenis.equals("IZIN", true)) "Surat_Permohonan_Izin.jpg"
+                    else if (jenis.equals("DISPENSASI", true)) "Surat_Tugas_Kesiswaan.pdf"
+                    else null
+            }
 
             if (!fileName.isNullOrEmpty() && !jenis.equals("ALPA", true)) {
                 binding.layoutAttachment.visibility = View.VISIBLE
@@ -149,6 +154,10 @@ class AntreanIzinAdapter(
             }
 
             binding.btnLihatSurat.setOnClickListener {
+                onLihatSuratClicked(item)
+            }
+
+            binding.layoutAttachment.setOnClickListener {
                 onLihatSuratClicked(item)
             }
 

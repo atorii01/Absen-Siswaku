@@ -45,6 +45,16 @@ class MainActivity : AppCompatActivity() {
             return
         }
 
+        val userRole = pref.getString("ROLE", "")?.takeIf { it.isNotEmpty() } ?: sessionManager.getRole()
+        if (userRole.equals("GURU", true) || userRole.equals("WALI_KELAS", true)) {
+            val walasIntent = Intent(this, WalasMainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            }
+            startActivity(walasIntent)
+            finish()
+            return
+        }
+
         enableEdgeToEdge()
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)

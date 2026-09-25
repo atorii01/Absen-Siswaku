@@ -37,3 +37,20 @@ data class WalasUserResponse(
     @SerializedName("nama_lengkap")
     val namaLengkap: String?
 )
+
+data class UserResponse(
+    @SerializedName("id")
+    val id: String? = null,
+
+    @SerializedName("username")
+    val username: String? = null,
+
+    @SerializedName("nama_lengkap")
+    val namaLengkap: String? = null,
+
+    @SerializedName("role")
+    val role: String? = "WALI_KELAS",
+
+    @SerializedName("rombel_kelas")
+    val rombelKelas: List<RombelKelasResponse>? = null
+)
