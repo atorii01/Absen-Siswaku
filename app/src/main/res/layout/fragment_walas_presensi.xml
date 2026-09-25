@@ -148,13 +148,23 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginHorizontal="16dp"
-                    android:layout_marginTop="12dp"
                     android:orientation="vertical">
 
                     <TextView
-                        android:id="@+id/tvJudulHalaman"
+                        android:id="@+id/tvGreetingWalas"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:textColor="@color/primary_teal"
+                        android:textSize="13sp"
+                        android:textStyle="bold"
+                        tools:text="Selamat Pagi, Herlina, S.E" />
+
+                    <TextView
+                        android:id="@+id/tvVerifikasiHeader"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
                         android:text="Verifikasi Ketidakhadiran &amp; Presensi Kelas"
                         android:textColor="@color/text_primary"
                         android:textSize="19sp"
@@ -167,7 +177,7 @@
                         android:layout_marginTop="4dp"
                         android:textColor="@color/text_secondary"
                         android:textSize="13sp"
-                        tools:text="Wali Kelas 12 RPL 1 • Rekap Masuk Otomatis" />
+                        tools:text="Wali Kelas XII AKL 1 • Rekap Masuk Otomatis" />
                 </LinearLayout>
 
                 <!-- ================= 2b. 4 KOTAK METRIK STATISTIK HARI INI ================= -->

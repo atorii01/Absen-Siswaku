@@ -26,7 +26,9 @@ data class RiwayatModel(
     @SerializedName("jam_verifikasi")
     val jamVerifikasi: String? = null,
     @SerializedName("keterangan_status")
-    val keteranganStatus: String? = null
+    val keteranganStatus: String? = null,
+    @SerializedName("siswa")
+    val siswa: SiswaMiniResponse? = null
 ) {
     val displayJamMasuk: String
         get() = when {

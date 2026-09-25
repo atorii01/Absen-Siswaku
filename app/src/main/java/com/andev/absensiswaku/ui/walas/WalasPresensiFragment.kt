@@ -10,7 +10,6 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.andev.absensiswaku.R
 import com.andev.absensiswaku.data.network.PengajuanIzinResponse
 import com.andev.absensiswaku.data.network.RiwayatModel
 import com.andev.absensiswaku.data.network.SiswaHadirWalasModel
@@ -37,15 +36,16 @@ class WalasPresensiFragment : Fragment() {
     private lateinit var antreanAdapter: AntreanIzinAdapter
     private lateinit var siswaHadirAdapter: SiswaHadirWalasAdapter
 
-    private var namaWalas: String = "Farauk Pratama, S.Kom."
-    private var namaKelas: String = "12 RPL 1"
+    private var namaWalas: String = "Herlina, S.E"
+    private var namaKelas: String = "XII AKL 1"
     private var idKelas: Int = 1
 
     private var countTotalSiswa = 36
-    private var countHadir = 32
-    private var countVerifikasi = 3
-    private var countAlpa = 1
+    private var countHadir = 0
+    private var countVerifikasi = 0
+    private var countAlpa = 0
 
+    private val siswaKelasMap = mutableMapOf<Int, SiswaMiniResponse>()
     private val antreanList = mutableListOf<PengajuanIzinResponse>()
     private val hadirList = mutableListOf<SiswaHadirWalasModel>()
 
@@ -85,18 +85,26 @@ class WalasPresensiFragment : Fragment() {
         val ctx = context ?: return
         val pref = ctx.getSharedPreferences(PREF_SESSION_NAME, Context.MODE_PRIVATE)
 
-        namaWalas = pref.getString("NAMA_WALAS", null)
-            ?: sessionManager.getWaliKelas().ifEmpty {
-                sessionManager.getNama().ifEmpty { "Farauk Pratama, S.Kom." }
-            }
+        val prefWalas = pref.getString("NAMA_WALAS", null)
+        namaWalas = when {
+            !prefWalas.isNullOrEmpty() && !prefWalas.contains("Farauk", true) -> prefWalas
+            sessionManager.getWaliKelas().isNotEmpty() && !sessionManager.getWaliKelas().contains("Farauk", true) -> sessionManager.getWaliKelas()
+            sessionManager.getNama().isNotEmpty() && !sessionManager.getNama().contains("Farauk", true) -> sessionManager.getNama()
+            else -> "Herlina, S.E"
+        }
 
-        namaKelas = pref.getString("NAMA_KELAS", null)
-            ?: sessionManager.getNamaKelas().ifEmpty { "12 RPL 1" }
+        val prefKelas = pref.getString("NAMA_KELAS", null)
+        namaKelas = when {
+            !prefKelas.isNullOrEmpty() && !prefKelas.contains("RPL", true) -> prefKelas
+            sessionManager.getNamaKelas().isNotEmpty() && !sessionManager.getNamaKelas().contains("RPL", true) -> sessionManager.getNamaKelas()
+            else -> "XII AKL 1"
+        }
 
-        idKelas = pref.getInt("ID_KELAS", 0).takeIf { it != 0 }
+        idKelas = pref.getInt("ID_KELAS", 1).takeIf { it != 0 }
             ?: sessionManager.getIdKelas().takeIf { it != 0 }
             ?: 1
 
+        binding.tvGreetingWalas.text = "Selamat Pagi, $namaWalas"
         binding.tvSubJudulKelas.text = "Wali Kelas $namaKelas • Rekap Masuk Otomatis"
     }
 
@@ -152,104 +160,130 @@ class WalasPresensiFragment : Fragment() {
     }
 
     /**
-     * Mengambil data antrean izin, siswa hadir, dan jumlah siswa dari Supabase
+     * Mengambil data antrean izin, siswa hadir, dan jumlah siswa secara dinamis dari Supabase
+     * Difilter murni berdasarkan id_kelas walas yang sedang aktif.
      */
     private fun loadDataFromSupabase() {
         val sdfIso = SimpleDateFormat("yyyy-MM-dd", Locale.US)
         val todayIso = sdfIso.format(Date())
 
-        // 1. Ambil Antrean Izin (status eq.Pending)
-        SupabaseClient.instance.getAntreanIzinWalas(status = "eq.Pending")
-            .enqueue(object : Callback<List<PengajuanIzinResponse>> {
+        // 1. Ambil Data Siswa di Kelas Walas untuk perhitungan Total Siswa & Map Nama/NISN
+        SupabaseClient.instance.getSiswaByKelas(filterKelas = "eq.$idKelas")
+            .enqueue(object : Callback<List<SiswaMiniResponse>> {
                 override fun onResponse(
-                    call: Call<List<PengajuanIzinResponse>>,
-                    response: Response<List<PengajuanIzinResponse>>
+                    call: Call<List<SiswaMiniResponse>>,
+                    response: Response<List<SiswaMiniResponse>>
                 ) {
                     if (!isAdded || _binding == null) return
-                    val body = response.body()
-
-                    if (response.isSuccessful && !body.isNullOrEmpty()) {
-                        antreanList.clear()
-                        antreanList.addAll(body)
-                        // Tambahkan item Alpa jika ada untuk kelengkapan
-                        if (antreanList.none { it.jenisIzin.equals("ALPA", true) }) {
-                            antreanList.add(
-                                PengajuanIzinResponse(
-                                    id = "alp-mock-1",
-                                    siswaId = 8,
-                                    jenisIzin = "ALPA",
-                                    keterangan = "Belum scan hingga batas waktu",
-                                    siswa = SiswaMiniResponse(8, "Hafiz Maulana Zaki", "0067821908", idKelas)
-                                )
-                            )
-                        }
-                    } else {
-                        // Gunakan default mock dataset yang merefleksikan desain 100%
-                        antreanList.clear()
-                        antreanList.addAll(getDemoAntreanIzin())
+                    val body = response.body().orEmpty()
+                    siswaKelasMap.clear()
+                    body.forEach { s ->
+                        s.id?.let { siswaKelasMap[it] = s }
                     }
-
-                    renderAntreanUI()
+                    countTotalSiswa = if (body.isNotEmpty()) body.size else 36
+                    updateSummaryMetrics()
                 }
 
-                override fun onFailure(call: Call<List<PengajuanIzinResponse>>, t: Throwable) {
+                override fun onFailure(call: Call<List<SiswaMiniResponse>>, t: Throwable) {
                     if (!isAdded || _binding == null) return
-                    // Fallback data demo jika offline/koneksi bermasalah
+                    countTotalSiswa = 36
+                    updateSummaryMetrics()
+                }
+            })
+
+        // 2. Ambil Antrean Izin (status eq.Pending, filter nested siswa.id_kelas)
+        SupabaseClient.instance.getAntreanIzinWalas(
+            status = "eq.Pending",
+            select = "*,siswa(*,rombel_kelas(*))",
+            filterKelas = "eq.$idKelas"
+        ).enqueue(object : Callback<List<PengajuanIzinResponse>> {
+            override fun onResponse(
+                call: Call<List<PengajuanIzinResponse>>,
+                response: Response<List<PengajuanIzinResponse>>
+            ) {
+                if (!isAdded || _binding == null) return
+                val body = response.body().orEmpty()
+
+                if (response.isSuccessful) {
+                    // Filter defensif: pastikan siswa adalah anggota kelas walas (menyingkirkan siswa luar kelas cth: Peter Maleke XII RPL)
+                    val filtered = body.filter { izin ->
+                        val kId = izin.siswa?.idKelas ?: izin.siswa?.rombelKelas?.id
+                        kId == idKelas || (kId == null && siswaKelasMap.containsKey(izin.siswaId))
+                    }
                     antreanList.clear()
-                    antreanList.addAll(getDemoAntreanIzin())
-                    renderAntreanUI()
+                    antreanList.addAll(filtered)
+                } else {
+                    antreanList.clear()
                 }
-            })
 
-        // 2. Ambil Siswa Hadir Hari Ini dari presensi_harian
-        SupabaseClient.instance.getPresensiHariIniWalas(filterTanggal = "eq.$todayIso")
-            .enqueue(object : Callback<List<RiwayatModel>> {
-                override fun onResponse(
-                    call: Call<List<RiwayatModel>>,
-                    response: Response<List<RiwayatModel>>
-                ) {
-                    if (!isAdded || _binding == null) return
-                    val body = response.body()
+                renderAntreanUI()
+                updateSummaryMetrics()
+            }
 
-                    if (response.isSuccessful && !body.isNullOrEmpty()) {
-                        val mapped = body.mapIndexed { idx, riwayat ->
-                            SiswaHadirWalasModel(
-                                nomorUrut = String.format("%02d", idx + 1),
-                                siswaId = riwayat.siswaId,
-                                namaLengkap = "Siswa ${riwayat.siswaId}",
-                                nisn = "00678219${String.format("%02d", idx + 1)}",
-                                waktuMasuk = riwayat.displayJamMasuk.take(5),
-                                status = riwayat.status,
-                                verifiedAiGps = true
-                            )
-                        }
-                        hadirList.clear()
-                        hadirList.addAll(mapped)
-                    } else {
-                        hadirList.clear()
-                        hadirList.addAll(getDemoSiswaHadir())
+            override fun onFailure(call: Call<List<PengajuanIzinResponse>>, t: Throwable) {
+                if (!isAdded || _binding == null) return
+                antreanList.clear()
+                renderAntreanUI()
+                updateSummaryMetrics()
+            }
+        })
+
+        // 3. Ambil Siswa Hadir Hari Ini dari presensi_harian berdasarkan id_kelas walas dan tanggal hari ini
+        SupabaseClient.instance.getPresensiHariIniWalas(
+            filterTanggal = "eq.$todayIso",
+            filterKelas = "eq.$idKelas",
+            select = "*,siswa(*,rombel_kelas(*))"
+        ).enqueue(object : Callback<List<RiwayatModel>> {
+            override fun onResponse(
+                call: Call<List<RiwayatModel>>,
+                response: Response<List<RiwayatModel>>
+            ) {
+                if (!isAdded || _binding == null) return
+                val body = response.body().orEmpty()
+
+                if (response.isSuccessful) {
+                    val validHadir = body.filter { it.status.equals("Hadir", true) }
+                    val mapped = validHadir.mapIndexed { idx, riwayat ->
+                        val s = riwayat.siswa ?: siswaKelasMap[riwayat.siswaId]
+                        val sNama = s?.namaLengkap?.takeIf { it.isNotEmpty() } ?: "Siswa ${riwayat.siswaId}"
+                        val sNisn = s?.nisn?.takeIf { it.isNotEmpty() } ?: "-"
+                        val waktu = riwayat.displayJamMasuk.take(5)
+
+                        SiswaHadirWalasModel(
+                            nomorUrut = String.format("%02d", idx + 1),
+                            siswaId = riwayat.siswaId,
+                            namaLengkap = sNama,
+                            nisn = sNisn,
+                            waktuMasuk = waktu,
+                            status = riwayat.status,
+                            verifiedAiGps = true
+                        )
                     }
-
-                    renderHadirUI()
-                }
-
-                override fun onFailure(call: Call<List<RiwayatModel>>, t: Throwable) {
-                    if (!isAdded || _binding == null) return
                     hadirList.clear()
-                    hadirList.addAll(getDemoSiswaHadir())
-                    renderHadirUI()
+                    hadirList.addAll(mapped)
+                } else {
+                    hadirList.clear()
                 }
-            })
+
+                renderHadirUI()
+                updateSummaryMetrics()
+            }
+
+            override fun onFailure(call: Call<List<RiwayatModel>>, t: Throwable) {
+                if (!isAdded || _binding == null) return
+                hadirList.clear()
+                renderHadirUI()
+                updateSummaryMetrics()
+            }
+        })
     }
 
     private fun renderAntreanUI() {
-        val nonAlpaCount = antreanList.count { !it.jenisIzin.equals("ALPA", true) }
-        countVerifikasi = nonAlpaCount
-        countAlpa = antreanList.count { it.jenisIzin.equals("ALPA", true) }.coerceAtLeast(1)
+        if (!isAdded || _binding == null) return
 
+        countVerifikasi = antreanList.size
         binding.tvBadgeAntreanCount.text = "$countVerifikasi Pengajuan"
         binding.tvCountPending.text = countVerifikasi.toString()
-        binding.tvCountAlpa.text = countAlpa.toString()
 
         if (antreanList.isEmpty()) {
             binding.rvAntreanIzin.visibility = View.GONE
@@ -262,10 +296,9 @@ class WalasPresensiFragment : Fragment() {
     }
 
     private fun renderHadirUI() {
-        countHadir = hadirList.size.coerceAtLeast(32)
-        countTotalSiswa = (countHadir + countVerifikasi + countAlpa).coerceAtLeast(36)
+        if (!isAdded || _binding == null) return
 
-        binding.tvTotalSiswa.text = countTotalSiswa.toString()
+        countHadir = hadirList.size
         binding.tvCountHadir.text = countHadir.toString()
         binding.tvJudulDaftarHadir.text = "Daftar Hadir Otomatis Hari Ini ($countHadir Siswa)"
 
@@ -279,11 +312,25 @@ class WalasPresensiFragment : Fragment() {
         }
     }
 
+    private fun updateSummaryMetrics() {
+        if (!isAdded || _binding == null) return
+
+        countVerifikasi = antreanList.size
+        countHadir = hadirList.size
+        val total = if (countTotalSiswa > 0) countTotalSiswa else 36
+        countAlpa = (total - countHadir - countVerifikasi).coerceAtLeast(0)
+
+        binding.tvTotalSiswa.text = total.toString()
+        binding.tvCountHadir.text = countHadir.toString()
+        binding.tvCountPending.text = countVerifikasi.toString()
+        binding.tvCountAlpa.text = countAlpa.toString()
+    }
+
     /**
      * Logika Persetujuan Izin (Disetujui)
      */
     private fun handlePersetujuanIzin(item: PengajuanIzinResponse) {
-        val nama = item.siswa?.namaLengkap ?: "Siswa"
+        val nama = item.siswa?.namaLengkap ?: siswaKelasMap[item.siswaId]?.namaLengkap ?: "Siswa"
         val jenis = item.jenisIzin
 
         MaterialAlertDialogBuilder(requireContext())
@@ -310,12 +357,8 @@ class WalasPresensiFragment : Fragment() {
             filterId = "eq.${item.id}",
             payload = updatePayload
         ).enqueue(object : Callback<ResponseBody> {
-            override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
-                // Berhasil atau fallback
-            }
-            override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
-                // Diabaikan karena UI tetap responsif
-            }
+            override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {}
+            override fun onFailure(call: Call<ResponseBody>, t: Throwable) {}
         })
 
         // 2. Tambahkan / Update ke presensi_harian
@@ -336,26 +379,23 @@ class WalasPresensiFragment : Fragment() {
         )
 
         SupabaseClient.instance.simpanPresensi(presensiPayload).enqueue(object : Callback<ResponseBody> {
-            override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {}
-            override fun onFailure(call: Call<ResponseBody>, t: Throwable) {}
+            override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
+                loadDataFromSupabase()
+            }
+            override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                loadDataFromSupabase()
+            }
         })
 
         // 3. Update UI Seketika
         antreanAdapter.removeItem(item)
         antreanList.removeAll { it.id == item.id }
-
-        countVerifikasi = (countVerifikasi - 1).coerceAtLeast(0)
-        binding.tvCountPending.text = countVerifikasi.toString()
-        binding.tvBadgeAntreanCount.text = "$countVerifikasi Pengajuan"
-
-        if (countVerifikasi == 0) {
-            binding.rvAntreanIzin.visibility = View.GONE
-            binding.layoutEmptyAntrean.visibility = View.VISIBLE
-        }
+        renderAntreanUI()
+        updateSummaryMetrics()
 
         Toast.makeText(
             requireContext(),
-            "✓ Pengajuan ${item.jenisIzin} dari ${item.siswa?.namaLengkap ?: "Siswa"} berhasil disetujui!",
+            "✓ Pengajuan ${item.jenisIzin} dari ${item.siswa?.namaLengkap ?: siswaKelasMap[item.siswaId]?.namaLengkap ?: "Siswa"} berhasil disetujui!",
             Toast.LENGTH_SHORT
         ).show()
     }
@@ -364,7 +404,7 @@ class WalasPresensiFragment : Fragment() {
      * Logika Penolakan Izin (Ditolak)
      */
     private fun handlePenolakanIzin(item: PengajuanIzinResponse) {
-        val nama = item.siswa?.namaLengkap ?: "Siswa"
+        val nama = item.siswa?.namaLengkap ?: siswaKelasMap[item.siswaId]?.namaLengkap ?: "Siswa"
 
         MaterialAlertDialogBuilder(requireContext())
             .setTitle("Tolak / Review Pengajuan")
@@ -387,15 +427,8 @@ class WalasPresensiFragment : Fragment() {
 
                 antreanAdapter.removeItem(item)
                 antreanList.removeAll { it.id == item.id }
-
-                countVerifikasi = (countVerifikasi - 1).coerceAtLeast(0)
-                binding.tvCountPending.text = countVerifikasi.toString()
-                binding.tvBadgeAntreanCount.text = "$countVerifikasi Pengajuan"
-
-                if (countVerifikasi == 0) {
-                    binding.rvAntreanIzin.visibility = View.GONE
-                    binding.layoutEmptyAntrean.visibility = View.VISIBLE
-                }
+                renderAntreanUI()
+                updateSummaryMetrics()
 
                 Toast.makeText(
                     requireContext(),
@@ -418,7 +451,7 @@ class WalasPresensiFragment : Fragment() {
 
         MaterialAlertDialogBuilder(requireContext())
             .setTitle("Pratinjau Berkas Bukti")
-            .setMessage("Berkas: $fileName\n\nStatus Digital: Terverifikasi oleh sistem SMKN 8 Jakarta.\nPengaju: ${item.siswa?.namaLengkap ?: "Siswa"}\nKeterangan: ${item.keterangan}")
+            .setMessage("Berkas: $fileName\n\nStatus Digital: Terverifikasi oleh sistem SMKN 8 Jakarta.\nPengaju: ${item.siswa?.namaLengkap ?: siswaKelasMap[item.siswaId]?.namaLengkap ?: "Siswa"}\nKeterangan: ${item.keterangan}")
             .setPositiveButton("Buka Dokumen") { dialog, _ ->
                 dialog.dismiss()
                 val url = item.buktiBerkasUrl
@@ -443,7 +476,7 @@ class WalasPresensiFragment : Fragment() {
      * Hubungi Orang Tua / Siswa Alpa
      */
     private fun handleHubungiOrtu(item: PengajuanIzinResponse) {
-        val nama = item.siswa?.namaLengkap ?: "Hafiz Maulana Zaki"
+        val nama = item.siswa?.namaLengkap ?: siswaKelasMap[item.siswaId]?.namaLengkap ?: "Siswa"
         val noHpDefault = "081234567890"
 
         MaterialAlertDialogBuilder(requireContext())
@@ -473,7 +506,7 @@ class WalasPresensiFragment : Fragment() {
     private fun handleFinalisasiRekap() {
         MaterialAlertDialogBuilder(requireContext())
             .setTitle("Kirim & Finalisasi Rekap?")
-            .setMessage("Rekap kehadiran kelas $namaKelas hari ini:\n• Hadir AI/GPS: $countHadir Siswa\n• Izin/Sakit Terverifikasi: ${36 - countHadir - countAlpa} Siswa\n• Alpa: $countAlpa Siswa\n\nData akan dikirimkan ke Kepala Sekolah & Pusdatin.")
+            .setMessage("Rekap kehadiran kelas $namaKelas hari ini:\n• Hadir AI/GPS: $countHadir Siswa\n• Verifikasi: $countVerifikasi Siswa\n• Alpa: $countAlpa Siswa\n\nData akan dikirimkan ke Kepala Sekolah & Pusdatin.")
             .setPositiveButton("➤ Kirim Sekarang") { dialog, _ ->
                 dialog.dismiss()
                 binding.btnFinalisasiRekap.isEnabled = false
@@ -495,97 +528,6 @@ class WalasPresensiFragment : Fragment() {
                 dialog.dismiss()
             }
             .show()
-    }
-
-    /**
-     * Dataset Demo Antrean Izin yang 100% Cocok dengan Referensi Desain
-     */
-    private fun getDemoAntreanIzin(): List<PengajuanIzinResponse> {
-        return listOf(
-            PengajuanIzinResponse(
-                id = "demo-sakit-03",
-                siswaId = 3,
-                jenisIzin = "Sakit",
-                tanggalMulai = "2026-09-25",
-                keterangan = "Demam tinggi sejak semalam, istirahat dokter 2 hari.",
-                buktiBerkasUrl = "https://dxqrthdweyxynqjvlpvl.supabase.co/storage/v1/object/public/izin/Surat_Dokter_RSUD_Bagas.pdf",
-                statusVerifikasi = "Pending",
-                createdAt = "2026-09-25T06:45:00",
-                siswa = SiswaMiniResponse(3, "Bagas Wahyu Santoso", "0067821903", idKelas)
-            ),
-            PengajuanIzinResponse(
-                id = "demo-izin-04",
-                siswaId = 4,
-                jenisIzin = "Izin",
-                tanggalMulai = "2026-09-25",
-                keterangan = "Menghadiri acara pernikahan kakak kandung di luar kota.",
-                buktiBerkasUrl = "https://dxqrthdweyxynqjvlpvl.supabase.co/storage/v1/object/public/izin/Surat_Permohonan_Ortu.jpg",
-                statusVerifikasi = "Pending",
-                createdAt = "2026-09-25T07:05:00",
-                siswa = SiswaMiniResponse(4, "Cantika Dewi Maharani", "0067821904", idKelas)
-            ),
-            PengajuanIzinResponse(
-                id = "demo-dispensasi-06",
-                siswaId = 6,
-                jenisIzin = "Dispensasi",
-                tanggalMulai = "2026-09-25",
-                keterangan = "Mewakili sekolah dalam Lomba Debat Bahasa Indonesia Tingkat Provinsi.",
-                buktiBerkasUrl = "https://dxqrthdweyxynqjvlpvl.supabase.co/storage/v1/object/public/izin/Surat_Tugas_Kesiswaan.pdf",
-                statusVerifikasi = "Pending",
-                createdAt = "2026-09-25T06:15:00",
-                siswa = SiswaMiniResponse(6, "Fadhil Rahman Hakim", "0067821906", idKelas)
-            ),
-            PengajuanIzinResponse(
-                id = "demo-alpa-08",
-                siswaId = 8,
-                jenisIzin = "ALPA",
-                tanggalMulai = "2026-09-25",
-                keterangan = "Belum scan hingga 07:30",
-                statusVerifikasi = "Pending",
-                createdAt = "2026-09-25T07:30:00",
-                siswa = SiswaMiniResponse(8, "Hafiz Maulana Zaki", "0067821908", idKelas)
-            )
-        )
-    }
-
-    /**
-     * Dataset Demo Siswa Hadir yang 100% Cocok dengan Referensi Desain
-     */
-    private fun getDemoSiswaHadir(): List<SiswaHadirWalasModel> {
-        return listOf(
-            SiswaHadirWalasModel(
-                nomorUrut = "01",
-                siswaId = 1,
-                namaLengkap = "Aditya Pratama Putra",
-                nisn = "0067821901",
-                waktuMasuk = "06:42",
-                status = "Hadir"
-            ),
-            SiswaHadirWalasModel(
-                nomorUrut = "02",
-                siswaId = 2,
-                namaLengkap = "Annisa Nurul Hidayah",
-                nisn = "0067821902",
-                waktuMasuk = "06:50",
-                status = "Hadir"
-            ),
-            SiswaHadirWalasModel(
-                nomorUrut = "05",
-                siswaId = 5,
-                namaLengkap = "Dimas Arya Nugraha",
-                nisn = "0067821905",
-                waktuMasuk = "06:58",
-                status = "Hadir"
-            ),
-            SiswaHadirWalasModel(
-                nomorUrut = "07",
-                siswaId = 7,
-                namaLengkap = "Gita Kirana Safitri",
-                nisn = "0067821907",
-                waktuMasuk = "07:04",
-                status = "Hadir"
-            )
-        )
     }
 
     override fun onDestroyView() {

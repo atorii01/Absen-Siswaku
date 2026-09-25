@@ -58,14 +58,10 @@ class AntreanIzinAdapter(
             binding.tvNomorUrut.text = displayPos
 
             // 2. Identitas Siswa
-            val nama = item.siswa?.namaLengkap
-                ?: if (item.keterangan.contains("Bagas", true)) "Bagas Wahyu Santoso"
-                else if (item.keterangan.contains("Cantika", true)) "Cantika Dewi Maharani"
-                else if (item.keterangan.contains("Fadhil", true)) "Fadhil Rahman Hakim"
-                else if (item.keterangan.contains("Hafiz", true)) "Hafiz Maulana Zaki"
-                else "Siswa SMKN 8 (${item.siswaId})"
+            val nama = item.siswa?.namaLengkap?.takeIf { it.isNotEmpty() }
+                ?: "Siswa ${item.siswaId}"
 
-            val nisn = item.siswa?.nisn?.takeIf { it.isNotEmpty() } ?: "00678219${String.format("%02d", posNumber)}"
+            val nisn = item.siswa?.nisn?.takeIf { it.isNotEmpty() } ?: "-"
             val jam = item.createdAt?.substringAfter("T")?.take(5) ?: "06:45"
             binding.tvNamaSiswa.text = nama
 
@@ -131,8 +127,8 @@ class AntreanIzinAdapter(
 
             // 5. Lampiran Berkas Bukti
             val fileName = item.buktiBerkasUrl?.substringAfterLast("/")?.takeIf { it.isNotEmpty() }
-                ?: if (jenis.equals("SAKIT", true)) "Surat_Dokter_RSUD_${nama.substringBefore(" ")}.pdf"
-                else if (jenis.equals("IZIN", true)) "Surat_Permohonan_Ortu.jpg"
+                ?: if (jenis.equals("SAKIT", true)) "Surat_Keterangan_Sakit.pdf"
+                else if (jenis.equals("IZIN", true)) "Surat_Permohonan_Izin.jpg"
                 else if (jenis.equals("DISPENSASI", true)) "Surat_Tugas_Kesiswaan.pdf"
                 else null
 

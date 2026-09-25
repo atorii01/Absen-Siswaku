@@ -35,7 +35,9 @@ data class SiswaMiniResponse(
     @SerializedName("nisn")
     val nisn: String? = null,
     @SerializedName("id_kelas")
-    val idKelas: Int? = null
+    val idKelas: Int? = null,
+    @SerializedName("rombel_kelas")
+    val rombelKelas: RombelKelasResponse? = null
 )
 
 data class SiswaHadirWalasModel(

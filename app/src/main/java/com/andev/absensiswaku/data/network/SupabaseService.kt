@@ -61,7 +61,8 @@ interface SupabaseService {
     @GET("pengajuan_izin")
     fun getAntreanIzinWalas(
         @Query("status_verifikasi") status: String = "eq.Pending",
-        @Query("select") select: String = "*,siswa(id,nama_lengkap,nisn,id_kelas)",
+        @Query("select") select: String = "*,siswa(*,rombel_kelas(*))",
+        @Query("siswa.id_kelas") filterKelas: String,
         @Query("order") order: String = "created_at.desc,tanggal_mulai.desc"
     ): Call<List<PengajuanIzinResponse>>
 
@@ -75,7 +76,8 @@ interface SupabaseService {
     @GET("presensi_harian")
     fun getPresensiHariIniWalas(
         @Query("tanggal") filterTanggal: String,
-        @Query("select") select: String = "*,siswa(id,nama_lengkap,nisn,id_kelas)",
+        @Query("id_kelas") filterKelas: String,
+        @Query("select") select: String = "*,siswa(*,rombel_kelas(*))",
         @Query("order") order: String = "waktu_masuk.asc"
     ): Call<List<RiwayatModel>>
 

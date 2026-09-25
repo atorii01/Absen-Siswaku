@@ -365,12 +365,21 @@ class LoginActivity : AppCompatActivity() {
     private fun performGuruLogin(identifier: String, secret: String) {
         showLoading(true)
 
-        val namaWalas = if (identifier.contains("farauk", true) || identifier.contains("walas", true) || identifier == "admin") {
+        val namaWalas = if (identifier.contains("farauk", true)) {
             "Farauk Pratama, S.Kom."
         } else {
-            "Wali Kelas ($identifier)"
+            "Herlina, S.E"
         }
-        val namaKelas = "12 RPL 1"
+        val namaKelas = if (identifier.contains("farauk", true)) {
+            "12 RPL 1"
+        } else {
+            "XII AKL 1"
+        }
+        val jurusan = if (identifier.contains("farauk", true)) {
+            "Rekayasa Perangkat Lunak"
+        } else {
+            "Akuntansi dan Keuangan Lembaga"
+        }
         val idKelas = 1
 
         val isRememberChecked = binding.cbRememberMe.isChecked
@@ -404,7 +413,7 @@ class LoginActivity : AppCompatActivity() {
             nama = namaWalas,
             kelasId = idKelas,
             namaKelas = namaKelas,
-            jurusan = "Rekayasa Perangkat Lunak",
+            jurusan = jurusan,
             waliKelas = namaWalas
         )
 
