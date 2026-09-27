@@ -1,0 +1,654 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/screen_bg">
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:clipToPadding="false"
+            android:orientation="vertical"
+            android:paddingTop="12dp"
+            android:paddingBottom="40dp">
+
+            <!-- ================= 1. TOP BAR ================= -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingHorizontal="16dp">
+
+                <!-- Logo Toga SMKN 8 -->
+                <LinearLayout
+                    android:layout_width="38dp"
+                    android:layout_height="38dp"
+                    android:background="@drawable/bg_icon_squircle_teal"
+                    android:gravity="center">
+
+                    <ImageView
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:contentDescription="Toga SMKN 8 Jakarta"
+                        android:src="@drawable/ic_toga"
+                        app:tint="@color/primary_teal" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="SMKN 8 Jakarta"
+                        android:textColor="@color/primary_teal"
+                        android:textSize="15sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:letterSpacing="0.04"
+                        android:text="PORTAL WALI KELAS"
+                        android:textColor="@color/primary_teal"
+                        android:textSize="11sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <!-- Avatar Wali Kelas -->
+                <ImageView
+                    android:id="@+id/imgAvatarWalas"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:contentDescription="Avatar Wali Kelas"
+                    android:src="@drawable/ic_avatar" />
+            </LinearLayout>
+
+            <!-- ================= 2. PILL STATUS TAHUN AJARAN & DAPODIK ================= -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginTop="14dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <!-- Pill Semester Ganjil -->
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="30dp"
+                    android:background="@drawable/bg_badge_pill_gray"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingHorizontal="10dp">
+
+                    <ImageView
+                        android:layout_width="14dp"
+                        android:layout_height="14dp"
+                        android:contentDescription="Kalender"
+                        android:src="@drawable/ic_calendar"
+                        app:tint="@color/text_secondary" />
+
+                    <TextView
+                        android:id="@+id/tvTahunAjaran"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="6dp"
+                        android:text="Tahun Ajaran 2026/2027 • Ganjil"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="11sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="1dp"
+                    android:layout_weight="1" />
+
+                <!-- Badge Hijau Terkoneksi Dapodik -->
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="30dp"
+                    android:background="@drawable/bg_badge_pill_verified_teal"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingHorizontal="10dp">
+
+                    <View
+                        android:layout_width="8dp"
+                        android:layout_height="8dp"
+                        android:background="@drawable/bg_dot_status_online" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="6dp"
+                        android:text="Terkoneksi Dapodik"
+                        android:textColor="@color/primary_teal"
+                        android:textSize="11sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- ================= 3. JUDUL HALAMAN & SUBTEKS ================= -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginTop="16dp"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/tvTitleLaporan"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Pusat Rekap &amp; Laporan Kelas"
+                    android:textColor="@color/text_primary"
+                    android:textSize="20sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tvSubHeaderWalas"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="3dp"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="13sp"
+                    tools:text="Kelas binaan: XII RPL • Wali Kelas: Farauk Pratama, S.Kom." />
+            </LinearLayout>
+
+            <!-- ================= 4. PEMILIH PERIODE WAKTU (FILTER CHIPS) ================= -->
+            <HorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:clipToPadding="false"
+                android:paddingHorizontal="16dp"
+                android:scrollbars="none">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <!-- Chip 1: Bulan Ini (Default Aktif) -->
+                    <LinearLayout
+                        android:id="@+id/chipBulanIni"
+                        android:layout_width="wrap_content"
+                        android:layout_height="38dp"
+                        android:background="@drawable/bg_chip_month_active"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center"
+                        android:paddingHorizontal="16dp">
+
+                        <TextView
+                            android:id="@+id/tvChipBulanIni"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Bulan Ini (September 2026)"
+                            android:textColor="@color/white"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <!-- Chip 2: Semester Ganjil -->
+                    <LinearLayout
+                        android:id="@+id/chipSemester"
+                        android:layout_width="wrap_content"
+                        android:layout_height="38dp"
+                        android:layout_marginStart="8dp"
+                        android:background="@drawable/bg_chip_month_inactive"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center"
+                        android:paddingHorizontal="16dp">
+
+                        <TextView
+                            android:id="@+id/tvChipSemester"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Semester Ganjil"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="12sp" />
+                    </LinearLayout>
+
+                    <!-- Chip 3: Rentang Kustom -->
+                    <LinearLayout
+                        android:id="@+id/chipRentangKustom"
+                        android:layout_width="wrap_content"
+                        android:layout_height="38dp"
+                        android:layout_marginStart="8dp"
+                        android:background="@drawable/bg_chip_month_inactive"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center"
+                        android:paddingHorizontal="16dp">
+
+                        <ImageView
+                            android:layout_width="14dp"
+                            android:layout_height="14dp"
+                            android:layout_marginEnd="6dp"
+                            android:contentDescription="Pilih Tanggal"
+                            android:src="@drawable/ic_calendar"
+                            app:tint="@color/text_secondary" />
+
+                        <TextView
+                            android:id="@+id/tvChipRentangKustom"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Rentang Kustom"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="12sp" />
+                    </LinearLayout>
+                </LinearLayout>
+            </HorizontalScrollView>
+
+            <!-- ================= 5. CARD RINGKASAN AKUMULASI KEHADIRAN KELAS ================= -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginTop="16dp"
+                app:cardBackgroundColor="@color/card_bg"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="0dp"
+                app:strokeColor="@color/border_stroke"
+                app:strokeWidth="1dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <!-- Header Card: Ikon Grafik + Title + Badge Persentase -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:contentDescription="Grafik Tren"
+                            android:src="@drawable/ic_trending_up"
+                            app:tint="@color/primary_teal" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:layout_weight="1"
+                            android:text="Persentase Kehadiran Kelas"
+                            android:textColor="@color/text_primary"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tvDisiplinPercentage"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:background="@drawable/bg_badge_pill_verified_green"
+                            android:paddingHorizontal="10dp"
+                            android:paddingVertical="4dp"
+                            android:textColor="@color/badge_hadir_text"
+                            android:textSize="12sp"
+                            android:textStyle="bold"
+                            tools:text="96.4% Disiplin" />
+                    </LinearLayout>
+
+                    <!-- Progress Bar Horizontal Tebal -->
+                    <ProgressBar
+                        android:id="@+id/progressKehadiranKelas"
+                        style="?android:attr/progressBarStyleHorizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="10dp"
+                        android:layout_marginTop="14dp"
+                        android:max="100"
+                        android:progress="96"
+                        android:progressTint="@color/primary_teal" />
+
+                    <!-- 4 Mini Metrik Berdampingan -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:orientation="horizontal">
+
+                        <!-- Hadir -->
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <LinearLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal">
+
+                                <View
+                                    android:layout_width="8dp"
+                                    android:layout_height="8dp"
+                                    android:background="@drawable/bg_dot_emerald" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="4dp"
+                                    android:text="Hadir"
+                                    android:textColor="@color/text_secondary"
+                                    android:textSize="11sp" />
+                            </LinearLayout>
+
+                            <TextView
+                                android:id="@+id/tvTotalHadir"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="2dp"
+                                android:textColor="@color/text_primary"
+                                android:textSize="13sp"
+                                android:textStyle="bold"
+                                tools:text="34 Siswa" />
+                        </LinearLayout>
+
+                        <!-- Terlambat -->
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <LinearLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal">
+
+                                <View
+                                    android:layout_width="8dp"
+                                    android:layout_height="8dp"
+                                    android:background="@drawable/bg_dot_amber" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="4dp"
+                                    android:text="Terlambat"
+                                    android:textColor="@color/text_secondary"
+                                    android:textSize="11sp" />
+                            </LinearLayout>
+
+                            <TextView
+                                android:id="@+id/tvTotalTerlambat"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="2dp"
+                                android:textColor="@color/text_primary"
+                                android:textSize="13sp"
+                                android:textStyle="bold"
+                                tools:text="1 Siswa" />
+                        </LinearLayout>
+
+                        <!-- Sakit & Izin -->
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <LinearLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal">
+
+                                <View
+                                    android:layout_width="8dp"
+                                    android:layout_height="8dp"
+                                    android:background="@drawable/bg_dot_blue" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="4dp"
+                                    android:text="Izin/Sakit"
+                                    android:textColor="@color/text_secondary"
+                                    android:textSize="11sp" />
+                            </LinearLayout>
+
+                            <TextView
+                                android:id="@+id/tvTotalIzinSakit"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="2dp"
+                                android:textColor="@color/text_primary"
+                                android:textSize="13sp"
+                                android:textStyle="bold"
+                                tools:text="1 Siswa" />
+                        </LinearLayout>
+
+                        <!-- Alpa -->
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <LinearLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal">
+
+                                <View
+                                    android:layout_width="8dp"
+                                    android:layout_height="8dp"
+                                    android:background="@drawable/bg_dot_red" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="4dp"
+                                    android:text="Alpa"
+                                    android:textColor="@color/text_secondary"
+                                    android:textSize="11sp" />
+                            </LinearLayout>
+
+                            <TextView
+                                android:id="@+id/tvTotalAlpa"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="2dp"
+                                android:textColor="@color/text_primary"
+                                android:textSize="13sp"
+                                android:textStyle="bold"
+                                tools:text="0 Siswa" />
+                        </LinearLayout>
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- ================= 6. CARD TOMBOL EKSPOR BERKAS LAPORAN RESMI ================= -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginTop="16dp"
+                app:cardBackgroundColor="@color/primary_teal_container"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="0dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <ImageView
+                            android:layout_width="28dp"
+                            android:layout_height="28dp"
+                            android:contentDescription="Dokumen PDF"
+                            android:src="@drawable/ic_pdf_doc"
+                            app:tint="@color/white" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="10dp"
+                            android:text="Ekspor Lembar Rekap Resmi (.PDF)"
+                            android:textColor="@color/white"
+                            android:textSize="15sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:alpha="0.88"
+                        android:lineSpacingExtra="2dp"
+                        android:text="Dokumen rekap kehadiran bulanan kelas dengan kop resmi SMKN 8 Jakarta, cap digital, dan tanda tangan Wali Kelas."
+                        android:textColor="@color/white"
+                        android:textSize="12sp" />
+
+                    <!-- Tombol Putih Solid Unduh PDF -->
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnUnduhPdfKelas"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:layout_marginTop="14dp"
+                        android:backgroundTint="@color/white"
+                        android:stateListAnimator="@null"
+                        android:text="📥 Unduh Laporan PDF Kelas"
+                        android:textAllCaps="false"
+                        android:textColor="@color/on_primary_teal_container"
+                        android:textSize="13sp"
+                        android:textStyle="bold"
+                        app:cornerRadius="12dp" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- ================= 7. BAGIAN HISTORI PRESENSI HARIAN KELAS ================= -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginTop="20dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:contentDescription="Histori"
+                    android:src="@drawable/ic_calendar"
+                    app:tint="@color/primary_teal" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:layout_weight="1"
+                    android:text="Histori Kehadiran Harian Rombel"
+                    android:textColor="@color/text_primary"
+                    android:textSize="15sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tvLabelUrut"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_badge_pill_gray"
+                    android:paddingHorizontal="8dp"
+                    android:paddingVertical="3dp"
+                    android:text="Urut Terbaru"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="11sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <!-- Loading Spinner -->
+            <ProgressBar
+                android:id="@+id/progressBarLoading"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="24dp"
+                android:indeterminateTint="@color/primary_teal"
+                android:visibility="gone" />
+
+            <!-- Empty State -->
+            <LinearLayout
+                android:id="@+id/layoutEmptyState"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="32dp"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:paddingHorizontal="24dp"
+                android:visibility="gone">
+
+                <ImageView
+                    android:layout_width="64dp"
+                    android:layout_height="64dp"
+                    android:alpha="0.4"
+                    android:contentDescription="Kosong"
+                    android:src="@drawable/ic_folder_check"
+                    app:tint="@color/text_secondary" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="Belum Ada Rekap Presensi"
+                    android:textColor="@color/text_primary"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:gravity="center"
+                    android:text="Data presensi rombel untuk periode ini belum tersedia di server."
+                    android:textColor="@color/text_secondary"
+                    android:textSize="12sp" />
+            </LinearLayout>
+
+            <!-- RecyclerView Riwayat Harian Kelas -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvRiwayatHarianKelas"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:nestedScrollingEnabled="false"
+                tools:itemCount="5"
+                tools:listitem="@layout/item_rekap_harian_walas" />
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

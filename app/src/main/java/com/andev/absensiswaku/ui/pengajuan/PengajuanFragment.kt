@@ -236,36 +236,42 @@ class PengajuanFragment : Fragment() {
     private fun updateDateDisplays() {
         if (!isAdded || _binding == null) return
 
-        val sdfDate = SimpleDateFormat("dd MMM yyyy", Locale.forLanguageTag("id-ID"))
-        val sdfDay = SimpleDateFormat("EEEE", Locale.forLanguageTag("id-ID"))
-        val sdfSql = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        try {
+            val sdfDate = SimpleDateFormat("dd MMM yyyy", Locale.forLanguageTag("id-ID"))
+            val sdfDay = SimpleDateFormat("EEEE", Locale.forLanguageTag("id-ID"))
+            val sdfSql = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
 
-        sdfDate.timeZone = TimeZone.getTimeZone("Asia/Jakarta")
-        sdfDay.timeZone = TimeZone.getTimeZone("Asia/Jakarta")
-        sdfSql.timeZone = TimeZone.getTimeZone("Asia/Jakarta")
+            sdfDate.timeZone = TimeZone.getTimeZone("Asia/Jakarta")
+            sdfDay.timeZone = TimeZone.getTimeZone("Asia/Jakarta")
+            sdfSql.timeZone = TimeZone.getTimeZone("Asia/Jakarta")
 
-        val startDate = Date(startDateMillis)
-        val endDate = Date(endDateMillis)
+            val startDate = Date(startDateMillis)
+            val endDate = Date(endDateMillis)
 
-        tanggalMulaiStr = sdfSql.format(startDate)
-        tanggalSelesaiStr = sdfSql.format(endDate)
+            tanggalMulaiStr = sdfSql.format(startDate)
+            tanggalSelesaiStr = sdfSql.format(endDate)
 
-        val startFormatted = sdfDate.format(startDate)
-        val startDay = sdfDay.format(startDate)
+            val startFormatted = sdfDate.format(startDate)
+            val startDay = sdfDay.format(startDate)
 
-        val endFormatted = sdfDate.format(endDate)
-        val endDay = sdfDay.format(endDate)
+            val endFormatted = sdfDate.format(endDate)
+            val endDay = sdfDay.format(endDate)
 
-        val diffMillis = (endDateMillis - startDateMillis).coerceAtLeast(0)
-        val durationDays = ((diffMillis / (1000 * 60 * 60 * 24)) + 1).toInt()
+            val diffMillis = (endDateMillis - startDateMillis).coerceAtLeast(0)
+            val durationDays = ((diffMillis / (1000 * 60 * 60 * 24)) + 1).toInt()
 
-        binding.tvTanggalMulaiVal.text = startFormatted
-        binding.tvHariMulaiSub.text = startDay
+            binding.tvTanggalMulaiVal.text = startFormatted
+            binding.tvHariMulaiSub.text = startDay
 
-        binding.tvTanggalSelesaiVal.text = endFormatted
-        binding.tvHariSelesaiSub.text = "$endDay ($durationDays Hari)"
+            binding.tvTanggalSelesaiVal.text = endFormatted
+            binding.tvHariSelesaiSub.text = "$endDay ($durationDays Hari)"
 
-        binding.tvDurasiInfo.text = "Total durasi ketidakhadiran: $durationDays Hari Kalender Sekolah"
+            binding.tvDurasiInfo.text = "Total durasi ketidakhadiran: $durationDays Hari Kalender Sekolah"
+        } catch (e: Exception) {
+            binding.tvTanggalMulaiVal.text = "-"
+            binding.tvTanggalSelesaiVal.text = "-"
+            binding.tvDurasiInfo.text = "Periode tanggal telah ditentukan."
+        }
     }
 
     private fun setupFileUpload() {
@@ -293,26 +299,52 @@ class PengajuanFragment : Fragment() {
     }
 
     /**
-     * Konversi URI gambar ke string Base64 dengan kompresi proporsional (max width 800px)
+     * Konversi URI gambar ke string Base64 dengan inSampleSize & pengaman OutOfMemoryError
      */
     private fun uriToBase64(uri: Uri): String? {
+        val ctx = context ?: return null
         return try {
-            val inputStream = requireContext().contentResolver.openInputStream(uri)
-            val originalBitmap = BitmapFactory.decodeStream(inputStream) ?: return null
+            val resolver = ctx.contentResolver
+
+            // 1. Ambil dimensi gambar terlebih dahulu tanpa load ke memori
+            val options = BitmapFactory.Options().apply {
+                inJustDecodeBounds = true
+            }
+            resolver.openInputStream(uri)?.use { stream ->
+                BitmapFactory.decodeStream(stream, null, options)
+            }
+
+            // 2. Perkecil sample size jika ukuran gambar lebih dari 1000px
+            var inSampleSize = 1
+            while ((options.outHeight / inSampleSize) >= 1000 || (options.outWidth / inSampleSize) >= 1000) {
+                inSampleSize *= 2
+            }
+
+            options.inJustDecodeBounds = false
+            options.inSampleSize = inSampleSize
+
+            // 3. Decode dengan inSampleSize aman
+            val sampledBitmap = resolver.openInputStream(uri)?.use { stream ->
+                BitmapFactory.decodeStream(stream, null, options)
+            } ?: return null
 
             // Resize proporsional dengan lebar maksimal 800px
             val targetWidth = 800
-            val finalBitmap = if (originalBitmap.width > targetWidth) {
-                val targetHeight = (originalBitmap.height * (targetWidth.toFloat() / originalBitmap.width)).toInt().coerceAtLeast(1)
-                Bitmap.createScaledBitmap(originalBitmap, targetWidth, targetHeight, true)
+            val finalBitmap = if (sampledBitmap.width > targetWidth) {
+                val targetHeight = (sampledBitmap.height * (targetWidth.toFloat() / sampledBitmap.width)).toInt().coerceAtLeast(1)
+                Bitmap.createScaledBitmap(sampledBitmap, targetWidth, targetHeight, true)
             } else {
-                originalBitmap
+                sampledBitmap
             }
 
             val outputStream = ByteArrayOutputStream()
             finalBitmap.compress(Bitmap.CompressFormat.JPEG, 70, outputStream)
             val byteArray = outputStream.toByteArray()
             "data:image/jpeg;base64," + Base64.encodeToString(byteArray, Base64.NO_WRAP)
+        } catch (oom: OutOfMemoryError) {
+            System.gc()
+            Toast.makeText(context, "Ukuran foto terlalu besar untuk diproses.", Toast.LENGTH_SHORT).show()
+            null
         } catch (e: Exception) {
             e.printStackTrace()
             null
@@ -419,28 +451,36 @@ class PengajuanFragment : Fragment() {
 
     private fun getFileNameFromUri(uri: Uri): String {
         var name = "surat_keterangan_${System.currentTimeMillis()}.pdf"
-        val cursor = context?.contentResolver?.query(uri, null, null, null, null)
-        cursor?.use {
-            if (it.moveToFirst()) {
-                val index = it.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-                if (index != -1) {
-                    name = it.getString(index)
+        try {
+            val cursor = context?.contentResolver?.query(uri, null, null, null, null)
+            cursor?.use {
+                if (it.moveToFirst()) {
+                    val index = it.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                    if (index != -1) {
+                        name = it.getString(index) ?: name
+                    }
                 }
             }
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
         return name
     }
 
     private fun getFileSizeFromUri(uri: Uri): String {
         var sizeBytes = 0L
-        val cursor = context?.contentResolver?.query(uri, null, null, null, null)
-        cursor?.use {
-            if (it.moveToFirst()) {
-                val index = it.getColumnIndex(OpenableColumns.SIZE)
-                if (index != -1) {
-                    sizeBytes = it.getLong(index)
+        try {
+            val cursor = context?.contentResolver?.query(uri, null, null, null, null)
+            cursor?.use {
+                if (it.moveToFirst()) {
+                    val index = it.getColumnIndex(OpenableColumns.SIZE)
+                    if (index != -1) {
+                        sizeBytes = it.getLong(index)
+                    }
                 }
             }
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
         return if (sizeBytes > 0) {
             val mb = sizeBytes / (1024f * 1024f)

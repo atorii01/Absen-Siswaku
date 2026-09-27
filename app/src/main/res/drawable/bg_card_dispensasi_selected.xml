@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="rectangle">
-    <solid android:color="#FEF3C7" />
+    <solid android:color="@color/badge_terlambat_bg" />
     <stroke
         android:width="2dp"
-        android:color="#F59E0B" />
+        android:color="@color/badge_terlambat_text" />
     <corners android:radius="14dp" />
 </shape>

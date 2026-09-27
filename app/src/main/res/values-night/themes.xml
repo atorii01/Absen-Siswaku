@@ -1,8 +1,18 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
+    <!-- Base application theme for Night / Dark Mode. -->
     <style name="Base.Theme.AbsenSiswaku" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your dark theme here. -->
-        <!-- <item name="colorPrimary">@color/my_dark_primary</item> -->
+        <item name="colorPrimary">@color/primary_teal</item>
+        <item name="colorOnPrimary">#090E17</item>
+        <item name="colorPrimaryContainer">@color/primary_teal_container</item>
+        <item name="colorOnPrimaryContainer">@color/on_primary_teal_container</item>
+        <item name="android:windowBackground">@color/screen_bg</item>
+        <item name="colorSurface">@color/card_bg</item>
+        <item name="colorOnSurface">@color/text_primary</item>
+        <item name="colorSurfaceVariant">@color/input_bg</item>
+        <item name="colorOnSurfaceVariant">@color/text_secondary</item>
+        <item name="colorOutline">@color/card_stroke</item>
+        <item name="android:statusBarColor">@color/screen_bg</item>
+        <item name="android:navigationBarColor">@color/screen_bg</item>
     </style>
 
     <style name="Theme.AbsenSiswaku" parent="Base.Theme.AbsenSiswaku" />

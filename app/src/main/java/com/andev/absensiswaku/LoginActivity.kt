@@ -27,7 +27,7 @@ class LoginActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityLoginBinding
     private lateinit var sessionManager: SessionManager
-    private var currentRoleTab: String = "SISWA"
+    private var selectedRoleTab: String = "SISWA"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         val pref = getSharedPreferences("PREF_SMKN8_SESSION", Context.MODE_PRIVATE)
@@ -39,6 +39,35 @@ class LoginActivity : AppCompatActivity() {
         }
 
         super.onCreate(savedInstanceState)
+
+        // 3. Pengecekan Sesi Aktif di onCreate()
+        val isLoggedIn = pref.getBoolean("KEY_IS_LOGGED_IN", false) || pref.getBoolean("is_logged_in", false)
+        val role = pref.getString("ROLE", "") ?: pref.getString("role", "") ?: ""
+
+        if (isLoggedIn) {
+            if (role.equals("SISWA", true)) {
+                val intent = Intent(this, MainActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                }
+                startActivity(intent)
+                finish()
+                return
+            } else if (role.equals("GURU_MAPEL", true)) {
+                val intent = Intent(this, GuruMainActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                }
+                startActivity(intent)
+                finish()
+                return
+            } else if (role.equals("WALI_KELAS", true) || role.equals("GURU", true)) {
+                val intent = Intent(this, WalasMainActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                }
+                startActivity(intent)
+                finish()
+                return
+            }
+        }
 
         sessionManager = SessionManager(this)
 
@@ -78,12 +107,12 @@ class LoginActivity : AppCompatActivity() {
             if (!isChecked) return@addOnButtonCheckedListener
             when (checkedId) {
                 R.id.btnTabSiswa -> {
-                    if (currentRoleTab != "SISWA") {
+                    if (selectedRoleTab != "SISWA") {
                         switchToSiswaTab()
                     }
                 }
                 R.id.btnTabGuru -> {
-                    if (currentRoleTab != "GURU") {
+                    if (selectedRoleTab != "GURU") {
                         switchToGuruTab()
                     }
                 }
@@ -92,7 +121,7 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun switchToSiswaTab() {
-        currentRoleTab = "SISWA"
+        selectedRoleTab = "SISWA"
 
         val tealColor = ContextCompat.getColor(this, R.color.primary_teal)
         val textPrimaryColor = ContextCompat.getColor(this, R.color.text_primary)
@@ -137,7 +166,7 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun switchToGuruTab() {
-        currentRoleTab = "GURU"
+        selectedRoleTab = "GURU"
 
         val tealColor = ContextCompat.getColor(this, R.color.primary_teal)
         val textPrimaryColor = ContextCompat.getColor(this, R.color.text_primary)
@@ -216,7 +245,7 @@ class LoginActivity : AppCompatActivity() {
 
             var isValid = true
             if (inputIdentifier.isEmpty()) {
-                val label = if (currentRoleTab == "SISWA") "NISN" else "Username"
+                val label = if (selectedRoleTab == "SISWA") "NISN" else "Username"
                 binding.tilIdentifier.error = "$label wajib diisi"
                 isValid = false
             } else {
@@ -224,7 +253,7 @@ class LoginActivity : AppCompatActivity() {
             }
 
             if (inputSecret.isEmpty()) {
-                val label = if (currentRoleTab == "SISWA") "PIN Presensi" else "Password"
+                val label = if (selectedRoleTab == "SISWA") "PIN Presensi" else "Password"
                 binding.tilSecret.error = "$label wajib diisi"
                 isValid = false
             } else {
@@ -233,7 +262,7 @@ class LoginActivity : AppCompatActivity() {
 
             if (!isValid) return@setOnClickListener
 
-            if (currentRoleTab == "SISWA") {
+            if (selectedRoleTab == "SISWA") {
                 performSiswaLogin(inputIdentifier, inputSecret)
             } else {
                 performGuruLogin(inputIdentifier, inputSecret)
@@ -296,6 +325,14 @@ class LoginActivity : AppCompatActivity() {
 
                         val pref = getSharedPreferences("PREF_SMKN8_SESSION", Context.MODE_PRIVATE)
                         pref.edit().apply {
+                            putString("ROLE", "SISWA")
+                            putString("role", "SISWA")
+                            putInt("ID_SISWA", siswa.id ?: 0)
+                            putString("NAMA_SISWA", siswa.namaLengkap ?: "")
+                            putString("NISN", siswa.nisn ?: currentNisn)
+                            putInt("ID_KELAS", siswa.idKelas ?: (siswa.rombelKelas?.id ?: 0))
+                            putString("KELAS", siswa.rombelKelas?.namaKelas ?: "-")
+                            putString("WALI_KELAS", siswa.rombelKelas?.waliKelas?.namaLengkap ?: "-")
                             putBoolean("KEY_IS_LOGGED_IN", true)
                             putBoolean("is_logged_in", true)
                             putBoolean("KEY_REMEMBER_DEVICE", isRememberChecked)
@@ -306,13 +343,6 @@ class LoginActivity : AppCompatActivity() {
                                 remove("SAVED_NISN")
                                 remove("SAVED_PIN")
                             }
-                            // Simpan session siswa aktif untuk dipakai di portal
-                            putInt("ID_SISWA", siswa.id ?: 0)
-                            putString("NAMA_SISWA", siswa.namaLengkap ?: "")
-                            putString("NISN", siswa.nisn ?: currentNisn)
-                            siswa.rombelKelas?.id?.let { putInt("ID_KELAS", it) }
-                            putString("KELAS", siswa.rombelKelas?.namaKelas ?: "-")
-                            putString("WALI_KELAS", siswa.rombelKelas?.waliKelas?.namaLengkap ?: "-")
                             apply()
                         }
 
@@ -333,7 +363,9 @@ class LoginActivity : AppCompatActivity() {
                             Toast.LENGTH_SHORT
                         ).show()
 
-                        val intent = Intent(this@LoginActivity, MainActivity::class.java)
+                        val intent = Intent(this@LoginActivity, MainActivity::class.java).apply {
+                            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                        }
                         startActivity(intent)
                         finish()
                     } else {
@@ -379,6 +411,7 @@ class LoginActivity : AppCompatActivity() {
                     val rombel = user?.rombelKelas?.firstOrNull()
 
                     val role = user?.role ?: "WALI_KELAS"
+                    val idWalas = user?.id ?: "walas-1"
                     val namaWalas = user?.namaLengkap
                         ?: if (identifier.contains("farauk", true)) "Farauk Pratama, S.Kom."
                         else identifier
@@ -386,24 +419,26 @@ class LoginActivity : AppCompatActivity() {
                     val namaKelas = rombel?.namaKelas ?: "XII RPL"
                     val jurusan = rombel?.jurusan ?: "Rekayasa Perangkat Lunak"
 
-                    saveGuruSessionAndNavigate(role, namaWalas, idKelas, namaKelas, jurusan, identifier, secret, isRememberChecked)
+                    saveGuruSessionAndNavigate(role, idWalas, namaWalas, idKelas, namaKelas, jurusan, identifier, secret, isRememberChecked)
                 }
 
                 override fun onFailure(call: Call<List<UserResponse>>, t: Throwable) {
                     showLoading(false)
                     val role = "WALI_KELAS"
+                    val idWalas = "walas-1"
                     val namaWalas = if (identifier.contains("farauk", true)) "Farauk Pratama, S.Kom." else identifier
                     val idKelas = 9
                     val namaKelas = "XII RPL"
                     val jurusan = "Rekayasa Perangkat Lunak"
 
-                    saveGuruSessionAndNavigate(role, namaWalas, idKelas, namaKelas, jurusan, identifier, secret, isRememberChecked)
+                    saveGuruSessionAndNavigate(role, idWalas, namaWalas, idKelas, namaKelas, jurusan, identifier, secret, isRememberChecked)
                 }
             })
     }
 
     private fun saveGuruSessionAndNavigate(
         role: String,
+        idWalas: String,
         namaWalas: String,
         idKelas: Int,
         namaKelas: String,
@@ -416,6 +451,7 @@ class LoginActivity : AppCompatActivity() {
         pref.edit().apply {
             putString("ROLE", role)
             putString("role", role)
+            putString("ID_WALAS", idWalas)
             putString("NAMA_WALAS", namaWalas)
             putInt("ID_KELAS", idKelas)
             putString("NAMA_KELAS", namaKelas)
@@ -446,14 +482,23 @@ class LoginActivity : AppCompatActivity() {
             waliKelas = namaWalas
         )
 
+        val isGuruMapel = role.equals("GURU_MAPEL", true) ||
+                identifier.contains("mapel", true)
+
+        val targetActivity = if (isGuruMapel) {
+            GuruMainActivity::class.java
+        } else {
+            WalasMainActivity::class.java
+        }
+
+        val roleLabel = if (isGuruMapel) "Guru Mapel" else "Wali Kelas $namaKelas"
         Toast.makeText(
             this@LoginActivity,
-            "✓ Selamat Datang, $namaWalas (Wali Kelas $namaKelas)",
+            "✓ Selamat Datang, $namaWalas ($roleLabel)",
             Toast.LENGTH_SHORT
         ).show()
 
-        // Navigasi WAJIB ke WalasMainActivity, BUKAN MainActivity
-        val intent = Intent(this@LoginActivity, WalasMainActivity::class.java).apply {
+        val intent = Intent(this@LoginActivity, targetActivity).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
         startActivity(intent)

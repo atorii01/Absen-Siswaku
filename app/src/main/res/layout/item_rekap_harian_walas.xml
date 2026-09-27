@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="16dp"
+    android:layout_marginVertical="6dp"
+    app:cardBackgroundColor="@color/card_bg"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="0dp"
+    app:strokeColor="@color/border_stroke"
+    app:strokeWidth="1dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- Baris 1: Tanggal & Badge Kelengkapan -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:contentDescription="Kalender"
+                    android:src="@drawable/ic_calendar"
+                    app:tint="@color/primary_teal" />
+
+                <TextView
+                    android:id="@+id/tvTanggalHarian"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:textColor="@color/text_primary"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    tools:text="Jumat, 25 Sep 2026" />
+
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/tvBadgeKelengkapan"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_badge_pill_verified_green"
+                android:paddingHorizontal="10dp"
+                android:paddingVertical="4dp"
+                android:text="✓ Terverifikasi Lengkap"
+                android:textColor="@color/badge_hadir_text"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+
+        </LinearLayout>
+
+        <!-- Garis Tipis Pemisah -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginVertical="10dp"
+            android:background="@color/border_stroke" />
+
+        <!-- Baris 2: Ringkasan Kehadiran & Chevron Rincian -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/tvRingkasanKehadiran"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/text_primary"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    tools:text="35/36 Siswa Hadir (97.2%)" />
+
+                <TextView
+                    android:id="@+id/tvRincianStatus"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="3dp"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="12sp"
+                    tools:text="1 Sakit • 0 Izin • 0 Alpa" />
+
+            </LinearLayout>
+
+            <!-- Tombol / Indikator Rincian -->
+            <LinearLayout
+                android:id="@+id/btnRincianHarian"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center_vertical"
+                android:padding="4dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Rincian"
+                    android:textColor="@color/primary_teal"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:layout_marginStart="2dp"
+                    android:contentDescription="Detail"
+                    android:src="@drawable/ic_chevron_right"
+                    app:tint="@color/primary_teal" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>

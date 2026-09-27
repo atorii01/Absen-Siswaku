@@ -1,0 +1,1159 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/screen_bg">
+
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/nestedScrollView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:clipToPadding="false"
+            android:orientation="vertical"
+            android:paddingTop="12dp"
+            android:paddingBottom="40dp">
+
+            <!-- ================= 2a. TOP BAR & HEADER ================= -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingHorizontal="16dp">
+
+                <!-- Logo Toga SMKN 8 -->
+                <LinearLayout
+                    android:layout_width="38dp"
+                    android:layout_height="38dp"
+                    android:background="@drawable/bg_icon_squircle_teal"
+                    android:gravity="center">
+
+                    <ImageView
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:contentDescription="Toga SMKN 8 Jakarta"
+                        android:src="@drawable/ic_toga"
+                        app:tint="@color/primary_teal" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="SMKN 8 Jakarta"
+                        android:textColor="@color/primary_teal"
+                        android:textSize="15sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:letterSpacing="0.04"
+                        android:text="PORTAL WALI KELAS"
+                        android:textColor="@color/primary_teal"
+                        android:textSize="11sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <!-- Avatar Wali Kelas -->
+                <ImageView
+                    android:id="@+id/imgTopAvatarWalas"
+                    android:layout_width="38dp"
+                    android:layout_height="38dp"
+                    android:contentDescription="Avatar Walas"
+                    android:src="@drawable/ic_avatar" />
+            </LinearLayout>
+
+            <!-- Pill Status Dapodik -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginTop="12dp"
+                android:background="@drawable/bg_badge_pill_active"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingHorizontal="10dp"
+                android:paddingVertical="4dp">
+
+                <ImageView
+                    android:layout_width="14dp"
+                    android:layout_height="14dp"
+                    android:contentDescription="Ikon Database"
+                    android:src="@drawable/ic_database"
+                    app:tint="@color/status_active_green_text" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:text="● SINKRONISASI DAPODIK AKTIF"
+                    android:textColor="@color/status_active_green_text"
+                    android:textSize="10sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <!-- Judul Halaman & Subteks -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginTop="8dp"
+                android:text="Master Data &amp; Kelola Siswa"
+                android:textColor="@color/text_primary"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvSubteksHeader"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginTop="3dp"
+                android:text="Kelola pendaftaran, rombongan belajar, dan pembaruan profil data Dapodik terpadu kelas XII RPL."
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp" />
+
+            <!-- ================= 2b. 3 KARTU RINGKASAN METRIK HORIZONTAL ================= -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginTop="14dp"
+                android:orientation="horizontal">
+
+                <!-- 1. Box "Total Siswa" -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="5dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_card_surface"
+                    android:orientation="vertical"
+                    android:padding="12dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:ellipsize="end"
+                            android:maxLines="1"
+                            android:text="TOTAL SISWA"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="10sp"
+                            android:textStyle="bold" />
+
+                        <FrameLayout
+                            android:layout_width="26dp"
+                            android:layout_height="26dp"
+                            android:background="@drawable/bg_avatar_circle_mint">
+
+                            <ImageView
+                                android:layout_width="14dp"
+                                android:layout_height="14dp"
+                                android:layout_gravity="center"
+                                android:contentDescription="Users"
+                                android:src="@drawable/ic_people"
+                                app:tint="@color/primary_teal" />
+                        </FrameLayout>
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/tvTotalSiswaCount"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:textColor="@color/text_primary"
+                        android:textSize="22sp"
+                        android:textStyle="bold"
+                        tools:text="36" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Terdaftar"
+                        android:textColor="@color/status_active_green_text"
+                        android:textSize="11sp"
+                        android:textStyle="bold" />
+
+                    <!-- Garis Aksen Bawah Teal -->
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="3dp"
+                        android:layout_marginTop="8dp"
+                        android:background="@drawable/bg_badge_pill_active" />
+                </LinearLayout>
+
+                <!-- 2. Box "Rombel" -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="2dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_card_surface"
+                    android:orientation="vertical"
+                    android:padding="12dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:ellipsize="end"
+                            android:maxLines="1"
+                            android:text="ROMBEL"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="10sp"
+                            android:textStyle="bold" />
+
+                        <FrameLayout
+                            android:layout_width="26dp"
+                            android:layout_height="26dp"
+                            android:background="@drawable/bg_avatar_circle_blue">
+
+                            <ImageView
+                                android:layout_width="14dp"
+                                android:layout_height="14dp"
+                                android:layout_gravity="center"
+                                android:contentDescription="Kelas"
+                                android:src="@drawable/ic_school"
+                                app:tint="@color/secondary_blue" />
+                        </FrameLayout>
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/tvMetrikTotalRombel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="1"
+                        android:textColor="@color/text_primary"
+                        android:textSize="22sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvSublabelRombel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        android:textColor="@color/secondary_blue"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        tools:text="XII RPL Reguler" />
+
+                    <!-- Garis Aksen Bawah Biru -->
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="3dp"
+                        android:layout_marginTop="8dp"
+                        android:background="@drawable/bg_badge_pill_blue" />
+                </LinearLayout>
+
+                <!-- 3. Box "Status Aktif" -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="5dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_card_surface"
+                    android:orientation="vertical"
+                    android:padding="12dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:ellipsize="end"
+                            android:maxLines="1"
+                            android:text="AKTIF"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="10sp"
+                            android:textStyle="bold" />
+
+                        <FrameLayout
+                            android:layout_width="26dp"
+                            android:layout_height="26dp"
+                            android:background="@drawable/bg_avatar_circle_mint">
+
+                            <ImageView
+                                android:layout_width="14dp"
+                                android:layout_height="14dp"
+                                android:layout_gravity="center"
+                                android:contentDescription="Checklist"
+                                android:src="@drawable/ic_check_circle"
+                                app:tint="@color/primary_teal" />
+                        </FrameLayout>
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/tvMetrikStatusAktif"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:textColor="@color/text_primary"
+                        android:textSize="22sp"
+                        android:textStyle="bold"
+                        tools:text="36" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="100% Siap"
+                        android:textColor="@color/status_active_green_text"
+                        android:textSize="11sp"
+                        android:textStyle="bold" />
+
+                    <!-- Garis Aksen Bawah Hijau -->
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="3dp"
+                        android:layout_marginTop="8dp"
+                        android:background="@drawable/bg_badge_pill_active" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- ================= 2c. SWITCHER TAB KELOLA (SEGMENTED) ================= -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginTop="14dp"
+                android:background="@drawable/bg_search_box"
+                android:orientation="horizontal"
+                android:padding="3dp">
+
+                <!-- Tab 1: Kelola Siswa -->
+                <TextView
+                    android:id="@+id/btnTabKelolaSiswa"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_segmented_active"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center"
+                    android:text="Kelola Siswa"
+                    android:textColor="@color/primary_teal"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+
+                <!-- Tab 2: Kelola Rombel / Kelas -->
+                <TextView
+                    android:id="@+id/btnTabKelolaRombel"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_segmented_inactive"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center"
+                    android:text="Kelola Rombel / Kelas"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <!-- ================= WRAPPER SECTION SISWA ================= -->
+            <LinearLayout
+                android:id="@+id/layoutSiswaSection"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <!-- ================= 2d. TOMBOL AKSI CEPAT ================= -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="16dp"
+                    android:layout_marginTop="12dp"
+                    android:orientation="horizontal">
+
+                    <!-- Tombol 1: Tambah Siswa Baru (Solid Teal) -->
+                    <LinearLayout
+                        android:id="@+id/btnTambahSiswaBaru"
+                        android:layout_width="0dp"
+                        android:layout_height="44dp"
+                        android:layout_marginEnd="6dp"
+                        android:layout_weight="1.3"
+                        android:background="@drawable/bg_btn_solid_teal"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center"
+                        android:orientation="horizontal"
+                        android:paddingHorizontal="12dp">
+
+                        <ImageView
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:contentDescription="Ikon Tambah"
+                            android:src="@drawable/ic_person_add"
+                            app:tint="@color/white" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:text="Tambah Siswa Baru"
+                            android:textColor="@color/white"
+                            android:textSize="13sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <!-- Tombol 2: Impor Excel (Outlined) -->
+                    <LinearLayout
+                        android:id="@+id/btnImporExcel"
+                        android:layout_width="0dp"
+                        android:layout_height="44dp"
+                        android:layout_marginStart="6dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_btn_outlined_teal"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center"
+                        android:orientation="horizontal"
+                        android:paddingHorizontal="10dp">
+
+                        <ImageView
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:contentDescription="Ikon Excel"
+                            android:src="@drawable/ic_excel"
+                            app:tint="@color/primary_teal" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="6dp"
+                            android:text="Impor Excel"
+                            android:textColor="@color/primary_teal"
+                            android:textSize="13sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- ================= 2e. KARTU FORMULIR ENTRI DATA LANGSUNG (COLLAPSIBLE) ================= -->
+                <LinearLayout
+                    android:id="@+id/cardFormEntri"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="16dp"
+                    android:layout_marginTop="14dp"
+                    android:background="@drawable/bg_card_surface"
+                    android:orientation="vertical"
+                    android:padding="16dp"
+                    android:visibility="gone"
+                    tools:visibility="visible">
+
+                    <!-- Header Bar Form -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <!-- Pill Kiri: Entri Data Langsung -->
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:background="@drawable/bg_badge_pill_blue"
+                            android:paddingHorizontal="10dp"
+                            android:paddingVertical="4dp"
+                            android:text="Entri Data Langsung"
+                            android:textColor="@color/action_blue_text"
+                            android:textSize="11sp"
+                            android:textStyle="bold" />
+
+                        <View
+                            android:layout_width="0dp"
+                            android:layout_height="1dp"
+                            android:layout_weight="1" />
+
+                        <TextView
+                            android:id="@+id/tvModeForm"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Mode: Input Baru"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+
+                        <!-- Tombol Panah Collapse -->
+                        <ImageView
+                            android:id="@+id/btnCollapseForm"
+                            android:layout_width="28dp"
+                            android:layout_height="28dp"
+                            android:layout_marginStart="6dp"
+                            android:background="?attr/selectableItemBackgroundBorderless"
+                            android:contentDescription="Tutup Formulir"
+                            android:padding="4dp"
+                            android:src="@drawable/ic_expand_less"
+                            app:tint="@color/text_secondary" />
+                    </LinearLayout>
+
+                    <!-- Grid Baris 1: NISN & NIK -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:orientation="horizontal">
+
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:id="@+id/tilNisn"
+                            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="6dp"
+                            android:layout_weight="1"
+                            android:hint="NISN (10 DIGIT)*"
+                            app:boxCornerRadiusBottomEnd="10dp"
+                            app:boxCornerRadiusBottomStart="10dp"
+                            app:boxCornerRadiusTopEnd="10dp"
+                            app:boxCornerRadiusTopStart="10dp"
+                            app:boxStrokeColor="@color/primary_teal"
+                            app:hintTextColor="@color/primary_teal">
+
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:id="@+id/etNisn"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:inputType="number"
+                                android:maxLength="10"
+                                android:textSize="13sp" />
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:id="@+id/tilNik"
+                            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="6dp"
+                            android:layout_weight="1"
+                            android:hint="NIK SISWA*"
+                            app:boxCornerRadiusBottomEnd="10dp"
+                            app:boxCornerRadiusBottomStart="10dp"
+                            app:boxCornerRadiusTopEnd="10dp"
+                            app:boxCornerRadiusTopStart="10dp"
+                            app:boxStrokeColor="@color/primary_teal"
+                            app:hintTextColor="@color/primary_teal">
+
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:id="@+id/etNik"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:inputType="number"
+                                android:maxLength="16"
+                                android:textSize="13sp" />
+                        </com.google.android.material.textfield.TextInputLayout>
+                    </LinearLayout>
+
+                    <!-- Baris 2: NAMA LENGKAP SISWA -->
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/tilNamaLengkap"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:hint="NAMA LENGKAP SISWA*"
+                        app:boxCornerRadiusBottomEnd="10dp"
+                        app:boxCornerRadiusBottomStart="10dp"
+                        app:boxCornerRadiusTopEnd="10dp"
+                        app:boxCornerRadiusTopStart="10dp"
+                        app:boxStrokeColor="@color/primary_teal"
+                        app:hintTextColor="@color/primary_teal">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/etNamaLengkap"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="textPersonName|textCapWords"
+                            android:textSize="13sp" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <!-- Grid Baris 3: PILIHAN ROMBEL & JENIS KELAMIN -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <!-- Pilihan Rombel (Dropdown) -->
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:id="@+id/tilPilihanRombel"
+                            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="6dp"
+                            android:layout_weight="1"
+                            android:hint="PILIHAN ROMBEL*"
+                            app:boxCornerRadiusBottomEnd="10dp"
+                            app:boxCornerRadiusBottomStart="10dp"
+                            app:boxCornerRadiusTopEnd="10dp"
+                            app:boxCornerRadiusTopStart="10dp"
+                            app:boxStrokeColor="@color/primary_teal"
+                            app:hintTextColor="@color/primary_teal">
+
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:id="@+id/etPilihanRombel"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:focusable="false"
+                                android:textSize="13sp"
+                                tools:text="XII RPL" />
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                        <!-- Radio Group Jenis Kelamin -->
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="6dp"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="JENIS KELAMIN*"
+                                android:textColor="@color/text_secondary"
+                                android:textSize="11sp"
+                                android:textStyle="bold" />
+
+                            <RadioGroup
+                                android:id="@+id/rgJenisKelamin"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal">
+
+                                <RadioButton
+                                    android:id="@+id/rbLakiLaki"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:checked="true"
+                                    android:text="Laki-laki"
+                                    android:textSize="12sp" />
+
+                                <RadioButton
+                                    android:id="@+id/rbPerempuan"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="4dp"
+                                    android:text="Perempuan"
+                                    android:textSize="12sp" />
+                            </RadioGroup>
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <!-- Baris 4: NO. WHATSAPP WALI MURID -->
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/tilNoWhatsapp"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:hint="NO. WHATSAPP WALI MURID (NOTIFIKASI PRESENSI)*"
+                        app:boxCornerRadiusBottomEnd="10dp"
+                        app:boxCornerRadiusBottomStart="10dp"
+                        app:boxCornerRadiusTopEnd="10dp"
+                        app:boxCornerRadiusTopStart="10dp"
+                        app:boxStrokeColor="@color/primary_teal"
+                        app:hintTextColor="@color/primary_teal">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/etNoWhatsapp"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="phone"
+                            android:textSize="13sp" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <!-- Baris 5: Card Verifikasi Wajah AI -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:background="@drawable/bg_search_box"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:padding="10dp">
+
+                        <ImageView
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:contentDescription="Avatar Wajah Siswa"
+                            android:src="@drawable/ic_avatar" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="10dp"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Verifikasi Wajah AI"
+                                android:textColor="@color/text_primary"
+                                android:textSize="12sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Tersinkronisasi Presensi"
+                                android:textColor="@color/status_active_green_text"
+                                android:textSize="11sp" />
+                        </LinearLayout>
+
+                        <TextView
+                            android:id="@+id/btnUnggahUlangWajah"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:background="?attr/selectableItemBackground"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:padding="6dp"
+                            android:text="Unggah Ulang"
+                            android:textColor="@color/secondary_blue"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <!-- Baris 6: Tombol Simpan & Reset -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="14dp"
+                        android:orientation="horizontal">
+
+                        <!-- Kiri: Simpan Data Siswa (Solid Teal 70%) -->
+                        <LinearLayout
+                            android:id="@+id/btnSimpanSiswa"
+                            android:layout_width="0dp"
+                            android:layout_height="42dp"
+                            android:layout_marginEnd="6dp"
+                            android:layout_weight="7"
+                            android:background="@drawable/bg_btn_solid_teal"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:gravity="center">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="💾 Simpan Data Siswa"
+                                android:textColor="@color/white"
+                                android:textSize="13sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+
+                        <!-- Kanan: Reset (Outlined 30%) -->
+                        <LinearLayout
+                            android:id="@+id/btnResetForm"
+                            android:layout_width="0dp"
+                            android:layout_height="42dp"
+                            android:layout_marginStart="6dp"
+                            android:layout_weight="3"
+                            android:background="@drawable/bg_btn_outlined_teal"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:gravity="center">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Reset"
+                                android:textColor="@color/primary_teal"
+                                android:textSize="13sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- ================= 2f. SEARCH & FILTER BAR ================= -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="16dp"
+                    android:layout_marginTop="14dp"
+                    android:background="@drawable/bg_search_box"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingHorizontal="14dp"
+                    android:paddingVertical="8dp">
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:contentDescription="Ikon Pencarian"
+                        android:src="@drawable/ic_search"
+                        app:tint="@color/text_secondary" />
+
+                    <EditText
+                        android:id="@+id/etSearchSiswa"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp"
+                        android:background="@android:color/transparent"
+                        android:hint="Cari nama atau NISN siswa..."
+                        android:imeOptions="actionSearch"
+                        android:inputType="text"
+                        android:textColor="@color/text_primary"
+                        android:textColorHint="@color/text_muted"
+                        android:textSize="13sp" />
+                </LinearLayout>
+
+                <!-- Horizontal Chips Filter: Semua, Laki-laki, Perempuan -->
+                <HorizontalScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:clipToPadding="false"
+                    android:paddingHorizontal="16dp"
+                    android:scrollbars="none">
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <!-- Chip 1: Semua -->
+                        <LinearLayout
+                            android:id="@+id/chipFilterSemua"
+                            android:layout_width="wrap_content"
+                            android:layout_height="32dp"
+                            android:background="@drawable/bg_chip_month_active"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:gravity="center"
+                            android:paddingHorizontal="14dp">
+
+                            <TextView
+                                android:id="@+id/chipSemua"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Semua (36)"
+                                android:textColor="@color/white"
+                                android:textSize="12sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+
+                        <!-- Chip 2: Laki-laki -->
+                        <LinearLayout
+                            android:id="@+id/chipFilterLaki"
+                            android:layout_width="wrap_content"
+                            android:layout_height="32dp"
+                            android:layout_marginStart="8dp"
+                            android:background="@drawable/bg_chip_month_inactive"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:gravity="center"
+                            android:paddingHorizontal="14dp">
+
+                            <TextView
+                                android:id="@+id/chipLaki"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Laki-laki (18)"
+                                android:textColor="@color/text_secondary"
+                                android:textSize="12sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+
+                        <!-- Chip 3: Perempuan -->
+                        <LinearLayout
+                            android:id="@+id/chipFilterPerempuan"
+                            android:layout_width="wrap_content"
+                            android:layout_height="32dp"
+                            android:layout_marginStart="8dp"
+                            android:background="@drawable/bg_chip_month_inactive"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:gravity="center"
+                            android:paddingHorizontal="14dp">
+
+                            <TextView
+                                android:id="@+id/chipPerempuan"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Perempuan (18)"
+                                android:textColor="@color/text_secondary"
+                                android:textSize="12sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+                    </LinearLayout>
+                </HorizontalScrollView>
+
+                <!-- ================= 2g. SECTION DAFTAR SISWA TERVERIFIKASI ================= -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="16dp"
+                    android:layout_marginTop="16dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/tvHeaderDaftarSiswa"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Daftar Siswa Terverifikasi (36 Ditampilkan)"
+                        android:textColor="@color/text_primary"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Terurut Alfabetis"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="11sp" />
+                </LinearLayout>
+
+                <!-- Progress Bar Loading -->
+                <ProgressBar
+                    android:id="@+id/progressBarLoadingSiswa"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:layout_marginTop="20dp"
+                    android:indeterminateTint="@color/primary_teal"
+                    android:visibility="gone" />
+
+                <!-- Empty State -->
+                <LinearLayout
+                    android:id="@+id/layoutEmptyStateSiswa"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="24dp"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:paddingHorizontal="32dp"
+                    android:visibility="gone">
+
+                    <ImageView
+                        android:layout_width="56dp"
+                        android:layout_height="56dp"
+                        android:contentDescription="Tidak ada siswa"
+                        android:src="@drawable/ic_people"
+                        app:tint="@color/text_muted" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="Belum Ada Siswa Ditemukan"
+                        android:textColor="@color/text_primary"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:gravity="center"
+                        android:text="Gunakan tombol '+ Tambah Siswa Baru' untuk mendaftarkan data siswa rombel."
+                        android:textColor="@color/text_secondary"
+                        android:textSize="12sp" />
+                </LinearLayout>
+
+                <!-- RecyclerView Daftar Siswa -->
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rvDaftarSiswa"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:nestedScrollingEnabled="false"
+                    android:overScrollMode="never"
+                    app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                    tools:itemCount="5"
+                    tools:listitem="@layout/item_siswa_kelola" />
+
+            </LinearLayout>
+
+            <!-- ================= 2h. SECTION ROMBONGAN BELAJAR & WALI KELAS ================= -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginTop="24dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Rombongan Belajar &amp; Wali Kelas"
+                        android:textColor="@color/text_primary"
+                        android:textSize="15sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="Tahun Ajaran 2026/2027 Semester Ganjil"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="11sp" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/btnBuatKelas"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_btn_action_blue"
+                    android:paddingHorizontal="10dp"
+                    android:paddingVertical="6dp"
+                    android:text="+ Buat Kelas"
+                    android:textColor="@color/action_blue_text"
+                    android:textSize="11sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <!-- Card Rombel Binaan -->
+            <LinearLayout
+                android:id="@+id/cardRombelBinaan"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/bg_card_surface"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <!-- Badge Kode Rombel -->
+                    <TextView
+                        android:id="@+id/tvBadgeKodeRombel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/bg_badge_pill_blue"
+                        android:paddingHorizontal="10dp"
+                        android:paddingVertical="5dp"
+                        android:textColor="@color/action_blue_text"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        tools:text="12.RPL" />
+
+                    <!-- Kolom Tengah: Nama Kelas + Nama Walas -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="12dp"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/tvNamaRombelWalas"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textColor="@color/text_primary"
+                            android:textSize="15sp"
+                            android:textStyle="bold"
+                            tools:text="XII RPL • Pagi" />
+
+                        <TextView
+                            android:id="@+id/tvNamaWalasRombel"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="12sp"
+                            tools:text="Wali Kelas: Farauk Pratama, S.Kom." />
+                    </LinearLayout>
+
+                    <!-- Ikon Gerigi Pengaturan -->
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:contentDescription="Pengaturan Rombel"
+                        android:src="@drawable/ic_settings"
+                        app:tint="@color/text_secondary" />
+                </LinearLayout>
+
+                <!-- Bilah Progres Kapasitas Kursi -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Kapasitas Kursi"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="12sp" />
+
+                    <TextView
+                        android:id="@+id/tvKapasitasKursi"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/text_primary"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        tools:text="36 / 36 Siswa (Penuh)" />
+                </LinearLayout>
+
+                <ProgressBar
+                    android:id="@+id/progressKapasitasKursi"
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="8dp"
+                    android:layout_marginTop="6dp"
+                    android:max="36"
+                    android:progress="36"
+                    android:progressTint="@color/primary_teal" />
+            </LinearLayout>
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

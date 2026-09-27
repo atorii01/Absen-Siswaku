@@ -186,24 +186,24 @@ class SetelanFragment : Fragment() {
         }
 
         val countHadir = presensiList.count { item ->
-            val st = item.status.uppercase()
+            val st = item.status?.uppercase().orEmpty()
             st.contains("HADIR") || st.contains("TEPAT_WAKTU") || st.contains("TERLAMBAT")
         }
 
         val countIzinDariPresensi = presensiList.count { item ->
-            val st = item.status.uppercase()
+            val st = item.status?.uppercase().orEmpty()
             st.contains("IZIN") || st.contains("SAKIT") || st.contains("DISPENSASI")
         }
 
         val countIzinDariTabelIzin = izinList.count { item ->
-            val st = item.statusVerifikasi.uppercase()
+            val st = item.statusVerifikasi?.uppercase().orEmpty()
             st.contains("SETUJU") || st.contains("DISETUJUI") || st.contains("PENDING")
         }
 
         val countIzinTotal = (countIzinDariPresensi + countIzinDariTabelIzin).coerceAtLeast(0)
 
         val countAlpa = presensiList.count { item ->
-            item.status.uppercase().contains("ALPA")
+            item.status?.uppercase().orEmpty().contains("ALPA")
         }
 
         val totalDays = countHadir + countIzinTotal + countAlpa

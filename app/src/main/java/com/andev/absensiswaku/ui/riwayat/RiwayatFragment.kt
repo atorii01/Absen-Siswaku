@@ -1,5 +1,6 @@
 package com.andev.absensiswaku.ui.riwayat
 
+import android.content.ActivityNotFoundException
 import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
@@ -37,6 +38,7 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
+import java.util.TimeZone
 
 class RiwayatFragment : Fragment() {
 
@@ -101,27 +103,36 @@ class RiwayatFragment : Fragment() {
     private fun setupDynamicMonthChips() {
         if (!isAdded || _binding == null) return
 
-        val sdfMonthFull = SimpleDateFormat("MMMM yyyy", Locale.forLanguageTag("id-ID"))
-        val sdfPattern = SimpleDateFormat("yyyy-MM", Locale.getDefault())
+        try {
+            val sdfMonthFull = SimpleDateFormat("MMMM yyyy", Locale.forLanguageTag("id-ID"))
+            val sdfPattern = SimpleDateFormat("yyyy-MM", Locale.getDefault())
 
-        val cal = Calendar.getInstance()
+            val cal = Calendar.getInstance()
 
-        // Month 1: Bulan Ini
-        month1Name = sdfMonthFull.format(cal.time)
-        month1Pattern = sdfPattern.format(cal.time)
-        binding.tvChipMonth1.text = "$month1Name (Bulan Ini)"
+            // Month 1: Bulan Ini
+            month1Name = sdfMonthFull.format(cal.time)
+            month1Pattern = sdfPattern.format(cal.time)
+            binding.tvChipMonth1.text = "$month1Name (Bulan Ini)"
 
-        // Month 2: Bulan Lalu
-        cal.add(Calendar.MONTH, -1)
-        month2Name = sdfMonthFull.format(cal.time)
-        month2Pattern = sdfPattern.format(cal.time)
-        binding.tvChipMonth2.text = month2Name
+            // Month 2: Bulan Lalu
+            cal.add(Calendar.MONTH, -1)
+            month2Name = sdfMonthFull.format(cal.time)
+            month2Pattern = sdfPattern.format(cal.time)
+            binding.tvChipMonth2.text = month2Name
 
-        // Month 3: 2 Bulan Lalu
-        cal.add(Calendar.MONTH, -1)
-        month3Name = sdfMonthFull.format(cal.time)
-        month3Pattern = sdfPattern.format(cal.time)
-        binding.tvChipMonth3.text = month3Name
+            // Month 3: 2 Bulan Lalu
+            cal.add(Calendar.MONTH, -1)
+            month3Name = sdfMonthFull.format(cal.time)
+            month3Pattern = sdfPattern.format(cal.time)
+            binding.tvChipMonth3.text = month3Name
+        } catch (e: Exception) {
+            month1Name = "Bulan Ini"
+            month2Name = "Bulan Lalu"
+            month3Name = "2 Bulan Lalu"
+            binding.tvChipMonth1.text = month1Name
+            binding.tvChipMonth2.text = month2Name
+            binding.tvChipMonth3.text = month3Name
+        }
 
         binding.chipMonth1.setOnClickListener { switchMonthSelection(1) }
         binding.chipMonth2.setOnClickListener { switchMonthSelection(2) }
@@ -227,6 +238,36 @@ class RiwayatFragment : Fragment() {
             })
     }
 
+    /**
+     * Konversi timestamp UTC ISO 8601 dari Supabase ke format jam WIB dengan parser fallback
+     */
+    private fun formatIsoKeWib(isoString: String?): String {
+        if (isoString.isNullOrEmpty()) return "07:00 WIB"
+        return try {
+            val cleanIso = isoString.substringBefore(".").substringBefore("+").trim()
+            val parser = if (cleanIso.contains("T")) {
+                SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault()).apply {
+                    timeZone = TimeZone.getTimeZone("UTC")
+                }
+            } else if (cleanIso.contains(" ")) {
+                SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).apply {
+                    timeZone = TimeZone.getTimeZone("UTC")
+                }
+            } else {
+                SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).apply {
+                    timeZone = TimeZone.getTimeZone("UTC")
+                }
+            }
+            val formatter = SimpleDateFormat("HH:mm:ss 'WIB'", Locale.forLanguageTag("id-ID")).apply {
+                timeZone = TimeZone.getTimeZone("Asia/Jakarta")
+            }
+            val date = parser.parse(cleanIso) ?: Date()
+            formatter.format(date)
+        } catch (e: Exception) {
+            "07:00 WIB"
+        }
+    }
+
     private fun fetchIzinAndCombine(siswaIdInt: Int, walasName: String, listPresensi: List<RiwayatModel>) {
         SupabaseClient.instance.getRiwayatIzinSupabase(siswaIdFilter = "eq.$siswaIdInt")
             .enqueue(object : Callback<List<PengajuanIzinModel>> {
@@ -238,21 +279,27 @@ class RiwayatFragment : Fragment() {
 
                     val mappedIzinList = if (response.isSuccessful && response.body() != null) {
                         response.body()!!.map { item ->
-                            val statusMapped = if (item.statusVerifikasi.equals("Pending", true)) {
-                                "PENDING"
-                            } else {
-                                item.jenisIzin.ifEmpty { "IZIN" }
+                            val statusVerif = item.statusVerifikasi?.trim().orEmpty()
+                            val jenis = item.jenisIzin?.trim().orEmpty().ifEmpty { "Izin" }
+
+                            val statusMapped = when (statusVerif.lowercase()) {
+                                "pending" -> "PENDING"
+                                "disetujui" -> jenis.uppercase()
+                                "ditolak" -> "DITOLAK"
+                                else -> statusVerif.uppercase().ifEmpty { "PENDING" }
                             }
 
                             RiwayatModel(
                                 id = item.id,
                                 siswaId = item.siswaId,
                                 tanggal = item.tanggalMulai,
-                                waktuMasuk = "07:00:00",
-                                jamMasukField = item.jenisIzin,
+                                waktuMasuk = formatIsoKeWib(item.createdAt),
+                                jamMasukField = jenis,
                                 status = statusMapped,
-                                verifikator = walasName,
-                                keteranganStatus = item.keterangan
+                                verifikator = item.verifiedBy?.takeIf { it.isNotEmpty() } ?: walasName,
+                                keteranganStatus = item.keterangan,
+                                statusVerifikasi = statusVerif,
+                                jenisIzin = jenis
                             )
                         }
                     } else {
@@ -289,7 +336,9 @@ class RiwayatFragment : Fragment() {
 
         return if (allRiwayatList.isNotEmpty()) {
             allRiwayatList.filter { item ->
-                item.tanggal.contains(pattern) || item.tanggal.contains(monthNameText, ignoreCase = true)
+                val tgl = item.tanggal ?: ""
+                (pattern.isNotEmpty() && tgl.contains(pattern)) ||
+                (monthNameText.isNotEmpty() && tgl.contains(monthNameText, ignoreCase = true))
             }
         } else {
             emptyList()
@@ -309,10 +358,28 @@ class RiwayatFragment : Fragment() {
 
         val filteredList = getCurrentFilteredList()
 
-        val totalHadir = filteredList.count { it.status.equals("Hadir", true) || it.status.equals("HADIR", true) || it.status.equals("TEPAT_WAKTU", true) }
-        val totalTerlambat = filteredList.count { it.status.equals("Terlambat", true) || it.status.equals("TERLAMBAT", true) }
-        val totalIzin = filteredList.count { it.status.equals("Izin", true) || it.status.equals("Sakit", true) || it.status.equals("Dispensasi", true) || it.status.equals("IZIN", true) || it.status.equals("SAKIT", true) || it.status.equals("PENDING", true) }
-        val totalAlpa = filteredList.count { it.status.equals("Alpa", true) || it.status.equals("ALPA", true) }
+        val totalHadir = filteredList.count { 
+            it.status?.equals("Hadir", ignoreCase = true) == true || 
+            it.status?.equals("TEPAT_WAKTU", ignoreCase = true) == true 
+        }
+        val totalTerlambat = filteredList.count { 
+            it.status?.equals("Terlambat", ignoreCase = true) == true 
+        }
+        // Hitung izin masuk ke card "Izin / Sakit" HANYA jika statusnya "Disetujui"
+        val totalIzin = filteredList.count {
+            it.statusVerifikasi?.equals("Disetujui", ignoreCase = true) == true ||
+            (it.statusVerifikasi.isNullOrEmpty() && (
+                it.status?.equals("Izin", ignoreCase = true) == true || 
+                it.status?.equals("Sakit", ignoreCase = true) == true || 
+                it.status?.equals("Dispensasi", ignoreCase = true) == true
+            ))
+        }
+        // Jika statusnya "Ditolak", data tersebut TIDAK dimasukkan ke total Izin/Sakit yang sah (tetap dihitung Alpa atau status evaluasi)
+        val totalAlpa = filteredList.count {
+            it.statusVerifikasi?.equals("Ditolak", ignoreCase = true) == true ||
+            it.status?.equals("Alpa", ignoreCase = true) == true || 
+            it.status?.equals("Ditolak", ignoreCase = true) == true
+        }
         val totalDays = totalHadir + totalTerlambat + totalIzin + totalAlpa
 
         val disiplinPct = if (totalDays > 0) {
@@ -463,13 +530,14 @@ class RiwayatFragment : Fragment() {
             if (y > 720f) return@forEachIndexed // Page height limit
 
             canvas.drawText("${index + 1}", 46f, y, paintTextDark)
-            canvas.drawText(item.tanggal, 80f, y, paintTextDark)
-            canvas.drawText(item.displayJamMasuk, 200f, y, paintTextDark)
-            canvas.drawText(item.status, 300f, y, paintBold)
+            canvas.drawText(item.tanggal ?: "-", 80f, y, paintTextDark)
+            canvas.drawText(item.displayJamMasuk ?: "-", 200f, y, paintTextDark)
+            canvas.drawText(item.status ?: "-", 300f, y, paintBold)
 
-            val verifikasiStr = if (item.status.equals("HADIR", true) || item.status.equals("Hadir", true)) {
+            val statusStr = (item.status ?: "").uppercase()
+            val verifikasiStr = if (statusStr == "HADIR" || statusStr == "TEPAT_WAKTU") {
                 "Valid AI & GPS (Otomatis)"
-            } else if (item.status.equals("TERLAMBAT", true) || item.status.equals("Terlambat", true)) {
+            } else if (statusStr == "TERLAMBAT") {
                 "Terverifikasi (Terlambat)"
             } else {
                 "Diverifikasi Walas"
@@ -482,7 +550,11 @@ class RiwayatFragment : Fragment() {
 
         // --- FOOTER & TANDA TANGAN WALAS ---
         y = 740f
-        val todayStr = SimpleDateFormat("dd MMMM yyyy", Locale.forLanguageTag("id-ID")).format(Date())
+        val todayStr = try {
+            SimpleDateFormat("dd MMMM yyyy", Locale.forLanguageTag("id-ID")).format(Date())
+        } catch (e: Exception) {
+            ""
+        }
 
         canvas.drawText("Status Dokumen: Terverifikasi Digital oleh Sistem SMKN 8 Jakarta", 40f, y, paintTextMuted)
         canvas.drawText("Jakarta, $todayStr", 380f, y, paintTextDark)
@@ -519,7 +591,6 @@ class RiwayatFragment : Fragment() {
                 resolver.openOutputStream(pdfUri)?.use { outputStream ->
                     pdfDocument.writeTo(outputStream)
                 }
-                pdfDocument.close()
 
                 Snackbar.make(binding.root, "✓ PDF Berhasil Diunduh: $pdfFileName", Snackbar.LENGTH_LONG)
                     .setAction("Buka") {
@@ -528,25 +599,33 @@ class RiwayatFragment : Fragment() {
                     .show()
 
             } catch (e: Exception) {
-                pdfDocument.close()
                 Toast.makeText(ctx, "Gagal menyimpan berkas PDF: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
+            } finally {
+                try {
+                    pdfDocument.close()
+                } catch (ignored: Exception) {}
             }
         } else {
-            pdfDocument.close()
+            try {
+                pdfDocument.close()
+            } catch (ignored: Exception) {}
             Toast.makeText(ctx, "Gagal membuat entri PDF di direktori Download", Toast.LENGTH_LONG).show()
         }
     }
 
     private fun openPdfDocument(pdfUri: Uri) {
-        val openIntent = Intent(Intent.ACTION_VIEW).apply {
-            setDataAndType(pdfUri, "application/pdf")
-            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        }
+        val ctx = context ?: return
         try {
-            startActivity(Intent.createChooser(openIntent, "Buka Berkas Rekap Presensi"))
+            val openIntent = Intent(Intent.ACTION_VIEW).apply {
+                setDataAndType(pdfUri, "application/pdf")
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            startActivity(Intent.createChooser(openIntent, "Buka Berkas PDF"))
+        } catch (e: ActivityNotFoundException) {
+            Toast.makeText(ctx, "Tidak ditemukan aplikasi pembaca PDF di perangkat ini.", Toast.LENGTH_LONG).show()
         } catch (e: Exception) {
-            Toast.makeText(requireContext(), "Tidak ada aplikasi pembaca PDF ditemukan", Toast.LENGTH_SHORT).show()
+            Toast.makeText(ctx, "Gagal membuka PDF: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
         }
     }
 

@@ -270,7 +270,7 @@
                             android:id="@+id/barHadir"
                             android:layout_width="match_parent"
                             android:layout_height="4dp"
-                            android:background="#10B981"
+                            android:background="@color/dot_hadir"
                             app:layout_constraintBottom_toBottomOf="parent" />
                     </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -313,7 +313,7 @@
                             android:id="@+id/barVerifikasi"
                             android:layout_width="match_parent"
                             android:layout_height="4dp"
-                            android:background="#F59E0B"
+                            android:background="@color/dot_terlambat"
                             app:layout_constraintBottom_toBottomOf="parent" />
                     </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -356,7 +356,7 @@
                             android:id="@+id/barAlpa"
                             android:layout_width="match_parent"
                             android:layout_height="4dp"
-                            android:background="#EF4444"
+                            android:background="@color/status_unread_text"
                             app:layout_constraintBottom_toBottomOf="parent" />
                     </androidx.constraintlayout.widget.ConstraintLayout>
                 </LinearLayout>
@@ -375,7 +375,7 @@
                         android:layout_height="20dp"
                         android:contentDescription="Ikon Berkas"
                         android:src="@drawable/ic_folder_check"
-                        app:tint="#D97706" />
+                        app:tint="@color/metric_orange" />
 
                     <TextView
                         android:layout_width="0dp"

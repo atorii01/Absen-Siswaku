@@ -592,7 +592,7 @@
                     android:layout_height="28dp"
                     android:contentDescription="Terverifikasi"
                     android:src="@drawable/ic_shield_check"
-                    app:tint="#0284C7" />
+                    app:tint="@color/secondary_blue" />
 
                 <LinearLayout
                     android:layout_width="0dp"

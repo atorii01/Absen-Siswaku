@@ -1,6 +1,7 @@
 package com.andev.absensiswaku.ui.walas
 
 import android.app.Dialog
+import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.graphics.BitmapFactory
@@ -54,7 +55,7 @@ class WalasPresensiFragment : Fragment() {
     private var namaKelas: String = "XII RPL"
     private var idKelas: Int = 9
 
-    private var countTotalSiswa = 36
+    private var countTotalSiswa = 0
     private var countHadir = 0
     private var countVerifikasi = 0
     private var countAlpa = 0
@@ -107,9 +108,13 @@ class WalasPresensiFragment : Fragment() {
     }
 
     private fun setupHeaderAndDate() {
-        val localeId = Locale.forLanguageTag("id-ID")
-        val sdfHari = SimpleDateFormat("EEEE, d MMM yyyy", localeId)
-        val todayStr = sdfHari.format(Date())
+        val todayStr = try {
+            val localeId = Locale.forLanguageTag("id-ID")
+            val sdfHari = SimpleDateFormat("EEEE, d MMM yyyy", localeId)
+            sdfHari.format(Date())
+        } catch (e: Exception) {
+            "Hari Ini"
+        }
         binding.tvTanggalHariIni.text = todayStr
     }
 
@@ -162,8 +167,11 @@ class WalasPresensiFragment : Fragment() {
      * Difilter murni berdasarkan id_kelas walas yang sedang aktif.
      */
     private fun loadDataFromSupabase() {
-        val sdfIso = SimpleDateFormat("yyyy-MM-dd", Locale.US)
-        val todayIso = sdfIso.format(Date())
+        val todayIso = try {
+            SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
+        } catch (e: Exception) {
+            ""
+        }
 
         // 1. Ambil Data Siswa di Kelas Walas untuk perhitungan Total Siswa & Map Nama/NISN
         SupabaseClient.instance.getSiswaByKelas(filterKelas = "eq.$idKelas")
@@ -178,13 +186,13 @@ class WalasPresensiFragment : Fragment() {
                     body.forEach { s ->
                         s.id?.let { siswaKelasMap[it] = s }
                     }
-                    countTotalSiswa = if (body.isNotEmpty()) body.size else 36
+                    countTotalSiswa = if (body.isNotEmpty()) body.size else 0
                     updateSummaryMetrics()
                 }
 
                 override fun onFailure(call: Call<List<SiswaMiniResponse>>, t: Throwable) {
                     if (!isAdded || _binding == null) return
-                    countTotalSiswa = 36
+                    countTotalSiswa = 0
                     updateSummaryMetrics()
                 }
             })
@@ -240,10 +248,10 @@ class WalasPresensiFragment : Fragment() {
                 val body = response.body().orEmpty()
 
                 if (response.isSuccessful) {
-                    val validHadir = body.filter { it.status.equals("Hadir", true) }
+                    val validHadir = body.filter { it.status?.equals("Hadir", ignoreCase = true) == true }
                     val mapped = validHadir.mapIndexed { idx, riwayat ->
-                        val s = riwayat.siswa ?: siswaKelasMap[riwayat.siswaId]
-                        val sNama = s?.namaLengkap?.takeIf { it.isNotEmpty() } ?: "Siswa ${riwayat.siswaId}"
+                        val s = riwayat.siswa ?: riwayat.siswaId?.let { siswaKelasMap[it] }
+                        val sNama = s?.namaLengkap?.takeIf { it.isNotEmpty() } ?: "Siswa ${riwayat.siswaId ?: ""}".trim()
                         val sNisn = s?.nisn?.takeIf { it.isNotEmpty() } ?: "-"
                         val waktu = riwayat.displayJamMasuk.take(5)
 
@@ -253,7 +261,7 @@ class WalasPresensiFragment : Fragment() {
                             namaLengkap = sNama,
                             nisn = sNisn,
                             waktuMasuk = waktu,
-                            status = riwayat.status,
+                            status = riwayat.status ?: "Hadir",
                             verifiedAiGps = true
                         )
                     }
@@ -315,7 +323,7 @@ class WalasPresensiFragment : Fragment() {
 
         countVerifikasi = antreanList.size
         countHadir = hadirList.size
-        val total = if (countTotalSiswa > 0) countTotalSiswa else 36
+        val total = if (countTotalSiswa > 0) countTotalSiswa else 0
         countAlpa = (total - countHadir - countVerifikasi).coerceAtLeast(0)
 
         binding.tvTotalSiswa.text = total.toString()
@@ -328,8 +336,8 @@ class WalasPresensiFragment : Fragment() {
      * Logika Persetujuan Izin (Disetujui)
      */
     private fun handlePersetujuanIzin(item: PengajuanIzinResponse) {
-        val nama = item.siswa?.namaLengkap ?: siswaKelasMap[item.siswaId]?.namaLengkap ?: "Siswa"
-        val jenis = item.jenisIzin
+        val nama = item.siswa?.namaLengkap ?: item.siswaId?.let { siswaKelasMap[it]?.namaLengkap } ?: "Siswa"
+        val jenis = item.jenisIzin?.trim().orEmpty().ifEmpty { "Izin" }
 
         MaterialAlertDialogBuilder(requireContext())
             .setTitle("Konfirmasi Persetujuan")
@@ -366,11 +374,11 @@ class WalasPresensiFragment : Fragment() {
 
         val presensiPayload: Map<String, Any> = mapOf(
             "id" to UUID.randomUUID().toString(),
-            "siswa_id" to item.siswaId,
+            "siswa_id" to (item.siswaId ?: 0),
             "id_kelas" to idKelas,
             "tanggal" to sdfDate.format(now),
             "waktu_masuk" to sdfTime.format(now),
-            "status" to item.jenisIzin,
+            "status" to (item.jenisIzin?.trim().orEmpty().ifEmpty { "Izin" }),
             "jarak_gerbang_meter" to 0,
             "biometrik_match_score" to 100.0,
             "verifikator" to namaWalas
@@ -391,9 +399,11 @@ class WalasPresensiFragment : Fragment() {
         renderAntreanUI()
         updateSummaryMetrics()
 
+        val displayJenis = item.jenisIzin?.trim().orEmpty().ifEmpty { "Izin" }
+        val displayNama = item.siswa?.namaLengkap ?: item.siswaId?.let { siswaKelasMap[it]?.namaLengkap } ?: "Siswa"
         Toast.makeText(
             requireContext(),
-            "✓ Pengajuan ${item.jenisIzin} dari ${item.siswa?.namaLengkap ?: siswaKelasMap[item.siswaId]?.namaLengkap ?: "Siswa"} berhasil disetujui!",
+            "✓ Pengajuan $displayJenis dari $displayNama berhasil disetujui!",
             Toast.LENGTH_SHORT
         ).show()
     }
@@ -402,7 +412,7 @@ class WalasPresensiFragment : Fragment() {
      * Logika Penolakan Izin (Ditolak)
      */
     private fun handlePenolakanIzin(item: PengajuanIzinResponse) {
-        val nama = item.siswa?.namaLengkap ?: siswaKelasMap[item.siswaId]?.namaLengkap ?: "Siswa"
+        val nama = item.siswa?.namaLengkap ?: item.siswaId?.let { siswaKelasMap[it]?.namaLengkap } ?: "Siswa"
 
         MaterialAlertDialogBuilder(requireContext())
             .setTitle("Tolak / Review Pengajuan")
@@ -410,17 +420,24 @@ class WalasPresensiFragment : Fragment() {
             .setPositiveButton("✕ Ya, Tolak") { dialog, _ ->
                 dialog.dismiss()
 
-                val updatePayload: Map<String, Any> = mapOf(
+                val payloadTolak: Map<String, Any> = mapOf(
                     "status_verifikasi" to "Ditolak",
                     "verified_by" to namaWalas
                 )
 
                 SupabaseClient.instance.updateStatusIzin(
                     filterId = "eq.${item.id}",
-                    payload = updatePayload
+                    payload = payloadTolak
                 ).enqueue(object : Callback<ResponseBody> {
-                    override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {}
-                    override fun onFailure(call: Call<ResponseBody>, t: Throwable) {}
+                    override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
+                        if (response.isSuccessful) {
+                            Toast.makeText(context, "Pengajuan siswa berhasil ditolak", Toast.LENGTH_SHORT).show()
+                            loadDataFromSupabase()
+                        }
+                    }
+                    override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                        loadDataFromSupabase()
+                    }
                 })
 
                 antreanAdapter.removeItem(item)
@@ -461,11 +478,11 @@ class WalasPresensiFragment : Fragment() {
         dialog.window?.setLayout(displayWidth, ViewGroup.LayoutParams.WRAP_CONTENT)
 
         // 1. Data Siswa & Kelas
-        val namaSiswa = item.siswa?.namaLengkap ?: siswaKelasMap[item.siswaId]?.namaLengkap ?: "Siswa"
+        val namaSiswa = item.siswa?.namaLengkap ?: item.siswaId?.let { siswaKelasMap[it]?.namaLengkap } ?: "Siswa"
         dialogBinding.tvNamaSiswa.text = "$namaSiswa • Kelas $namaKelas"
 
         // 2. Badge Jenis Izin
-        val jenis = item.jenisIzin.trim()
+        val jenis = item.jenisIzin?.trim().orEmpty().ifEmpty { "Izin" }
         dialogBinding.tvJenisIzin.text = jenis
         when (jenis.uppercase()) {
             "SAKIT" -> dialogBinding.tvJenisIzin.setBackgroundResource(R.drawable.bg_badge_pill_sakit)
@@ -477,10 +494,10 @@ class WalasPresensiFragment : Fragment() {
         // 3. Nama File
         val isBase64 = item.buktiBerkasUrl?.startsWith("data:image") == true || (item.buktiBerkasUrl?.length ?: 0) > 500
         val rawFileName = if (isBase64) {
-            "Foto_Bukti_Fisik_${item.jenisIzin}.jpg"
+            "Foto_Bukti_Fisik_${jenis}.jpg"
         } else {
             item.buktiBerkasUrl?.substringAfterLast("/")?.takeIf { it.isNotEmpty() }
-                ?: "Surat_Keterangan_${item.jenisIzin}.jpg"
+                ?: "Surat_Keterangan_${jenis}.jpg"
         }
         dialogBinding.tvNamaFile.text = "📄 $rawFileName"
 
@@ -491,11 +508,25 @@ class WalasPresensiFragment : Fragment() {
         // 5. Muat Gambar: Cek apakah Base64, URL eksternal, Content/File URI, atau Ilustrasi Surat Resmi
         val berkasUrl = item.buktiBerkasUrl.orEmpty()
         if (berkasUrl.startsWith("data:image") || berkasUrl.length > 500) {
-            // Gambar berupa data Base64: Decode dan pasang langsung ke ImageView
+            // Gambar berupa data Base64: Decode dan pasang langsung ke ImageView dengan pengaman OOM
             try {
                 val cleanBase64 = berkasUrl.substringAfter("base64,")
                 val decodedBytes = Base64.decode(cleanBase64, Base64.DEFAULT)
-                val bitmap = BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
+
+                val options = BitmapFactory.Options().apply {
+                    inJustDecodeBounds = true
+                }
+                BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size, options)
+
+                // Perkecil sample size jika ukuran gambar lebih dari 1000px
+                var inSampleSize = 1
+                while ((options.outHeight / inSampleSize) >= 1000 || (options.outWidth / inSampleSize) >= 1000) {
+                    inSampleSize *= 2
+                }
+
+                options.inJustDecodeBounds = false
+                options.inSampleSize = inSampleSize
+                val bitmap = BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size, options)
                 if (bitmap != null) {
                     dialogBinding.ivPreviewSurat.setImageBitmap(bitmap)
                     dialogBinding.ivPreviewSurat.scaleType = ImageView.ScaleType.FIT_CENTER
@@ -503,6 +534,10 @@ class WalasPresensiFragment : Fragment() {
                 } else {
                     dialogBinding.ivPreviewSurat.setImageResource(R.drawable.ic_surat_dokter_preview)
                 }
+            } catch (oom: OutOfMemoryError) {
+                System.gc()
+                dialogBinding.ivPreviewSurat.setImageResource(R.drawable.ic_surat_dokter_preview)
+                Toast.makeText(context, "Ukuran foto terlalu besar untuk ditampilkan.", Toast.LENGTH_SHORT).show()
             } catch (e: Exception) {
                 dialogBinding.ivPreviewSurat.setImageResource(R.drawable.ic_surat_dokter_preview)
             }
@@ -520,6 +555,12 @@ class WalasPresensiFragment : Fragment() {
                             dialogBinding.ivPreviewSurat.setImageResource(R.drawable.ic_surat_dokter_preview)
                         }
                     }
+                } catch (oom: OutOfMemoryError) {
+                    System.gc()
+                    withContext(Dispatchers.Main) {
+                        dialogBinding.ivPreviewSurat.setImageResource(R.drawable.ic_surat_dokter_preview)
+                        Toast.makeText(context, "Ukuran foto terlalu besar untuk ditampilkan.", Toast.LENGTH_SHORT).show()
+                    }
                 } catch (e: Exception) {
                     withContext(Dispatchers.Main) {
                         dialogBinding.ivPreviewSurat.setImageResource(R.drawable.ic_surat_dokter_preview)
@@ -531,6 +572,10 @@ class WalasPresensiFragment : Fragment() {
                 dialogBinding.ivPreviewSurat.setImageURI(Uri.parse(berkasUrl))
                 dialogBinding.ivPreviewSurat.scaleType = ImageView.ScaleType.FIT_CENTER
                 dialogBinding.ivPreviewSurat.setBackgroundColor(Color.TRANSPARENT)
+            } catch (oom: OutOfMemoryError) {
+                System.gc()
+                dialogBinding.ivPreviewSurat.setImageResource(R.drawable.ic_surat_dokter_preview)
+                Toast.makeText(context, "Ukuran foto terlalu besar untuk ditampilkan.", Toast.LENGTH_SHORT).show()
             } catch (e: Exception) {
                 dialogBinding.ivPreviewSurat.setImageResource(R.drawable.ic_surat_dokter_preview)
             }
@@ -549,7 +594,7 @@ class WalasPresensiFragment : Fragment() {
      * Hubungi Orang Tua / Siswa Alpa
      */
     private fun handleHubungiOrtu(item: PengajuanIzinResponse) {
-        val nama = item.siswa?.namaLengkap ?: siswaKelasMap[item.siswaId]?.namaLengkap ?: "Siswa"
+        val nama = item.siswa?.namaLengkap ?: item.siswaId?.let { siswaKelasMap[it]?.namaLengkap } ?: "Siswa"
         val noHpDefault = "081234567890"
 
         MaterialAlertDialogBuilder(requireContext())
@@ -562,9 +607,20 @@ class WalasPresensiFragment : Fragment() {
                     val uri = Uri.parse("https://api.whatsapp.com/send?phone=$noHpDefault&text=${Uri.encode(pesan)}")
                     val intent = Intent(Intent.ACTION_VIEW, uri)
                     startActivity(intent)
+                } catch (e: ActivityNotFoundException) {
+                    try {
+                        val dialIntent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:$noHpDefault"))
+                        startActivity(dialIntent)
+                    } catch (e2: Exception) {
+                        Toast.makeText(context, "Tidak dapat membuka aplikasi telepon: ${e2.localizedMessage}", Toast.LENGTH_SHORT).show()
+                    }
                 } catch (e: Exception) {
-                    val dialIntent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:$noHpDefault"))
-                    startActivity(dialIntent)
+                    try {
+                        val dialIntent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:$noHpDefault"))
+                        startActivity(dialIntent)
+                    } catch (e2: Exception) {
+                        Toast.makeText(context, "Gagal membuka aplikasi: ${e2.localizedMessage}", Toast.LENGTH_SHORT).show()
+                    }
                 }
             }
             .setNegativeButton("Batal") { dialog, _ ->

@@ -580,7 +580,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Laporan Presensi Resmi"
-                            android:textColor="@color/white"
+                            android:textColor="@color/export_card_text_title"
                             android:textSize="15sp"
                             android:textStyle="bold" />
 
@@ -590,7 +590,7 @@
                             android:layout_marginTop="2dp"
                             android:lineSpacingExtra="2dp"
                             android:text="Dokumen rekap bulanan dengan tanda tangan digital Wali Kelas dan Cap Sekolah SMKN 8 Jakarta."
-                            android:textColor="#E0F2FE"
+                            android:textColor="@color/export_card_text_desc"
                             android:textSize="12sp" />
 
                     </LinearLayout>
@@ -602,12 +602,12 @@
                     android:layout_width="match_parent"
                     android:layout_height="48dp"
                     android:layout_marginTop="14dp"
-                    android:backgroundTint="@color/white"
+                    android:backgroundTint="@color/export_card_btn_bg"
                     android:insetTop="0dp"
                     android:insetBottom="0dp"
                     android:text="Unduh Rekap PDF Presensi Saya"
                     android:textAllCaps="false"
-                    android:textColor="@color/primary_teal"
+                    android:textColor="@color/export_card_btn_text"
                     android:textSize="13sp"
                     android:textStyle="bold"
                     app:cornerRadius="10dp"
@@ -615,7 +615,7 @@
                     app:iconGravity="textStart"
                     app:iconPadding="8dp"
                     app:iconSize="18dp"
-                    app:iconTint="@color/primary_teal" />
+                    app:iconTint="@color/export_card_btn_text" />
 
             </LinearLayout>
 

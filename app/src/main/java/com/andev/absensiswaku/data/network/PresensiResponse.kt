@@ -23,7 +23,7 @@ data class PresensiRequest(
 
 data class PresensiResponse(
     @SerializedName("success")
-    val success: Boolean = true,
+    val success: Boolean? = true,
     @SerializedName("message")
     val message: String? = null,
     @SerializedName("status_presensi")

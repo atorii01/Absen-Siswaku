@@ -4,79 +4,92 @@
     <color name="white">#FFFFFFFF</color>
     <color name="transparent">#00000000</color>
 
-    <!-- Brand Colors -->
+    <!-- Primary Brand SMKN 8 (Day) -->
     <color name="primary_teal">#00685F</color>
     <color name="deep_teal">#004D40</color>
+    <color name="primary_teal_container">#E6F4F2</color>
+    <color name="on_primary_teal_container">#004D40</color>
     <color name="secondary_blue">#2563EB</color>
+
+    <!-- Canvas & Surfaces (Day) -->
     <color name="screen_bg">#F8F9FF</color>
     <color name="surface_bg">#F8F9FF</color>
     <color name="card_bg">#FFFFFF</color>
-    <color name="border_stroke">#E2E8F0</color>
     <color name="card_stroke">#E2E8F0</color>
+    <color name="border_stroke">#E2E8F0</color>
     <color name="input_bg">#F0F4FA</color>
     <color name="input_stroke">#CBD5E1</color>
+    <color name="divider_color">#E2E8F0</color>
 
-    <!-- Text Colors -->
+    <!-- Typography Contrast (Day) -->
     <color name="text_primary">#0B1C30</color>
     <color name="text_secondary">#64748B</color>
     <color name="text_muted">#94A3B8</color>
+    <color name="text_hint">#94A3B8</color>
 
-    <!-- Status Badges -->
+    <!-- Semantic Badges (Day) -->
+    <color name="badge_hadir_bg">#DCFCE7</color>
+    <color name="badge_hadir_text">#15803D</color>
+    <color name="badge_terlambat_bg">#FEF3C7</color>
+    <color name="badge_terlambat_text">#D97706</color>
+    <color name="badge_izin_bg">#EFF6FF</color>
+    <color name="badge_izin_text">#1D4ED8</color>
+    <color name="badge_alpa_bg">#FEE2E2</color>
+    <color name="badge_alpa_text">#DC2626</color>
+    <color name="badge_pending_bg">#FEF7E0</color>
+    <color name="badge_pending_text">#B06000</color>
+    <color name="badge_soft_blue">#EFF6FF</color>
+    <color name="badge_coral_red">#EF4444</color>
+
+    <!-- Status Alerts & Pills (Day) -->
     <color name="status_unread_bg">#FEE2E2</color>
     <color name="status_unread_text">#DC2626</color>
     <color name="status_success_bg">#D1FAE5</color>
     <color name="status_success_text">#059669</color>
-    <color name="badge_soft_blue">#EFF6FF</color>
-    <color name="badge_coral_red">#EF4444</color>
-
-    <!-- Status Badges for Riwayat -->
-    <color name="badge_hadir_bg">#E6F4EA</color>
-    <color name="badge_hadir_text">#137333</color>
-    <color name="badge_pending_bg">#FEF7E0</color>
-    <color name="badge_pending_text">#B06000</color>
-    <color name="badge_terlambat_bg">#FFF0D4</color>
-    <color name="badge_terlambat_text">#935A00</color>
-    <color name="badge_izin_bg">#E8F0FE</color>
-    <color name="badge_izin_text">#1A73E8</color>
+    <color name="status_active_green_bg">#E6F4EA</color>
+    <color name="status_active_green_text">#15803D</color>
+    <color name="status_pill_gray_bg">#F1F5F9</color>
+    <color name="status_pill_gray_text">#64748B</color>
 
     <!-- Dots -->
     <color name="dot_hadir">#10B981</color>
     <color name="dot_terlambat">#D97706</color>
     <color name="dot_izin">#2563EB</color>
     <color name="dot_alpa">#94A3B8</color>
+    <color name="emerald_green">#10B981</color>
 
     <!-- Camera Overlay & AI Chips -->
     <color name="chip_camera_bg">#A0000000</color>
     <color name="chip_ai_bg">#D0064E3B</color>
-    <color name="emerald_green">#10B981</color>
     <color name="camera_btn_bg">#80000000</color>
     <color name="biometric_frame_green">#34D399</color>
 
-    <!-- GPS & Time Card -->
+    <!-- GPS & Time Card (Day) -->
     <color name="info_bg">#EFF4FF</color>
     <color name="info_border">#BFDBFE</color>
     <color name="info_text">#1E40AF</color>
     <color name="verified_card_bg">#EBF5FF</color>
     <color name="verified_card_border">#BAE6FD</color>
 
-    <!-- Button & Accent States -->
+    <!-- Actions & Buttons (Day) -->
+    <color name="action_blue_bg">#EFF4FF</color>
+    <color name="action_blue_text">#0051D5</color>
+    <color name="setting_item_bg">#F8FAFC</color>
+    <color name="rerata_box_bg">#EBF5FF</color>
+    <color name="rerata_box_title">#1E40AF</color>
+    <color name="logout_btn_bg">#FEE2E2</color>
+    <color name="logout_btn_text">#DC2626</color>
+    <color name="tab_bg">#E5EEFF</color>
     <color name="btn_disabled_bg">#CBD5E1</color>
     <color name="btn_disabled_text">#64748B</color>
     <color name="btn_orange_late">#D97706</color>
-    <color name="tab_bg">#E5EEFF</color>
-
-    <!-- Setelan Portal Siswa Theme Tokens -->
-    <color name="action_blue_bg">#EFF4FF</color>
-    <color name="action_blue_text">#0051D5</color>
     <color name="metric_orange">#D97706</color>
     <color name="metric_slate">#64748B</color>
-    <color name="status_active_green_bg">#E6F4EA</color>
-    <color name="status_active_green_text">#137333</color>
-    <color name="status_pill_gray_bg">#F1F5F9</color>
-    <color name="status_pill_gray_text">#64748B</color>
-    <color name="rerata_box_bg">#EBF5FF</color>
-    <color name="rerata_box_title">#1E40AF</color>
-    <color name="setting_item_bg">#F8FAFC</color>
-    <color name="logout_btn_bg">#FEE2E2</color>
-    <color name="logout_btn_text">#DC2626</color>
+
+    <!-- Export Report Card (Day) -->
+    <color name="export_card_bg">#00685F</color>
+    <color name="export_card_text_title">#FFFFFF</color>
+    <color name="export_card_text_desc">#E0F2FE</color>
+    <color name="export_card_btn_bg">#FFFFFF</color>
+    <color name="export_card_btn_text">#004D40</color>
 </resources>

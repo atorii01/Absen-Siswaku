@@ -1,53 +1,85 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Palet Warna Semantik Day & Night (Mode Gelap) -->
-    <color name="screen_bg">#0F172A</color>
-    <color name="surface_bg">#0F172A</color>
-    <color name="card_bg">#1E293B</color>
+    <!-- Primary Brand SMKN 8 (High Legibility in Dark) -->
+    <color name="primary_teal">#2DD4BF</color>
+    <color name="deep_teal">#2DD4BF</color>
+    <color name="primary_teal_container">#004D40</color>
+    <color name="on_primary_teal_container">#CCFBF1</color>
+    <color name="secondary_blue">#60A5FA</color>
+
+    <!-- Canvas & Surfaces (OLED/Slate Friendly Dark Mode) -->
+    <color name="screen_bg">#090E17</color>
+    <color name="surface_bg">#090E17</color>
+    <color name="card_bg">#131D2E</color>
+    <color name="card_stroke">#22324B</color>
+    <color name="border_stroke">#22324B</color>
+    <color name="input_bg">#182438</color>
+    <color name="input_stroke">#334A6E</color>
+    <color name="divider_color">#1F2E45</color>
+
+    <!-- Typography Contrast (Tajam dan Terbaca) -->
     <color name="text_primary">#F8FAFC</color>
     <color name="text_secondary">#94A3B8</color>
-    <color name="border_stroke">#334155</color>
-    <color name="card_stroke">#334155</color>
-    <color name="input_bg">#1E293B</color>
-    <color name="input_stroke">#334155</color>
     <color name="text_muted">#64748B</color>
+    <color name="text_hint">#64748B</color>
 
-    <!-- Setelan & Card Items Adaptive Tokens -->
-    <color name="setting_item_bg">#0F172A</color>
-    <color name="rerata_box_bg">#1E3A5F</color>
-    <color name="rerata_box_title">#93C5FD</color>
-    <color name="status_pill_gray_bg">#334155</color>
-    <color name="status_pill_gray_text">#94A3B8</color>
-    <color name="action_blue_bg">#1E293B</color>
-    <color name="action_blue_text">#60A5FA</color>
-    <color name="tab_bg">#334155</color>
-
-    <!-- Badges & Status in Night Mode -->
-    <color name="status_active_green_bg">#064E3B</color>
-    <color name="status_active_green_text">#34D399</color>
-    <color name="badge_soft_blue">#1E293B</color>
+    <!-- Semantic Badges (Night Mode: Dark Container + Bright High Contrast Text) -->
     <color name="badge_hadir_bg">#064E3B</color>
-    <color name="badge_hadir_text">#34D399</color>
-    <color name="badge_pending_bg">#451A03</color>
-    <color name="badge_pending_text">#FBBF24</color>
-    <color name="badge_terlambat_bg">#451A03</color>
+    <color name="badge_hadir_text">#4ADE80</color>
+    <color name="badge_terlambat_bg">#78350F</color>
     <color name="badge_terlambat_text">#FBBF24</color>
     <color name="badge_izin_bg">#1E3A8A</color>
     <color name="badge_izin_text">#60A5FA</color>
+    <color name="badge_alpa_bg">#7F1D1D</color>
+    <color name="badge_alpa_text">#F87171</color>
+    <color name="badge_pending_bg">#78350F</color>
+    <color name="badge_pending_text">#FBBF24</color>
+    <color name="badge_soft_blue">#182438</color>
+    <color name="badge_coral_red">#F87171</color>
 
-    <color name="info_bg">#1E293B</color>
-    <color name="info_border">#334155</color>
-    <color name="info_text">#93C5FD</color>
-    <color name="verified_card_bg">#1E293B</color>
-    <color name="verified_card_border">#334155</color>
-
-    <!-- Logout Soft Coral in Night Mode -->
-    <color name="logout_btn_bg">#451A1A</color>
-    <color name="logout_btn_text">#F87171</color>
-
-    <!-- Notification & Status Alerts -->
-    <color name="status_unread_bg">#451A1A</color>
+    <!-- Status Alerts & Pills (Night Mode) -->
+    <color name="status_unread_bg">#7F1D1D</color>
     <color name="status_unread_text">#F87171</color>
     <color name="status_success_bg">#064E3B</color>
-    <color name="status_success_text">#34D399</color>
+    <color name="status_success_text">#4ADE80</color>
+    <color name="status_active_green_bg">#064E3B</color>
+    <color name="status_active_green_text">#4ADE80</color>
+    <color name="status_pill_gray_bg">#22324B</color>
+    <color name="status_pill_gray_text">#94A3B8</color>
+
+    <!-- Dots -->
+    <color name="dot_hadir">#4ADE80</color>
+    <color name="dot_terlambat">#FBBF24</color>
+    <color name="dot_izin">#60A5FA</color>
+    <color name="dot_alpa">#64748B</color>
+    <color name="emerald_green">#4ADE80</color>
+
+    <!-- GPS & Time Card (Night Mode) -->
+    <color name="info_bg">#182438</color>
+    <color name="info_border">#22324B</color>
+    <color name="info_text">#93C5FD</color>
+    <color name="verified_card_bg">#182438</color>
+    <color name="verified_card_border">#22324B</color>
+
+    <!-- Actions & Buttons (Night Mode) -->
+    <color name="action_blue_bg">#182438</color>
+    <color name="action_blue_text">#60A5FA</color>
+    <color name="setting_item_bg">#0F1726</color>
+    <color name="rerata_box_bg">#1A2840</color>
+    <color name="rerata_box_title">#93C5FD</color>
+    <color name="logout_btn_bg">#451A1A</color>
+    <color name="logout_btn_text">#F87171</color>
+    <color name="tab_bg">#22324B</color>
+    <color name="btn_disabled_bg">#22324B</color>
+    <color name="btn_disabled_text">#64748B</color>
+    <color name="btn_orange_late">#D97706</color>
+    <color name="metric_orange">#FBBF24</color>
+    <color name="metric_slate">#94A3B8</color>
+
+    <!-- Export Report Card (Night Mode: Dark Container + Mint Accents) -->
+    <color name="export_card_bg">#004D40</color>
+    <color name="export_card_text_title">#FFFFFF</color>
+    <color name="export_card_text_desc">#CCFBF1</color>
+    <color name="export_card_btn_bg">#2DD4BF</color>
+    <color name="export_card_btn_text">#090E17</color>
 </resources>

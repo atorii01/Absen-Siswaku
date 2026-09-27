@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="16dp"
+    android:layout_marginVertical="5dp"
+    android:background="@drawable/bg_card_surface"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:padding="12dp">
+
+    <!-- Avatar Bulat Inisial Siswa -->
+    <FrameLayout
+        android:id="@+id/layoutAvatarInitials"
+        android:layout_width="44dp"
+        android:layout_height="44dp"
+        android:background="@drawable/bg_avatar_circle_mint">
+
+        <TextView
+            android:id="@+id/tvAvatarInitials"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:textColor="@color/primary_teal"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            tools:text="AP" />
+    </FrameLayout>
+
+    <!-- Informasi Tengah: Nama Lengkap Siswa + Status Dot + Rombel & NISN -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="6dp"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <!-- Baris Nama Lengkap + Dot Aktif -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/tvNamaSiswaKelola"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textColor="@color/text_primary"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                tools:text="Aditya Pratama N." />
+
+            <View
+                android:id="@+id/dotStatusSiswa"
+                android:layout_width="8dp"
+                android:layout_height="8dp"
+                android:layout_marginStart="6dp"
+                android:background="@drawable/bg_dot_status_online" />
+        </LinearLayout>
+
+        <!-- Baris NISN dan Badge Rombel -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="3dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/tvNisnSiswaKelola"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp"
+                tools:text="NISN: 0061829101" />
+
+            <TextView
+                android:id="@+id/tvBadgeRombelSiswa"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:background="@drawable/bg_badge_pill_blue"
+                android:paddingHorizontal="6dp"
+                android:paddingVertical="1dp"
+                android:textColor="@color/action_blue_text"
+                android:textSize="10sp"
+                android:textStyle="bold"
+                tools:text="XII RPL" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- 3 Tombol Aksi di Kanan: Edit, Mutasi, Hapus -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <!-- Tombol 1: Edit Data Siswa (Pensil Biru) -->
+        <FrameLayout
+            android:id="@+id/btnEditSiswa"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true">
+
+            <ImageView
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:layout_gravity="center"
+                android:contentDescription="Edit Data Siswa"
+                android:src="@drawable/ic_edit"
+                app:tint="@color/action_blue_text" />
+        </FrameLayout>
+
+        <!-- Tombol 2: Mutasi Rombel (Panah Ganda) -->
+        <FrameLayout
+            android:id="@+id/btnMutasiRombel"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_marginStart="2dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true">
+
+            <ImageView
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:layout_gravity="center"
+                android:contentDescription="Mutasi Kelas Siswa"
+                android:src="@drawable/ic_arrow_swap"
+                app:tint="@color/text_secondary" />
+        </FrameLayout>
+
+        <!-- Tombol 3: Hapus Siswa (Tempat Sampah Merah) -->
+        <FrameLayout
+            android:id="@+id/btnHapusSiswa"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_marginStart="2dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true">
+
+            <ImageView
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:layout_gravity="center"
+                android:contentDescription="Hapus Siswa"
+                android:src="@drawable/ic_trash"
+                app:tint="@color/logout_btn_text" />
+        </FrameLayout>
+    </LinearLayout>
+
+</LinearLayout>

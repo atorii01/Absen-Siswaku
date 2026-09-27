@@ -3,6 +3,7 @@ package com.andev.absensiswaku.data.network
 import okhttp3.ResponseBody
 import retrofit2.Call
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.Headers
 import retrofit2.http.PATCH
@@ -81,16 +82,80 @@ interface SupabaseService {
         @Query("order") order: String = "waktu_masuk.asc"
     ): Call<List<RiwayatModel>>
 
+    @GET("presensi_harian")
+    fun getPresensiKelas(
+        @Query("id_kelas") filterKelas: String,
+        @Query("select") select: String = "*,siswa(*,rombel_kelas(*))",
+        @Query("order") order: String = "tanggal.desc,waktu_masuk.asc"
+    ): Call<List<RiwayatModel>>
+
+    @GET("pengajuan_izin")
+    fun getIzinKelas(
+        @Query("status_verifikasi") status: String = "eq.Disetujui",
+        @Query("select") select: String = "*,siswa(*,rombel_kelas(*))",
+        @Query("siswa.id_kelas") filterKelas: String,
+        @Query("order") order: String = "tanggal_mulai.desc"
+    ): Call<List<PengajuanIzinResponse>>
+
     @GET("siswa")
     fun getSiswaByKelas(
         @Query("id_kelas") filterKelas: String,
-        @Query("select") select: String = "id,nama_lengkap,nisn,id_kelas",
+        @Query("select") select: String = "*,rombel_kelas(*)",
         @Query("order") order: String = "nama_lengkap.asc"
     ): Call<List<SiswaMiniResponse>>
+
+    @GET("siswa")
+    fun getSiswaKelola(
+        @Query("id_kelas") filterKelas: String,
+        @Query("order") order: String = "nama_lengkap.asc"
+    ): Call<List<SiswaKelolaResponse>>
+
+    @Headers("Prefer: return=representation")
+    @POST("siswa")
+    fun tambahSiswa(
+        @Body payload: Map<String, @JvmSuppressWildcards Any>
+    ): Call<ResponseBody>
+
+    @Headers("Prefer: return=representation")
+    @PATCH("siswa")
+    fun updateSiswa(
+        @Query("id") filterId: String,
+        @Body payload: Map<String, @JvmSuppressWildcards Any>
+    ): Call<ResponseBody>
+
+    @DELETE("siswa")
+    fun deleteSiswa(
+        @Query("id") filterId: String
+    ): Call<ResponseBody>
 
     @GET("users")
     fun loginGuru(
         @Query("username") usernameFilter: String,
         @Query("select") select: String = "id,username,nama_lengkap,role,rombel_kelas(id,nama_kelas,jurusan)"
     ): Call<List<UserResponse>>
+
+    @GET("konfigurasi_sistem")
+    fun getKonfigurasiSistem(
+        @Query("select") select: String = "*"
+    ): Call<List<KonfigurasiSistemResponse>>
+
+    // ================= GURU MAPEL READ-ONLY ENDPOINTS =================
+    @GET("rombel_kelas")
+    fun getAllRombelKelas(
+        @Query("select") select: String = "id,nama_kelas,jurusan,kapasitas_kuota,users(nama_lengkap)",
+        @Query("order") order: String = "nama_kelas.asc"
+    ): Call<List<RombelKelasResponse>>
+
+    @GET("presensi_harian")
+    fun getPresensiHariIniSemuaKelas(
+        @Query("tanggal") filterTanggal: String,
+        @Query("select") select: String = "id,siswa_id,id_kelas,tanggal,waktu_masuk,status",
+        @Query("order") order: String = "waktu_masuk.asc"
+    ): Call<List<PresensiHarianResponse>>
+
+    @GET("pengajuan_izin")
+    fun getIzinDisetujuiSemuaKelas(
+        @Query("status_verifikasi") status: String = "eq.Disetujui",
+        @Query("select") select: String = "id,siswa_id,jenis_izin,tanggal_mulai,tanggal_selesai,status_verifikasi,siswa(id,nama_lengkap,id_kelas)"
+    ): Call<List<PengajuanIzinResponse>>
 }

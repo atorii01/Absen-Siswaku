@@ -13,9 +13,10 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
 import com.andev.absensiswaku.data.pref.SessionManager
 import com.andev.absensiswaku.databinding.ActivityWalasMainBinding
-import com.andev.absensiswaku.ui.riwayat.RiwayatFragment
-import com.andev.absensiswaku.ui.setelan.SetelanFragment
+import com.andev.absensiswaku.ui.walas.WalasLaporanFragment
 import com.andev.absensiswaku.ui.walas.WalasPresensiFragment
+import com.andev.absensiswaku.ui.walas.WalasSetelanFragment
+import com.andev.absensiswaku.ui.walas.WalasSiswaFragment
 
 class WalasMainActivity : AppCompatActivity() {
 
@@ -35,10 +36,23 @@ class WalasMainActivity : AppCompatActivity() {
 
         sessionManager = SessionManager(this)
 
-        val isLoggedIn = pref.getBoolean("KEY_IS_LOGGED_IN", false) || pref.getBoolean("is_logged_in", false) || sessionManager.isLoggedIn()
+        val isLoggedIn = pref.getBoolean("KEY_IS_LOGGED_IN", false) || pref.getBoolean(
+            "is_logged_in",
+            false
+        ) || sessionManager.isLoggedIn()
 
         if (!isLoggedIn) {
             startActivity(Intent(this, LoginActivity::class.java))
+            finish()
+            return
+        }
+
+        val userRole = pref.getString("ROLE", "")?.takeIf { it.isNotEmpty() } ?: sessionManager.getRole()
+        if (userRole.equals("SISWA", true)) {
+            val siswaIntent = Intent(this, MainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            }
+            startActivity(siswaIntent)
             finish()
             return
         }
@@ -72,19 +86,22 @@ class WalasMainActivity : AppCompatActivity() {
                     loadFragment(WalasPresensiFragment())
                     true
                 }
+
                 R.id.nav_walas_laporan -> {
-                    loadFragment(RiwayatFragment())
+                    loadFragment(WalasLaporanFragment())
                     true
                 }
+
                 R.id.nav_walas_siswa -> {
-                    Toast.makeText(this, "Daftar Siswa Kelas Binaan Aktif", Toast.LENGTH_SHORT).show()
-                    loadFragment(WalasPresensiFragment())
+                    loadFragment(WalasSiswaFragment())
                     true
                 }
+
                 R.id.nav_walas_setelan -> {
-                    loadFragment(SetelanFragment())
+                    loadFragment(WalasSetelanFragment())
                     true
                 }
+
                 else -> false
             }
         }

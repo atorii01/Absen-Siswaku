@@ -1,7 +1,6 @@
 package com.andev.absensiswaku.ui.walas
 
 import android.content.Context
-import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -10,6 +9,10 @@ import androidx.recyclerview.widget.RecyclerView
 import com.andev.absensiswaku.R
 import com.andev.absensiswaku.data.network.PengajuanIzinResponse
 import com.andev.absensiswaku.databinding.ItemVerifikasiIzinBinding
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import java.util.TimeZone
 
 class AntreanIzinAdapter(
     private var items: MutableList<PengajuanIzinResponse>,
@@ -18,6 +21,26 @@ class AntreanIzinAdapter(
     private val onLihatSuratClicked: (PengajuanIzinResponse) -> Unit,
     private val onHubungiOrtuClicked: (PengajuanIzinResponse) -> Unit
 ) : RecyclerView.Adapter<AntreanIzinAdapter.ViewHolder>() {
+
+    companion object {
+        fun formatJamWib(isoString: String?): String {
+            if (isoString.isNullOrEmpty()) return "Diajukan baru saja"
+            return try {
+                // Tangani format ISO 8601 dari Supabase (contoh: 2026-09-25T05:30:00+00:00)
+                val cleanIso = isoString.substringBefore(".").substringBefore("+")
+                val parser = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault()).apply {
+                    timeZone = TimeZone.getTimeZone("UTC")
+                }
+                val formatter = SimpleDateFormat("HH:mm 'WIB'", Locale.forLanguageTag("id-ID")).apply {
+                    timeZone = TimeZone.getTimeZone("Asia/Jakarta")
+                }
+                val date = parser.parse(cleanIso) ?: Date()
+                "Diajukan " + formatter.format(date)
+            } catch (e: Exception) {
+                "Diajukan hari ini"
+            }
+        }
+    }
 
     fun updateData(newItems: List<PengajuanIzinResponse>) {
         items = newItems.toMutableList()
@@ -51,7 +74,7 @@ class AntreanIzinAdapter(
 
         fun bind(item: PengajuanIzinResponse, posNumber: Int) {
             val ctx = binding.root.context
-            val jenis = item.jenisIzin.trim()
+            val jenis = item.jenisIzin?.trim().orEmpty().ifEmpty { "Izin" }
 
             // 1. Nomor Urut format 2 digit (01, 02, ...)
             val displayPos = String.format("%02d", posNumber)
@@ -62,7 +85,7 @@ class AntreanIzinAdapter(
                 ?: "Siswa ${item.siswaId}"
 
             val nisn = item.siswa?.nisn?.takeIf { it.isNotEmpty() } ?: "-"
-            val jam = item.createdAt?.substringAfter("T")?.take(5) ?: "06:45"
+            val waktuDiajukan = formatJamWib(item.createdAt)
             binding.tvNamaSiswa.text = nama
 
             // 3. Styling Berdasarkan Jenis Status/Izin (Sakit, Izin, Dispensasi, Alpa)
@@ -70,10 +93,10 @@ class AntreanIzinAdapter(
                 "SAKIT" -> {
                     binding.viewAccentStripe.setBackgroundResource(R.drawable.bg_stripe_sakit)
                     binding.frameNomorUrut.setBackgroundResource(R.drawable.bg_circle_num_red)
-                    binding.tvNomorUrut.setTextColor(Color.parseColor("#DC2626"))
+                    binding.tvNomorUrut.setTextColor(ContextCompat.getColor(ctx, R.color.badge_alpa_text))
                     binding.tvBadgeJenisIzin.text = "Sakit"
                     binding.tvBadgeJenisIzin.setBackgroundResource(R.drawable.bg_badge_pill_sakit)
-                    binding.tvNisnWaktu.text = "NISN: $nisn • Diajukan $jam WIB"
+                    binding.tvNisnWaktu.text = "NISN: $nisn • $waktuDiajukan"
 
                     binding.layoutAlasanDanBerkas.visibility = View.VISIBLE
                     binding.layoutActionButtons.visibility = View.VISIBLE
@@ -83,10 +106,10 @@ class AntreanIzinAdapter(
                 "IZIN" -> {
                     binding.viewAccentStripe.setBackgroundResource(R.drawable.bg_stripe_izin)
                     binding.frameNomorUrut.setBackgroundResource(R.drawable.bg_circle_num_amber)
-                    binding.tvNomorUrut.setTextColor(Color.parseColor("#D97706"))
+                    binding.tvNomorUrut.setTextColor(ContextCompat.getColor(ctx, R.color.badge_terlambat_text))
                     binding.tvBadgeJenisIzin.text = "Izin"
                     binding.tvBadgeJenisIzin.setBackgroundResource(R.drawable.bg_badge_pill_amber)
-                    binding.tvNisnWaktu.text = "NISN: $nisn • Diajukan $jam WIB"
+                    binding.tvNisnWaktu.text = "NISN: $nisn • $waktuDiajukan"
 
                     binding.layoutAlasanDanBerkas.visibility = View.VISIBLE
                     binding.layoutActionButtons.visibility = View.VISIBLE
@@ -96,10 +119,10 @@ class AntreanIzinAdapter(
                 "DISPENSASI" -> {
                     binding.viewAccentStripe.setBackgroundResource(R.drawable.bg_stripe_dispensasi)
                     binding.frameNomorUrut.setBackgroundResource(R.drawable.bg_circle_num_blue)
-                    binding.tvNomorUrut.setTextColor(Color.parseColor("#2563EB"))
+                    binding.tvNomorUrut.setTextColor(ContextCompat.getColor(ctx, R.color.badge_izin_text))
                     binding.tvBadgeJenisIzin.text = "Dispensasi"
                     binding.tvBadgeJenisIzin.setBackgroundResource(R.drawable.bg_badge_pill_dispensasi)
-                    binding.tvNisnWaktu.text = "NISN: $nisn • Diajukan $jam WIB"
+                    binding.tvNisnWaktu.text = "NISN: $nisn • $waktuDiajukan"
 
                     binding.layoutAlasanDanBerkas.visibility = View.VISIBLE
                     binding.layoutActionButtons.visibility = View.VISIBLE
@@ -110,7 +133,7 @@ class AntreanIzinAdapter(
                     // ALPA / Belum Scan
                     binding.viewAccentStripe.setBackgroundResource(R.drawable.bg_stripe_alpa)
                     binding.frameNomorUrut.setBackgroundResource(R.drawable.bg_circle_num_slate)
-                    binding.tvNomorUrut.setTextColor(Color.parseColor("#64748B"))
+                    binding.tvNomorUrut.setTextColor(ContextCompat.getColor(ctx, R.color.text_secondary))
                     binding.tvBadgeJenisIzin.text = "Alpa"
                     binding.tvBadgeJenisIzin.setBackgroundResource(R.drawable.bg_badge_pill_alpa)
                     binding.tvNisnWaktu.text = "NISN: $nisn • Belum scan hingga 07:30"
@@ -122,7 +145,7 @@ class AntreanIzinAdapter(
             }
 
             // 4. Keterangan Alasan
-            val quote = item.keterangan.ifEmpty { "Tidak ada keterangan tambahan." }
+            val quote = item.keterangan.orEmpty().ifEmpty { "Tidak ada keterangan tambahan." }
             binding.tvKeteranganAlasan.text = "“$quote”"
 
             // 5. Lampiran Berkas Bukti

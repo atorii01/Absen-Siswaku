@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/nav_guru_presensi"
+        android:icon="@drawable/ic_bar_chart"
+        android:title="Presensi Kelas" />
+    <item
+        android:id="@+id/nav_guru_rekap"
+        android:icon="@drawable/ic_calendar"
+        android:title="Rekap Absen" />
+    <item
+        android:id="@+id/nav_guru_setelan"
+        android:icon="@drawable/ic_settings"
+        android:title="Setelan" />
+</menu>

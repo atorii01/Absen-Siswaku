@@ -2,11 +2,17 @@ package com.andev.absensiswaku.ui.riwayat
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.andev.absensiswaku.R
 import com.andev.absensiswaku.data.network.RiwayatModel
 import com.andev.absensiswaku.databinding.ItemRiwayatPresensiBinding
+
+// ViewBinding aliases agar selaras dengan naming convention
+private val ItemRiwayatPresensiBinding.badgeStatus: TextView get() = tvStatusBadgeItem
+private val ItemRiwayatPresensiBinding.tvKeteranganVerifikator: TextView get() = tvVerifyDetail
+private val ItemRiwayatPresensiBinding.tvWaktuDanKeterangan: TextView get() = tvJamItem
 
 class RiwayatAdapter(
     private var listRiwayat: List<RiwayatModel>,
@@ -37,92 +43,116 @@ class RiwayatAdapter(
     inner class RiwayatViewHolder(private val binding: ItemRiwayatPresensiBinding) :
         RecyclerView.ViewHolder(binding.root) {
 
+        private fun setBadgePill(
+            view: TextView,
+            @androidx.annotation.DrawableRes bgDrawableRes: Int,
+            @androidx.annotation.ColorRes textRes: Int
+        ) {
+            val ctx = view.context
+            view.setBackgroundResource(bgDrawableRes)
+            view.setTextColor(ContextCompat.getColor(ctx, textRes))
+        }
+
         fun bind(item: RiwayatModel) {
             val ctx = binding.root.context
             val walasName = if (!item.verifikator.isNullOrEmpty()) item.verifikator else defaultWalas
 
-            binding.tvTanggalItem.text = item.tanggal
-            val jamStr = item.displayJamMasuk
-            val ketText = if (!item.keteranganStatus.isNullOrEmpty()) " • ${item.keteranganStatus}" else ""
-            binding.tvJamItem.text = "$jamStr WIB$ketText"
+            binding.tvTanggalItem.text = item.tanggal ?: "-"
+            val jamTeks = item.waktu // Berisi jam WIB hasil format dari created_at
+            val subKeterangan = if (item.keterangan.isNotEmpty()) " • ${item.keterangan}" else ""
+            binding.tvWaktuDanKeterangan.text = "$jamTeks$subKeterangan"
 
-            val statusUpper = item.status.uppercase()
+            val statusVerif = item.statusVerifikasi?.lowercase()
 
-            when {
-                // 1. Presensi Mandiri Siswa (Zero-Touch Validation AI + GPS) - Tepat Waktu / Hadir
-                statusUpper == "HADIR" || statusUpper == "TEPAT_WAKTU" -> {
-                    binding.tvStatusBadgeItem.text = "✓ Terverifikasi AI & GPS (Hadir)"
-                    binding.tvStatusBadgeItem.setBackgroundResource(R.drawable.bg_badge_hadir)
-                    binding.tvStatusBadgeItem.setTextColor(ContextCompat.getColor(ctx, R.color.badge_hadir_text))
+            if (!statusVerif.isNullOrEmpty()) {
+                // 3 Kondisi Eksplisit Status Pengajuan Izin/Sakit/Dispensasi
+                when (statusVerif) {
+                    "pending" -> {
+                        // Badge Kuning / Oranye
+                        binding.badgeStatus.text = "Menunggu Verifikasi"
+                        setBadgePill(binding.badgeStatus, R.drawable.bg_badge_pending, R.color.badge_pending_text)
+                        binding.tvKeteranganVerifikator.text = "Diserahkan ke ${item.namaWalas} • Pending"
 
-                    binding.imgSelfieThumbnail.setImageResource(R.drawable.ic_avatar)
-                    binding.imgShieldVerify.setImageResource(R.drawable.ic_shield_check)
-                    binding.imgShieldVerify.setColorFilter(ContextCompat.getColor(ctx, R.color.badge_hadir_text))
-
-                    binding.tvVerifyDetail.text = "Diverifikasi otomatis oleh Sistem AI SMKN 8 Jakarta"
-                    binding.tvVerifyTag.text = "Otomatis"
-                    binding.tvVerifyTag.setTextColor(ContextCompat.getColor(ctx, R.color.badge_hadir_text))
-                }
-
-                // 2. Presensi Mandiri Siswa (Zero-Touch Validation AI + GPS) - Terlambat
-                statusUpper == "TERLAMBAT" -> {
-                    binding.tvStatusBadgeItem.text = "⚠ Terverifikasi AI (Terlambat)"
-                    binding.tvStatusBadgeItem.setBackgroundResource(R.drawable.bg_badge_terlambat)
-                    binding.tvStatusBadgeItem.setTextColor(ContextCompat.getColor(ctx, R.color.badge_terlambat_text))
-
-                    binding.imgSelfieThumbnail.setImageResource(R.drawable.ic_avatar)
-                    binding.imgShieldVerify.setImageResource(R.drawable.ic_warning)
-                    binding.imgShieldVerify.setColorFilter(ContextCompat.getColor(ctx, R.color.badge_terlambat_text))
-
-                    binding.tvVerifyDetail.text = "Diverifikasi otomatis oleh Sistem AI SMKN 8 Jakarta"
-                    binding.tvVerifyTag.text = "Toleransi"
-                    binding.tvVerifyTag.setTextColor(ContextCompat.getColor(ctx, R.color.badge_terlambat_text))
-                }
-
-                // 3. Pengajuan Ketidakhadiran - Pending Menunggu Verifikasi Walas
-                statusUpper == "PENDING" -> {
-                    binding.tvStatusBadgeItem.text = "Menunggu Verifikasi"
-                    binding.tvStatusBadgeItem.setBackgroundResource(R.drawable.bg_badge_pending)
-                    binding.tvStatusBadgeItem.setTextColor(ContextCompat.getColor(ctx, R.color.badge_pending_text))
-
-                    binding.imgSelfieThumbnail.setImageResource(R.drawable.ic_medical)
-                    binding.imgShieldVerify.setImageResource(R.drawable.ic_pending_clock)
-                    binding.imgShieldVerify.setColorFilter(ContextCompat.getColor(ctx, R.color.badge_pending_text))
-
-                    binding.tvVerifyDetail.text = "Diserahkan ke $walasName • Pending"
-                    binding.tvVerifyTag.text = "Pending"
-                    binding.tvVerifyTag.setTextColor(ContextCompat.getColor(ctx, R.color.badge_pending_text))
-                }
-
-                // 4. Pengajuan Ketidakhadiran (Izin, Sakit, Dispensasi) - Disetujui Walas
-                statusUpper in listOf("IZIN", "SAKIT", "DISPENSASI") -> {
-                    val labelStatus = when (statusUpper) {
-                        "IZIN" -> "Izin"
-                        "SAKIT" -> "Sakit"
-                        else -> "Dispensasi"
+                        binding.imgSelfieThumbnail.setImageResource(R.drawable.ic_medical)
+                        binding.imgShieldVerify.setImageResource(R.drawable.ic_pending_clock)
+                        binding.imgShieldVerify.setColorFilter(ContextCompat.getColor(ctx, R.color.badge_pending_text))
+                        binding.tvVerifyTag.text = "Pending"
+                        binding.tvVerifyTag.setTextColor(ContextCompat.getColor(ctx, R.color.badge_pending_text))
                     }
-                    binding.tvStatusBadgeItem.text = "✓ $labelStatus Disetujui"
-                    binding.tvStatusBadgeItem.setBackgroundResource(R.drawable.bg_badge_izin)
-                    binding.tvStatusBadgeItem.setTextColor(ContextCompat.getColor(ctx, R.color.badge_izin_text))
+                    "disetujui" -> {
+                        // Badge Hijau Terverifikasi
+                        val labelJenis = item.jenisIzin?.ifEmpty { "Izin" } ?: "Izin"
+                        binding.badgeStatus.text = "✓ $labelJenis Disetujui"
+                        setBadgePill(binding.badgeStatus, R.drawable.bg_badge_hadir, R.color.badge_hadir_text)
+                        binding.tvKeteranganVerifikator.text = "Diverifikasi oleh ${item.namaWalas}"
 
-                    binding.imgSelfieThumbnail.setImageResource(R.drawable.ic_medical)
-                    binding.imgShieldVerify.setImageResource(R.drawable.ic_shield_check)
-                    binding.imgShieldVerify.setColorFilter(ContextCompat.getColor(ctx, R.color.badge_izin_text))
+                        binding.imgSelfieThumbnail.setImageResource(R.drawable.ic_medical)
+                        binding.imgShieldVerify.setImageResource(R.drawable.ic_shield_check)
+                        binding.imgShieldVerify.setColorFilter(ContextCompat.getColor(ctx, R.color.badge_hadir_text))
+                        binding.tvVerifyTag.text = "Disetujui"
+                        binding.tvVerifyTag.setTextColor(ContextCompat.getColor(ctx, R.color.badge_hadir_text))
+                    }
+                    "ditolak" -> {
+                        // Badge Merah Ditolak
+                        binding.badgeStatus.text = "✕ Pengajuan Ditolak"
+                        setBadgePill(binding.badgeStatus, R.drawable.bg_badge_alpa, R.color.badge_alpa_text)
+                        binding.tvKeteranganVerifikator.text = "Ditolak oleh ${item.namaWalas} (Tidak Sah)"
 
-                    val verifyTimeText = if (!item.jamVerifikasi.isNullOrEmpty()) " pada ${item.jamVerifikasi}" else ""
-                    binding.tvVerifyDetail.text = "Diverifikasi oleh $walasName$verifyTimeText"
-                    binding.tvVerifyTag.text = "Disetujui"
-                    binding.tvVerifyTag.setTextColor(ContextCompat.getColor(ctx, R.color.badge_izin_text))
+                        binding.imgSelfieThumbnail.setImageResource(R.drawable.ic_medical)
+                        binding.imgShieldVerify.setImageResource(R.drawable.ic_warning)
+                        binding.imgShieldVerify.setColorFilter(ContextCompat.getColor(ctx, R.color.badge_alpa_text))
+                        binding.tvVerifyTag.text = "Ditolak"
+                        binding.tvVerifyTag.setTextColor(ContextCompat.getColor(ctx, R.color.badge_alpa_text))
+                    }
+                    else -> {
+                        binding.badgeStatus.text = item.status ?: "-"
+                        binding.badgeStatus.setBackgroundResource(R.drawable.bg_badge_pill_blue)
+                        binding.badgeStatus.setTextColor(ContextCompat.getColor(ctx, R.color.text_primary))
+
+                        binding.imgSelfieThumbnail.setImageResource(R.drawable.ic_avatar)
+                        binding.tvKeteranganVerifikator.text = "Diverifikasi oleh ${item.namaWalas}"
+                        binding.tvVerifyTag.text = ""
+                    }
                 }
+            } else {
+                // Presensi Mandiri Harian Siswa (AI + GPS)
+                val statusUpper = item.status?.uppercase().orEmpty()
+                when (statusUpper) {
+                    "HADIR", "TEPAT_WAKTU" -> {
+                        binding.badgeStatus.text = "✓ Terverifikasi AI & GPS (Hadir)"
+                        binding.badgeStatus.setBackgroundResource(R.drawable.bg_badge_hadir)
+                        binding.badgeStatus.setTextColor(ContextCompat.getColor(ctx, R.color.badge_hadir_text))
 
-                else -> {
-                    binding.tvStatusBadgeItem.text = item.status
-                    binding.tvStatusBadgeItem.setBackgroundResource(R.drawable.bg_badge_pill_blue)
-                    binding.tvStatusBadgeItem.setTextColor(ContextCompat.getColor(ctx, R.color.text_primary))
+                        binding.imgSelfieThumbnail.setImageResource(R.drawable.ic_avatar)
+                        binding.imgShieldVerify.setImageResource(R.drawable.ic_shield_check)
+                        binding.imgShieldVerify.setColorFilter(ContextCompat.getColor(ctx, R.color.badge_hadir_text))
 
-                    binding.imgSelfieThumbnail.setImageResource(R.drawable.ic_avatar)
-                    binding.tvVerifyDetail.text = "Diverifikasi oleh $walasName"
-                    binding.tvVerifyTag.text = ""
+                        binding.tvKeteranganVerifikator.text = "Diverifikasi otomatis oleh Sistem AI SMKN 8 Jakarta"
+                        binding.tvVerifyTag.text = "Otomatis"
+                        binding.tvVerifyTag.setTextColor(ContextCompat.getColor(ctx, R.color.badge_hadir_text))
+                    }
+                    "TERLAMBAT" -> {
+                        binding.badgeStatus.text = "⚠ Terverifikasi AI (Terlambat)"
+                        binding.badgeStatus.setBackgroundResource(R.drawable.bg_badge_terlambat)
+                        binding.badgeStatus.setTextColor(ContextCompat.getColor(ctx, R.color.badge_terlambat_text))
+
+                        binding.imgSelfieThumbnail.setImageResource(R.drawable.ic_avatar)
+                        binding.imgShieldVerify.setImageResource(R.drawable.ic_warning)
+                        binding.imgShieldVerify.setColorFilter(ContextCompat.getColor(ctx, R.color.badge_terlambat_text))
+
+                        binding.tvKeteranganVerifikator.text = "Diverifikasi otomatis oleh Sistem AI SMKN 8 Jakarta"
+                        binding.tvVerifyTag.text = "Toleransi"
+                        binding.tvVerifyTag.setTextColor(ContextCompat.getColor(ctx, R.color.badge_terlambat_text))
+                    }
+                    else -> {
+                        binding.badgeStatus.text = item.status ?: "-"
+                        binding.badgeStatus.setBackgroundResource(R.drawable.bg_badge_pill_blue)
+                        binding.badgeStatus.setTextColor(ContextCompat.getColor(ctx, R.color.text_primary))
+
+                        binding.imgSelfieThumbnail.setImageResource(R.drawable.ic_avatar)
+                        binding.tvKeteranganVerifikator.text = "Diverifikasi oleh ${item.namaWalas}"
+                        binding.tvVerifyTag.text = ""
+                    }
                 }
             }
 

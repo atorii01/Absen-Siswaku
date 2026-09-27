@@ -378,7 +378,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="48dp"
                     android:layout_marginTop="16dp"
-                    android:backgroundTint="#F0F5FE"
+                    android:backgroundTint="@color/input_bg"
                     android:fontFamily="sans-serif-medium"
                     android:insetTop="0dp"
                     android:insetBottom="0dp"
@@ -390,7 +390,7 @@
                     app:iconGravity="textStart"
                     app:iconPadding="8dp"
                     app:iconTint="@null"
-                    app:strokeColor="#D0E1FD"
+                    app:strokeColor="@color/input_stroke"
                     app:strokeWidth="1dp" />
 
                 <!-- Progress Bar inside Card during loading -->
