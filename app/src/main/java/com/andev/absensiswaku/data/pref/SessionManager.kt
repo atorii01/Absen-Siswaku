@@ -58,16 +58,27 @@ class SessionManager(context: Context) {
     fun getRole(): String = pref.getString(KEY_ROLE, "") ?: ""
 
     fun clearSession() {
-        val isRemembered = pref.getBoolean("KEY_REMEMBER_DEVICE", false)
+        val isRememberedSiswa = pref.getBoolean("KEY_REMEMBER_DEVICE_SISWA", false) || pref.getBoolean("KEY_REMEMBER_DEVICE", false)
+        val isRememberedGuru = pref.getBoolean("KEY_REMEMBER_DEVICE_GURU", false)
         val savedNisn = pref.getString("SAVED_NISN", "")
         val savedPin = pref.getString("SAVED_PIN", "")
+        val savedGuruUser = pref.getString("SAVED_GURU_USERNAME", "")
+        val savedGuruPass = pref.getString("SAVED_GURU_PASSWORD", "")
+        val lastRoleTab = pref.getString("LAST_ROLE_TAB", "SISWA")
 
         editor.clear()
-        if (isRemembered) {
+        if (isRememberedSiswa) {
+            editor.putBoolean("KEY_REMEMBER_DEVICE_SISWA", true)
             editor.putBoolean("KEY_REMEMBER_DEVICE", true)
             editor.putString("SAVED_NISN", savedNisn)
             editor.putString("SAVED_PIN", savedPin)
         }
+        if (isRememberedGuru) {
+            editor.putBoolean("KEY_REMEMBER_DEVICE_GURU", true)
+            editor.putString("SAVED_GURU_USERNAME", savedGuruUser)
+            editor.putString("SAVED_GURU_PASSWORD", savedGuruPass)
+        }
+        editor.putString("LAST_ROLE_TAB", lastRoleTab)
         editor.apply()
     }
 }

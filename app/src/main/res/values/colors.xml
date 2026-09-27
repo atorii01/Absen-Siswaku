@@ -38,8 +38,22 @@
     <color name="badge_alpa_text">#DC2626</color>
     <color name="badge_pending_bg">#FEF7E0</color>
     <color name="badge_pending_text">#B06000</color>
+    <color name="badge_sakit_bg">#FEE2E2</color>
+    <color name="badge_sakit_text">#DC2626</color>
     <color name="badge_soft_blue">#EFF6FF</color>
     <color name="badge_coral_red">#EF4444</color>
+    <color name="badge_amber_bg">#FEF3C7</color>
+    <color name="badge_amber_text">#B45309</color>
+    <color name="badge_super_admin_bg">#CCFBF1</color>
+    <color name="badge_super_admin_text">#0F766E</color>
+    <color name="alert_coral_bg">#FEF2F2</color>
+    <color name="alert_coral_stroke">#FCA5A5</color>
+    <color name="alert_coral_text">#DC2626</color>
+    <color name="alert_coral_sub">#7F1D1D</color>
+    <color name="hero_card_track">#004D40</color>
+    <color name="hero_card_subbox_bg">#25000000</color>
+    <color name="rombel_code_bg">#E6F4F2</color>
+    <color name="rombel_code_text">#00685F</color>
 
     <!-- Status Alerts & Pills (Day) -->
     <color name="status_unread_bg">#FEE2E2</color>

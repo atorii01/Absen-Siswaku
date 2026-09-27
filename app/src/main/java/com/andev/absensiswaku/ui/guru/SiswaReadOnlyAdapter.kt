@@ -6,14 +6,15 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.andev.absensiswaku.R
 import com.andev.absensiswaku.databinding.ItemSiswaRombelReadonlyBinding
+import java.io.Serializable
 
 data class SiswaReadOnlyItem(
     val id: Int,
     val namaLengkap: String,
     val nisn: String,
     val waktuMasuk: String,
-    val status: String // "HADIR", "TERLAMBAT", "IZIN", "SAKIT", "DISPENSASI", "ALPA"
-) {
+    val status: String // "HADIR", "TERLAMBAT", "IZIN", "SAKIT", "ALPA"
+) : Serializable {
     val initialLetters: String
         get() {
             val name = namaLengkap.trim()
@@ -71,21 +72,25 @@ class SiswaReadOnlyAdapter(
         fun bind(item: SiswaReadOnlyItem) {
             val ctx = binding.root.context
 
+            // Nama Siswa & Inisial Bulat
             binding.tvNamaSiswa.text = item.namaLengkap
             binding.tvAvatarInitials.text = item.initialLetters
 
-            val waktuTeks = if (item.waktuMasuk.isNotEmpty() && item.waktuMasuk != "-") {
-                item.waktuMasuk
-            } else if (item.status.equals("HADIR", true)) {
-                "06:45 WIB"
-            } else if (item.status.equals("TERLAMBAT", true)) {
-                "07:05 WIB"
-            } else {
-                "Belum Scan"
+            // Format Jam Masuk
+            val jamMasukFormatted = when {
+                item.waktuMasuk.isNotEmpty() && item.waktuMasuk != "-" -> {
+                    if (item.waktuMasuk.contains("WIB", ignoreCase = true) || item.waktuMasuk.contains("Disetujui", ignoreCase = true) || item.waktuMasuk.contains("Surat", ignoreCase = true)) {
+                        item.waktuMasuk
+                    } else {
+                        "${item.waktuMasuk} WIB"
+                    }
+                }
+                else -> "-"
             }
-            binding.tvNisnWaktu.text = "NISN: ${item.nisn} • $waktuTeks"
 
-            // Styling status badge
+            binding.tvNisnWaktu.text = "NISN: ${item.nisn} • $jamMasukFormatted"
+
+            // Badge status berwarna: Hadir (Hijau), Terlambat (Kuning), Izin (Biru), Sakit (Merah/Oranye), Alpa (Merah)
             when (item.status.uppercase()) {
                 "HADIR", "TEPAT_WAKTU" -> {
                     binding.tvBadgeStatusSiswa.text = "Hadir"
@@ -104,8 +109,8 @@ class SiswaReadOnlyAdapter(
                 }
                 "SAKIT" -> {
                     binding.tvBadgeStatusSiswa.text = "Sakit"
-                    binding.tvBadgeStatusSiswa.setBackgroundResource(R.drawable.bg_badge_pill_sakit)
-                    binding.tvBadgeStatusSiswa.setTextColor(ContextCompat.getColor(ctx, R.color.badge_alpa_text))
+                    binding.tvBadgeStatusSiswa.setBackgroundResource(R.drawable.bg_badge_sakit)
+                    binding.tvBadgeStatusSiswa.setTextColor(ContextCompat.getColor(ctx, R.color.badge_sakit_text))
                 }
                 "DISPENSASI" -> {
                     binding.tvBadgeStatusSiswa.text = "Dispensasi"

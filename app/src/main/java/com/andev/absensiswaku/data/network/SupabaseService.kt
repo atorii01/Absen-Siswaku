@@ -98,6 +98,12 @@ interface SupabaseService {
     ): Call<List<PengajuanIzinResponse>>
 
     @GET("siswa")
+    fun getAllSiswa(
+        @Query("select") select: String = "*,rombel_kelas(*)",
+        @Query("order") order: String = "nama_lengkap.asc"
+    ): Call<List<SiswaMiniResponse>>
+
+    @GET("siswa")
     fun getSiswaByKelas(
         @Query("id_kelas") filterKelas: String,
         @Query("select") select: String = "*,rombel_kelas(*)",
@@ -130,8 +136,8 @@ interface SupabaseService {
 
     @GET("users")
     fun loginGuru(
-        @Query("username") usernameFilter: String,
-        @Query("select") select: String = "id,username,nama_lengkap,role,rombel_kelas(id,nama_kelas,jurusan)"
+        @Query("or", encoded = true) orFilter: String,
+        @Query("select") select: String = "id,username,password_hash,nama_lengkap,role,mata_pelajaran,rombel_kelas(id,nama_kelas,jurusan)"
     ): Call<List<UserResponse>>
 
     @GET("konfigurasi_sistem")
@@ -140,6 +146,12 @@ interface SupabaseService {
     ): Call<List<KonfigurasiSistemResponse>>
 
     // ================= GURU MAPEL READ-ONLY ENDPOINTS =================
+    @GET("rombel_kelas")
+    fun getRombelMapel(
+        @Query("select") select: String = "id,nama_kelas,jurusan,wali_kelas_id,tahun_ajaran,users!wali_kelas_id(nama_lengkap)",
+        @Query("order") order: String = "id.asc"
+    ): Call<List<RombelMapelResponse>>
+
     @GET("rombel_kelas")
     fun getAllRombelKelas(
         @Query("select") select: String = "id,nama_kelas,jurusan,kapasitas_kuota,users(nama_lengkap)",
@@ -158,4 +170,11 @@ interface SupabaseService {
         @Query("status_verifikasi") status: String = "eq.Disetujui",
         @Query("select") select: String = "id,siswa_id,jenis_izin,tanggal_mulai,tanggal_selesai,status_verifikasi,siswa(id,nama_lengkap,id_kelas)"
     ): Call<List<PengajuanIzinResponse>>
+
+    @GET("siswa")
+    fun getSiswaAdmin(
+        @Query("select") select: String = "id,nisn,nama_lengkap,id_kelas,nik,jenis_kelamin,no_wa_orang_tua,rombel_kelas!id_kelas(nama_kelas)",
+        @Query("order") order: String = "nama_lengkap.asc",
+        @Query("limit") limit: Int = 500
+    ): Call<List<SiswaAdminResponse>>
 }

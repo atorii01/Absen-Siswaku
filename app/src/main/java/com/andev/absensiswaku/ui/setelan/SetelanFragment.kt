@@ -405,29 +405,29 @@ class SetelanFragment : Fragment() {
 
         // 1. Bersihkan status login aktif di SharedPreferences, namun pertahankan data remember me
         val pref = ctx.getSharedPreferences(PREF_SESSION_NAME, Context.MODE_PRIVATE)
-        val isRemembered = pref.getBoolean("KEY_REMEMBER_DEVICE", false)
+        val isRemembered = pref.getBoolean("KEY_REMEMBER_DEVICE", false) || pref.getBoolean("KEY_REMEMBER_DEVICE_SISWA", false)
 
-        pref.edit().apply {
-            putBoolean("KEY_IS_LOGGED_IN", false)
-            putBoolean("is_logged_in", false)
-            // Hapus session data runtime (nama, rombel, id_siswa)
-            remove("user_id")
-            remove("ID_SISWA")
-            remove("nama")
-            remove("NAMA_SISWA")
-            remove("id_kelas")
-            remove("ID_KELAS")
-            remove("nama_kelas")
-            remove("jurusan")
-            remove("wali_kelas")
-            remove("role")
-            if (!isRemembered) {
-                remove("KEY_REMEMBER_DEVICE")
-                remove("SAVED_NISN")
-                remove("SAVED_PIN")
-            }
-            apply()
+        val editor = pref.edit()
+        editor.putBoolean("KEY_IS_LOGGED_IN", false)
+        editor.putBoolean("is_logged_in", false)
+        // Hapus session data runtime (nama, rombel, id_siswa)
+        editor.remove("user_id")
+        editor.remove("ID_SISWA")
+        editor.remove("nama")
+        editor.remove("NAMA_SISWA")
+        editor.remove("id_kelas")
+        editor.remove("ID_KELAS")
+        editor.remove("nama_kelas")
+        editor.remove("jurusan")
+        editor.remove("wali_kelas")
+        editor.remove("role")
+        if (!isRemembered) {
+            editor.remove("KEY_REMEMBER_DEVICE")
+            editor.remove("KEY_REMEMBER_DEVICE_SISWA")
+            editor.remove("SAVED_NISN")
+            editor.remove("SAVED_PIN")
         }
+        editor.apply()
 
         Toast.makeText(ctx, "Anda telah keluar dari Portal Siswa.", Toast.LENGTH_SHORT).show()
 

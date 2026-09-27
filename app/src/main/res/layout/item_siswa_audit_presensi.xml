@@ -1,0 +1,275 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="16dp"
+    android:layout_marginVertical="6dp"
+    app:cardBackgroundColor="@color/card_bg"
+    app:cardCornerRadius="14dp"
+    app:cardElevation="0dp"
+    app:strokeColor="@color/card_stroke"
+    app:strokeWidth="1dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="12dp">
+
+        <!-- Top Section: Avatar Selfie Biometrik + Info Siswa + Status Jam Masuk -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <!-- Frame Foto Selfie / Biometrik -->
+            <FrameLayout
+                android:layout_width="48dp"
+                android:layout_height="48dp">
+
+                <!-- Avatar Siswa / Foto Selfie -->
+                <com.google.android.material.imageview.ShapeableImageView
+                    android:id="@+id/imgAuditSelfie"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:background="@drawable/bg_subbox_admin_hero"
+                    android:contentDescription="Selfie Presensi"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/ic_avatar"
+                    app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Medium"
+                    app:strokeColor="@color/primary_teal"
+                    app:strokeWidth="1.5dp" />
+
+                <!-- Inisial Teks jika avatar tidak memiliki foto khusus -->
+                <TextView
+                    android:id="@+id/tvAuditInitials"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="center"
+                    android:textColor="@color/primary_teal"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:visibility="gone"
+                    tools:text="AP" />
+
+                <!-- Badge Mini Biometrik Check -->
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:layout_gravity="bottom|end"
+                    android:contentDescription="Biometrik Verified"
+                    android:src="@drawable/ic_check_circle"
+                    app:tint="@color/primary_teal" />
+
+            </FrameLayout>
+
+            <!-- Teks Identitas Siswa -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/tvAuditNomorUrut"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        tools:text="#01" />
+
+                    <TextView
+                        android:id="@+id/tvAuditNamaSiswa"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="6dp"
+                        android:layout_weight="1"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        android:textColor="@color/text_primary"
+                        android:textSize="13.5sp"
+                        android:textStyle="bold"
+                        tools:text="Adinda Putri Pratiwi" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/tvAuditNisn"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="11.5sp"
+                        tools:text="NISN: 0068192341" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginHorizontal="6dp"
+                        android:text="•"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="10sp" />
+
+                    <TextView
+                        android:id="@+id/tvAuditJamMasuk"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/text_primary"
+                        android:textSize="11.5sp"
+                        android:textStyle="bold"
+                        tools:text="06:24:18 WIB" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <!-- Badge Status Hadir / Terlambat -->
+            <TextView
+                android:id="@+id/tvAuditStatusBadge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:background="@drawable/bg_badge_rombel_verif"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="4dp"
+                android:textColor="@color/badge_hadir_text"
+                android:textSize="10.5sp"
+                android:textStyle="bold"
+                tools:text="✓ Hadir Sah" />
+
+        </LinearLayout>
+
+        <!-- Divider Halus -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginVertical="10dp"
+            android:background="@color/card_stroke" />
+
+        <!-- Bottom Audit Metrics Bar: Face Match AI + Radius Gerbang + Anti Mock GPS -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <!-- Pill 1: Face Match AI -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:background="@drawable/bg_subbox_admin_hero"
+                android:gravity="center"
+                android:orientation="horizontal"
+                android:paddingHorizontal="6dp"
+                android:paddingVertical="5dp">
+
+                <ImageView
+                    android:layout_width="12dp"
+                    android:layout_height="12dp"
+                    android:contentDescription="AI Biometrik"
+                    android:src="@drawable/ic_verified"
+                    app:tint="@color/primary_teal" />
+
+                <TextView
+                    android:id="@+id/tvAuditFaceMatch"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:textColor="@color/primary_teal"
+                    android:textSize="10.5sp"
+                    android:textStyle="bold"
+                    tools:text="AI: 98.4%" />
+
+            </LinearLayout>
+
+            <!-- Pill 2: Jarak Gerbang (Geofence) -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:layout_weight="1.2"
+                android:background="@drawable/bg_subbox_admin_hero"
+                android:gravity="center"
+                android:orientation="horizontal"
+                android:paddingHorizontal="6dp"
+                android:paddingVertical="5dp">
+
+                <ImageView
+                    android:layout_width="12dp"
+                    android:layout_height="12dp"
+                    android:contentDescription="Geotag Gerbang"
+                    android:src="@drawable/ic_location_pin"
+                    app:tint="@color/text_primary" />
+
+                <TextView
+                    android:id="@+id/tvAuditJarakGerbang"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:textColor="@color/text_primary"
+                    android:textSize="10.5sp"
+                    android:textStyle="bold"
+                    tools:text="📍 14m Gerbang" />
+
+            </LinearLayout>
+
+            <!-- Pill 3: Anti Mock GPS -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:layout_weight="1.1"
+                android:background="@drawable/bg_subbox_admin_hero"
+                android:gravity="center"
+                android:orientation="horizontal"
+                android:paddingHorizontal="6dp"
+                android:paddingVertical="5dp">
+
+                <ImageView
+                    android:layout_width="12dp"
+                    android:layout_height="12dp"
+                    android:contentDescription="Anti Fake GPS"
+                    android:src="@drawable/ic_shield_check"
+                    app:tint="@color/badge_hadir_text" />
+
+                <TextView
+                    android:id="@+id/tvAuditAntiMock"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:textColor="@color/badge_hadir_text"
+                    android:textSize="10.5sp"
+                    android:textStyle="bold"
+                    tools:text="GPS: Valid" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>

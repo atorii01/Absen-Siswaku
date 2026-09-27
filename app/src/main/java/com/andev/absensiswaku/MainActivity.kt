@@ -25,6 +25,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var sessionManager: SessionManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
         val pref = getSharedPreferences("PREF_SMKN8_SESSION", Context.MODE_PRIVATE)
         val isDarkMode = pref.getBoolean("KEY_DARK_MODE", false)
         if (isDarkMode) {
@@ -32,8 +34,6 @@ class MainActivity : AppCompatActivity() {
         } else {
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
         }
-
-        super.onCreate(savedInstanceState)
 
         sessionManager = SessionManager(this)
 
@@ -46,7 +46,15 @@ class MainActivity : AppCompatActivity() {
         }
 
         val userRole = pref.getString("ROLE", "")?.takeIf { it.isNotEmpty() } ?: sessionManager.getRole()
-        if (userRole.equals("GURU", true) || userRole.equals("WALI_KELAS", true)) {
+        if (userRole.equals("GURU_MAPEL", true)) {
+            val guruIntent = Intent(this, GuruMainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            }
+            startActivity(guruIntent)
+            finish()
+            return
+        } else if (userRole.equals("GURU", true) || userRole.equals("WALI_KELAS", true) ||
+            userRole.equals("SUPER_ADMIN", true) || userRole.equals("ADMIN", true)) {
             val walasIntent = Intent(this, WalasMainActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             }

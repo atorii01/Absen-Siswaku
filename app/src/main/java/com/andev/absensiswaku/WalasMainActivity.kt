@@ -24,6 +24,8 @@ class WalasMainActivity : AppCompatActivity() {
     private lateinit var sessionManager: SessionManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
         val pref = getSharedPreferences("PREF_SMKN8_SESSION", Context.MODE_PRIVATE)
         val isDarkMode = pref.getBoolean("KEY_DARK_MODE", false)
         if (isDarkMode) {
@@ -31,8 +33,6 @@ class WalasMainActivity : AppCompatActivity() {
         } else {
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
         }
-
-        super.onCreate(savedInstanceState)
 
         sessionManager = SessionManager(this)
 
@@ -55,6 +55,13 @@ class WalasMainActivity : AppCompatActivity() {
             startActivity(siswaIntent)
             finish()
             return
+        } else if (userRole.equals("GURU_MAPEL", true)) {
+            val guruIntent = Intent(this, GuruMainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            }
+            startActivity(guruIntent)
+            finish()
+            return
         }
 
         enableEdgeToEdge()
@@ -70,12 +77,22 @@ class WalasMainActivity : AppCompatActivity() {
         setupBottomNavigation()
         setupBackPressHandler()
 
+        val isAdmin = userRole.equals("SUPER_ADMIN", true) || userRole.equals("ADMIN", true)
+
         if (savedInstanceState == null) {
-            loadFragment(WalasPresensiFragment())
+            if (isAdmin) {
+                loadFragment(com.andev.absensiswaku.ui.admin.AdminPresensiFragment())
+            } else {
+                loadFragment(WalasPresensiFragment())
+            }
         }
     }
 
     private fun setupBottomNavigation() {
+        val pref = getSharedPreferences("PREF_SMKN8_SESSION", Context.MODE_PRIVATE)
+        val userRole = pref.getString("ROLE", "")?.takeIf { it.isNotEmpty() } ?: sessionManager.getRole()
+        val isAdmin = userRole.equals("SUPER_ADMIN", true) || userRole.equals("ADMIN", true)
+
         binding.bottomNavigation.setOnItemSelectedListener { item ->
             if (binding.bottomNavigation.selectedItemId == item.itemId && supportFragmentManager.findFragmentById(R.id.fragmentContainer) != null) {
                 return@setOnItemSelectedListener true
@@ -83,17 +100,29 @@ class WalasMainActivity : AppCompatActivity() {
 
             when (item.itemId) {
                 R.id.nav_walas_presensi -> {
-                    loadFragment(WalasPresensiFragment())
+                    if (isAdmin) {
+                        loadFragment(com.andev.absensiswaku.ui.admin.AdminPresensiFragment())
+                    } else {
+                        loadFragment(WalasPresensiFragment())
+                    }
                     true
                 }
 
                 R.id.nav_walas_laporan -> {
-                    loadFragment(WalasLaporanFragment())
+                    if (isAdmin) {
+                        loadFragment(com.andev.absensiswaku.ui.admin.AdminRekapFragment())
+                    } else {
+                        loadFragment(WalasLaporanFragment())
+                    }
                     true
                 }
 
                 R.id.nav_walas_siswa -> {
-                    loadFragment(WalasSiswaFragment())
+                    if (isAdmin) {
+                        loadFragment(com.andev.absensiswaku.ui.admin.AdminMasterDataFragment())
+                    } else {
+                        loadFragment(WalasSiswaFragment())
+                    }
                     true
                 }
 

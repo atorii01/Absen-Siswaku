@@ -14,8 +14,8 @@ import androidx.fragment.app.Fragment
 import com.andev.absensiswaku.data.pref.SessionManager
 import com.andev.absensiswaku.databinding.ActivityGuruMainBinding
 import com.andev.absensiswaku.ui.guru.GuruPresensiFragment
-import com.andev.absensiswaku.ui.walas.WalasLaporanFragment
-import com.andev.absensiswaku.ui.walas.WalasSetelanFragment
+import com.andev.absensiswaku.ui.guru.GuruRekapFragment
+import com.andev.absensiswaku.ui.guru.GuruSetelanFragment
 
 class GuruMainActivity : AppCompatActivity() {
 
@@ -24,6 +24,8 @@ class GuruMainActivity : AppCompatActivity() {
     private var backPressedTime: Long = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
         val pref = getSharedPreferences("PREF_SMKN8_SESSION", Context.MODE_PRIVATE)
         val isDarkMode = pref.getBoolean("KEY_DARK_MODE", false)
         if (isDarkMode) {
@@ -31,8 +33,6 @@ class GuruMainActivity : AppCompatActivity() {
         } else {
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
         }
-
-        super.onCreate(savedInstanceState)
 
         sessionManager = SessionManager(this)
 
@@ -43,6 +43,24 @@ class GuruMainActivity : AppCompatActivity() {
 
         if (!isLoggedIn) {
             startActivity(Intent(this, LoginActivity::class.java))
+            finish()
+            return
+        }
+
+        val userRole = pref.getString("ROLE", "")?.takeIf { it.isNotEmpty() } ?: sessionManager.getRole()
+        if (userRole.equals("SISWA", true)) {
+            val siswaIntent = Intent(this, MainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            }
+            startActivity(siswaIntent)
+            finish()
+            return
+        } else if (userRole.equals("GURU", true) || userRole.equals("WALI_KELAS", true) ||
+            userRole.equals("SUPER_ADMIN", true) || userRole.equals("ADMIN", true)) {
+            val walasIntent = Intent(this, WalasMainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            }
+            startActivity(walasIntent)
             finish()
             return
         }
@@ -78,13 +96,12 @@ class GuruMainActivity : AppCompatActivity() {
                 }
 
                 R.id.nav_guru_rekap -> {
-                    // Gunakan Laporan / Rekap Presensi Global
-                    loadFragment(WalasLaporanFragment())
+                    loadFragment(GuruRekapFragment())
                     true
                 }
 
                 R.id.nav_guru_setelan -> {
-                    loadFragment(WalasSetelanFragment())
+                    loadFragment(GuruSetelanFragment())
                     true
                 }
 

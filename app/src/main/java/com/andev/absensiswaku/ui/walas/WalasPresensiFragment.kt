@@ -256,7 +256,7 @@ class WalasPresensiFragment : Fragment() {
                         val waktu = riwayat.displayJamMasuk.take(5)
 
                         SiswaHadirWalasModel(
-                            nomorUrut = String.format("%02d", idx + 1),
+                            nomorUrut = String.format(java.util.Locale.getDefault(), "%02d", idx + 1),
                             siswaId = riwayat.siswaId,
                             namaLengkap = sNama,
                             nisn = sNisn,

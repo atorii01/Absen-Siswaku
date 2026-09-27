@@ -77,7 +77,7 @@ class AntreanIzinAdapter(
             val jenis = item.jenisIzin?.trim().orEmpty().ifEmpty { "Izin" }
 
             // 1. Nomor Urut format 2 digit (01, 02, ...)
-            val displayPos = String.format("%02d", posNumber)
+            val displayPos = String.format(java.util.Locale.getDefault(), "%02d", posNumber)
             binding.tvNomorUrut.text = displayPos
 
             // 2. Identitas Siswa

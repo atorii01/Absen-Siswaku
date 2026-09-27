@@ -30,6 +30,8 @@ class LoginActivity : AppCompatActivity() {
     private var selectedRoleTab: String = "SISWA"
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
         val pref = getSharedPreferences("PREF_SMKN8_SESSION", Context.MODE_PRIVATE)
         val isDarkMode = pref.getBoolean("KEY_DARK_MODE", false)
         if (isDarkMode) {
@@ -38,38 +40,60 @@ class LoginActivity : AppCompatActivity() {
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
         }
 
-        super.onCreate(savedInstanceState)
-
-        // 3. Pengecekan Sesi Aktif di onCreate()
-        val isLoggedIn = pref.getBoolean("KEY_IS_LOGGED_IN", false) || pref.getBoolean("is_logged_in", false)
-        val role = pref.getString("ROLE", "") ?: pref.getString("role", "") ?: ""
-
-        if (isLoggedIn) {
-            if (role.equals("SISWA", true)) {
-                val intent = Intent(this, MainActivity::class.java).apply {
-                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                }
-                startActivity(intent)
-                finish()
-                return
-            } else if (role.equals("GURU_MAPEL", true)) {
-                val intent = Intent(this, GuruMainActivity::class.java).apply {
-                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                }
-                startActivity(intent)
-                finish()
-                return
-            } else if (role.equals("WALI_KELAS", true) || role.equals("GURU", true)) {
-                val intent = Intent(this, WalasMainActivity::class.java).apply {
-                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                }
-                startActivity(intent)
-                finish()
-                return
-            }
-        }
-
         sessionManager = SessionManager(this)
+
+        // Pengecekan Sesi Aktif di onCreate()
+        val isLoggedIn = sessionManager.isLoggedIn() ||
+            pref.getBoolean("KEY_IS_LOGGED_IN", false) ||
+            pref.getBoolean("is_logged_in", false)
+
+        val role = pref.getString("ROLE", null)?.takeIf { it.isNotBlank() }
+            ?: pref.getString("role", null)?.takeIf { it.isNotBlank() }
+            ?: sessionManager.getRole()
+
+        if (isLoggedIn && role.isNotBlank()) {
+            when {
+                role.equals("SISWA", true) -> {
+                    val intent = Intent(this, MainActivity::class.java).apply {
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    }
+                    startActivity(intent)
+                    finish()
+                    return
+                }
+                role.equals("GURU_MAPEL", true) -> {
+                    val intent = Intent(this, GuruMainActivity::class.java).apply {
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    }
+                    startActivity(intent)
+                    finish()
+                    return
+                }
+                role.equals("WALI_KELAS", true) || role.equals("GURU", true) ||
+                role.equals("SUPER_ADMIN", true) || role.equals("ADMIN", true) -> {
+                    val intent = Intent(this, WalasMainActivity::class.java).apply {
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    }
+                    startActivity(intent)
+                    finish()
+                    return
+                }
+                else -> {
+                    // Bersihkan sesi korup jika role tidak dikenali
+                    sessionManager.clearSession()
+                    val editor = pref.edit()
+                    editor.putBoolean("KEY_IS_LOGGED_IN", false)
+                    editor.putBoolean("is_logged_in", false)
+                    editor.apply()
+                }
+            }
+        } else if (isLoggedIn && role.isBlank()) {
+            sessionManager.clearSession()
+            val editor = pref.edit()
+            editor.putBoolean("KEY_IS_LOGGED_IN", false)
+            editor.putBoolean("is_logged_in", false)
+            editor.apply()
+        }
 
         enableEdgeToEdge()
         binding = ActivityLoginBinding.inflate(layoutInflater)
@@ -83,26 +107,10 @@ class LoginActivity : AppCompatActivity() {
 
         setupTabSwitching()
         setupClickListeners()
-
-        // Logika Auto-Fill di onCreate (tanpa bypass halaman login)
-        val isRemembered = pref.getBoolean("KEY_REMEMBER_DEVICE", false)
-
-        if (isRemembered) {
-            val savedNisn = pref.getString("SAVED_NISN", "") ?: ""
-            val savedPin = pref.getString("SAVED_PIN", "") ?: ""
-
-            binding.etIdentifier.setText(savedNisn)
-            binding.etSecret.setText(savedPin)
-            binding.cbRememberMe.isChecked = true
-        } else {
-            binding.cbRememberMe.isChecked = false
-        }
+        restoreInitialTabAndCredentials()
     }
 
     private fun setupTabSwitching() {
-        // Initialize default UI state (Siswa)
-        switchToSiswaTab()
-
         binding.toggleGroupRole.addOnButtonCheckedListener { _, checkedId, isChecked ->
             if (!isChecked) return@addOnButtonCheckedListener
             when (checkedId) {
@@ -116,6 +124,24 @@ class LoginActivity : AppCompatActivity() {
                         switchToGuruTab()
                     }
                 }
+            }
+        }
+    }
+
+    private fun restoreInitialTabAndCredentials() {
+        val pref = getSharedPreferences("PREF_SMKN8_SESSION", Context.MODE_PRIVATE)
+        val lastRole = pref.getString("LAST_ROLE_TAB", "SISWA") ?: "SISWA"
+        if (lastRole == "GURU") {
+            binding.toggleGroupRole.check(R.id.btnTabGuru)
+            if (selectedRoleTab != "GURU") {
+                switchToGuruTab()
+            }
+        } else {
+            binding.toggleGroupRole.check(R.id.btnTabSiswa)
+            if (selectedRoleTab != "SISWA") {
+                switchToSiswaTab()
+            } else {
+                restoreRememberedSiswaIfAvailable()
             }
         }
     }
@@ -160,6 +186,8 @@ class LoginActivity : AppCompatActivity() {
         binding.btnLogin.text = "Masuk ke Portal Siswa →"
         binding.tvInfoBanner.text =
             "Setelah login, Anda akan diarahkan ke Portal Presensi & Pengajuan Izin Siswa."
+        binding.tilIdentifier.setStartIconDrawable(R.drawable.ic_school)
+        binding.tvForgotPassword.text = "Lupa PIN?"
 
         clearInputErrors()
         restoreRememberedSiswaIfAvailable()
@@ -205,8 +233,11 @@ class LoginActivity : AppCompatActivity() {
         binding.btnLogin.text = "Masuk ke Portal Guru →"
         binding.tvInfoBanner.text =
             "Portal khusus Guru & Tendik untuk pengelolaan presensi kelas & rekapitulasi."
+        binding.tilIdentifier.setStartIconDrawable(R.drawable.ic_badge)
+        binding.tvForgotPassword.text = "Lupa Password?"
 
         clearInputErrors()
+        restoreRememberedGuruIfAvailable()
     }
 
     private fun dpToPx(dp: Int): Float {
@@ -222,16 +253,28 @@ class LoginActivity : AppCompatActivity() {
 
     private fun restoreRememberedSiswaIfAvailable() {
         val pref = getSharedPreferences("PREF_SMKN8_SESSION", Context.MODE_PRIVATE)
-        val isRemembered = pref.getBoolean("KEY_REMEMBER_DEVICE", false)
-        if (isRemembered) {
-            val savedNisn = pref.getString("SAVED_NISN", "") ?: ""
-            val savedPin = pref.getString("SAVED_PIN", "") ?: ""
-            if (savedNisn.isNotEmpty()) {
-                binding.etIdentifier.setText(savedNisn)
-            }
-            if (savedPin.isNotEmpty()) {
-                binding.etSecret.setText(savedPin)
-            }
+        val isRemembered = pref.getBoolean("KEY_REMEMBER_DEVICE_SISWA", false) || pref.getBoolean("KEY_REMEMBER_DEVICE", false)
+        val savedNisn = pref.getString("SAVED_NISN", "") ?: ""
+        val savedPin = pref.getString("SAVED_PIN", "") ?: ""
+
+        if (isRemembered && savedNisn.isNotEmpty() && savedNisn.all { it.isDigit() }) {
+            binding.etIdentifier.setText(savedNisn)
+            binding.etSecret.setText(savedPin)
+            binding.cbRememberMe.isChecked = true
+        } else {
+            binding.cbRememberMe.isChecked = false
+        }
+    }
+
+    private fun restoreRememberedGuruIfAvailable() {
+        val pref = getSharedPreferences("PREF_SMKN8_SESSION", Context.MODE_PRIVATE)
+        val isRemembered = pref.getBoolean("KEY_REMEMBER_DEVICE_GURU", false)
+        val savedGuruUsername = pref.getString("SAVED_GURU_USERNAME", "") ?: ""
+        val savedGuruPassword = pref.getString("SAVED_GURU_PASSWORD", "") ?: ""
+
+        if (isRemembered && savedGuruUsername.isNotEmpty()) {
+            binding.etIdentifier.setText(savedGuruUsername)
+            binding.etSecret.setText(savedGuruPassword)
             binding.cbRememberMe.isChecked = true
         } else {
             binding.cbRememberMe.isChecked = false
@@ -270,11 +313,12 @@ class LoginActivity : AppCompatActivity() {
         }
 
         binding.tvForgotPassword.setOnClickListener {
-            Toast.makeText(
-                this,
-                "Silakan hubungi Wali Kelas atau Admin Sekolah untuk reset PIN",
-                Toast.LENGTH_LONG
-            ).show()
+            val msg = if (selectedRoleTab == "SISWA") {
+                "Silakan hubungi Wali Kelas atau Admin Sekolah untuk reset PIN Presensi"
+            } else {
+                "Silakan hubungi Administrator Sekolah untuk reset password akun Guru/Tendik"
+            }
+            Toast.makeText(this, msg, Toast.LENGTH_LONG).show()
         }
 
         binding.btnBelajarId.setOnClickListener {
@@ -324,27 +368,28 @@ class LoginActivity : AppCompatActivity() {
                         val currentPin = binding.etSecret.text.toString().trim()
 
                         val pref = getSharedPreferences("PREF_SMKN8_SESSION", Context.MODE_PRIVATE)
-                        pref.edit().apply {
-                            putString("ROLE", "SISWA")
-                            putString("role", "SISWA")
-                            putInt("ID_SISWA", siswa.id ?: 0)
-                            putString("NAMA_SISWA", siswa.namaLengkap ?: "")
-                            putString("NISN", siswa.nisn ?: currentNisn)
-                            putInt("ID_KELAS", siswa.idKelas ?: (siswa.rombelKelas?.id ?: 0))
-                            putString("KELAS", siswa.rombelKelas?.namaKelas ?: "-")
-                            putString("WALI_KELAS", siswa.rombelKelas?.waliKelas?.namaLengkap ?: "-")
-                            putBoolean("KEY_IS_LOGGED_IN", true)
-                            putBoolean("is_logged_in", true)
-                            putBoolean("KEY_REMEMBER_DEVICE", isRememberChecked)
-                            if (isRememberChecked) {
-                                putString("SAVED_NISN", currentNisn)
-                                putString("SAVED_PIN", currentPin)
-                            } else {
-                                remove("SAVED_NISN")
-                                remove("SAVED_PIN")
-                            }
-                            apply()
+                        val editor = pref.edit()
+                        editor.putString("ROLE", "SISWA")
+                        editor.putString("role", "SISWA")
+                        editor.putString("LAST_ROLE_TAB", "SISWA")
+                        editor.putInt("ID_SISWA", siswa.id ?: 0)
+                        editor.putString("NAMA_SISWA", siswa.namaLengkap ?: "")
+                        editor.putString("NISN", siswa.nisn ?: currentNisn)
+                        editor.putInt("ID_KELAS", siswa.idKelas ?: (siswa.rombelKelas?.id ?: 0))
+                        editor.putString("KELAS", siswa.rombelKelas?.namaKelas ?: "-")
+                        editor.putString("WALI_KELAS", namaWalas)
+                        editor.putBoolean("KEY_IS_LOGGED_IN", true)
+                        editor.putBoolean("is_logged_in", true)
+                        editor.putBoolean("KEY_REMEMBER_DEVICE", isRememberChecked)
+                        editor.putBoolean("KEY_REMEMBER_DEVICE_SISWA", isRememberChecked)
+                        if (isRememberChecked) {
+                            editor.putString("SAVED_NISN", currentNisn)
+                            editor.putString("SAVED_PIN", currentPin)
+                        } else {
+                            editor.remove("SAVED_NISN")
+                            editor.remove("SAVED_PIN")
                         }
+                        editor.apply()
 
                         sessionManager.createSession(
                             role = "SISWA",
@@ -369,6 +414,7 @@ class LoginActivity : AppCompatActivity() {
                         startActivity(intent)
                         finish()
                     } else {
+                        binding.tilSecret.error = "NISN atau PIN Presensi salah"
                         Toast.makeText(
                             this@LoginActivity,
                             "NISN atau PIN Presensi salah",
@@ -399,39 +445,93 @@ class LoginActivity : AppCompatActivity() {
         showLoading(true)
 
         val isRememberChecked = binding.cbRememberMe.isChecked
+        val cleanId = identifier.trim()
+        val orFilter = "(username.eq.$cleanId,username.eq.$cleanId@smkn8.sch.id,id.eq.$cleanId)"
 
-        SupabaseClient.instance.loginGuru(usernameFilter = "eq.$identifier")
+        SupabaseClient.instance.loginGuru(orFilter = orFilter)
             .enqueue(object : Callback<List<UserResponse>> {
                 override fun onResponse(
                     call: Call<List<UserResponse>>,
                     response: Response<List<UserResponse>>
                 ) {
                     showLoading(false)
+                    if (!response.isSuccessful) {
+                        Toast.makeText(
+                            this@LoginActivity,
+                            "Gagal terhubung ke server (${response.code()})",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        return
+                    }
+
                     val user = response.body()?.firstOrNull()
-                    val rombel = user?.rombelKelas?.firstOrNull()
+                    if (user == null) {
+                        binding.tilIdentifier.error = "NIP / Username tidak terdaftar"
+                        Toast.makeText(
+                            this@LoginActivity,
+                            "Akun Guru / NIP tidak ditemukan di database SMKN 8",
+                            Toast.LENGTH_LONG
+                        ).show()
+                        return
+                    }
 
-                    val role = user?.role ?: "WALI_KELAS"
-                    val idWalas = user?.id ?: "walas-1"
-                    val namaWalas = user?.namaLengkap
-                        ?: if (identifier.contains("farauk", true)) "Farauk Pratama, S.Kom."
-                        else identifier
-                    val idKelas = rombel?.id ?: 9
-                    val namaKelas = rombel?.namaKelas ?: "XII RPL"
-                    val jurusan = rombel?.jurusan ?: "Rekayasa Perangkat Lunak"
+                    // Verifikasi Password Hash
+                    val expectedHash = user.passwordHash
+                    val isPasswordValid = if (!expectedHash.isNullOrEmpty()) {
+                        secret == expectedHash
+                    } else {
+                        secret == "guru123" || secret == "admin123"
+                    }
 
-                    saveGuruSessionAndNavigate(role, idWalas, namaWalas, idKelas, namaKelas, jurusan, identifier, secret, isRememberChecked)
+                    if (!isPasswordValid) {
+                        binding.tilSecret.error = "Password salah"
+                        Toast.makeText(
+                            this@LoginActivity,
+                            "Password yang Anda masukkan salah",
+                            Toast.LENGTH_LONG
+                        ).show()
+                        return
+                    }
+
+                    // Hapus pesan error jika valid
+                    binding.tilIdentifier.error = null
+                    binding.tilSecret.error = null
+
+                    val rombel = user.rombelKelas?.firstOrNull()
+                    val role = user.role ?: "WALI_KELAS"
+                    val idWalas = user.id ?: cleanId
+                    val namaWalas = user.namaLengkap ?: cleanId
+
+                    val isGuruMapel = role.equals("GURU_MAPEL", true) || idWalas.startsWith("mapel", true)
+                    val isAdmin = role.equals("SUPER_ADMIN", true) || role.equals("ADMIN", true)
+
+                    val idKelas = rombel?.id ?: if (isAdmin) 9 else 0
+                    val namaKelas = rombel?.namaKelas ?: if (isAdmin) "Semua Kelas" else if (isGuruMapel) "Semua Kelas" else "-"
+                    val jurusan = rombel?.jurusan ?: if (isAdmin) "Administrator Sistem" else if (isGuruMapel) (user.mataPelajaran ?: "Guru Mapel") else "-"
+
+                    saveGuruSessionAndNavigate(
+                        role = role,
+                        idWalas = idWalas,
+                        namaWalas = namaWalas,
+                        idKelas = idKelas,
+                        namaKelas = namaKelas,
+                        jurusan = jurusan,
+                        identifier = cleanId,
+                        secret = secret,
+                        isRememberChecked = isRememberChecked,
+                        isGuruMapel = isGuruMapel,
+                        mataPelajaran = user.mataPelajaran,
+                        username = user.username
+                    )
                 }
 
                 override fun onFailure(call: Call<List<UserResponse>>, t: Throwable) {
                     showLoading(false)
-                    val role = "WALI_KELAS"
-                    val idWalas = "walas-1"
-                    val namaWalas = if (identifier.contains("farauk", true)) "Farauk Pratama, S.Kom." else identifier
-                    val idKelas = 9
-                    val namaKelas = "XII RPL"
-                    val jurusan = "Rekayasa Perangkat Lunak"
-
-                    saveGuruSessionAndNavigate(role, idWalas, namaWalas, idKelas, namaKelas, jurusan, identifier, secret, isRememberChecked)
+                    Toast.makeText(
+                        this@LoginActivity,
+                        "Koneksi gagal: ${t.localizedMessage ?: t.message}",
+                        Toast.LENGTH_LONG
+                    ).show()
                 }
             })
     }
@@ -445,31 +545,42 @@ class LoginActivity : AppCompatActivity() {
         jurusan: String,
         identifier: String,
         secret: String,
-        isRememberChecked: Boolean
+        isRememberChecked: Boolean,
+        isGuruMapel: Boolean,
+        mataPelajaran: String? = null,
+        username: String? = null
     ) {
         val pref = getSharedPreferences("PREF_SMKN8_SESSION", Context.MODE_PRIVATE)
-        pref.edit().apply {
-            putString("ROLE", role)
-            putString("role", role)
-            putString("ID_WALAS", idWalas)
-            putString("NAMA_WALAS", namaWalas)
-            putInt("ID_KELAS", idKelas)
-            putString("NAMA_KELAS", namaKelas)
-            putString("nama", namaWalas)
-            putString("nama_kelas", namaKelas)
-            putString("wali_kelas", namaWalas)
-            putBoolean("KEY_IS_LOGGED_IN", true)
-            putBoolean("is_logged_in", true)
-            putBoolean("KEY_REMEMBER_DEVICE", isRememberChecked)
-            if (isRememberChecked) {
-                putString("SAVED_NISN", identifier)
-                putString("SAVED_PIN", secret)
-            } else {
-                remove("SAVED_NISN")
-                remove("SAVED_PIN")
-            }
-            apply()
+        val editor = pref.edit()
+        editor.putString("ROLE", role)
+        editor.putString("role", role)
+        editor.putString("LAST_ROLE_TAB", "GURU")
+        editor.putString("ID_USER", idWalas)
+        editor.putString("ID_WALAS", idWalas)
+        editor.putString("user_id", idWalas)
+        editor.putString("NAMA_LENGKAP", namaWalas)
+        editor.putString("NAMA_WALAS", namaWalas)
+        editor.putString("nama", namaWalas)
+        editor.putString("wali_kelas", namaWalas)
+        val finalMapel = mataPelajaran ?: if (isGuruMapel) "Mata Pelajaran Umum" else jurusan
+        editor.putString("MATA_PELAJARAN", finalMapel)
+        editor.putString("USERNAME", username ?: identifier)
+        editor.putInt("ID_KELAS", idKelas)
+        editor.putString("NAMA_KELAS", namaKelas)
+        editor.putString("nama_kelas", namaKelas)
+        editor.putString("jurusan", jurusan)
+        editor.putBoolean("KEY_IS_LOGGED_IN", true)
+        editor.putBoolean("is_logged_in", true)
+        editor.putBoolean("KEY_REMEMBER_DEVICE", isRememberChecked)
+        editor.putBoolean("KEY_REMEMBER_DEVICE_GURU", isRememberChecked)
+        if (isRememberChecked) {
+            editor.putString("SAVED_GURU_USERNAME", identifier)
+            editor.putString("SAVED_GURU_PASSWORD", secret)
+        } else {
+            editor.remove("SAVED_GURU_USERNAME")
+            editor.remove("SAVED_GURU_PASSWORD")
         }
+        editor.apply()
 
         sessionManager.createSession(
             role = role,
@@ -482,16 +593,17 @@ class LoginActivity : AppCompatActivity() {
             waliKelas = namaWalas
         )
 
-        val isGuruMapel = role.equals("GURU_MAPEL", true) ||
-                identifier.contains("mapel", true)
-
         val targetActivity = if (isGuruMapel) {
             GuruMainActivity::class.java
         } else {
             WalasMainActivity::class.java
         }
 
-        val roleLabel = if (isGuruMapel) "Guru Mapel" else "Wali Kelas $namaKelas"
+        val roleLabel = when {
+            role.equals("SUPER_ADMIN", true) || role.equals("ADMIN", true) -> "Administrator SMKN 8"
+            isGuruMapel -> "Guru Mata Pelajaran"
+            else -> "Wali Kelas $namaKelas"
+        }
         Toast.makeText(
             this@LoginActivity,
             "✓ Selamat Datang, $namaWalas ($roleLabel)",

@@ -5,28 +5,17 @@ import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.andev.absensiswaku.R
+import com.andev.absensiswaku.data.network.RombelMapelResponse
 import com.andev.absensiswaku.databinding.ItemRombelMapelBinding
 import java.util.Locale
 
-data class RombelMapelItem(
-    val id: Int,
-    val namaKelas: String,
-    val jurusan: String,
-    val namaWalas: String,
-    val kapasitas: Int = 36,
-    val hadirCount: Int = 0,
-    val izinCount: Int = 0,
-    val alpaCount: Int = 0,
-    val persentaseHadir: Float = 0f
-)
-
 class RombelMapelAdapter(
-    private var items: List<RombelMapelItem> = emptyList(),
-    private val onLihatSiswaClick: (RombelMapelItem) -> Unit
+    private var items: List<RombelMapelResponse> = emptyList(),
+    private val onLihatSiswaClick: (RombelMapelResponse) -> Unit
 ) : RecyclerView.Adapter<RombelMapelAdapter.ViewHolder>() {
 
-    fun updateData(newItems: List<RombelMapelItem>) {
-        this.items = newItems
+    fun submitList(newItems: List<RombelMapelResponse>) {
+        this.items = ArrayList(newItems)
         notifyDataSetChanged()
     }
 
@@ -46,38 +35,50 @@ class RombelMapelAdapter(
     inner class ViewHolder(private val binding: ItemRombelMapelBinding) :
         RecyclerView.ViewHolder(binding.root) {
 
-        fun bind(item: RombelMapelItem) {
+        fun bind(item: RombelMapelResponse) {
             val ctx = binding.root.context
+            val kuota = if (item.id == 8 || item.id == 10) 35 else 36
 
+            // 1. Judul Card: nama_kelas (cth: "XII AKL 1", "XII RPL")
             binding.tvNamaKelas.text = item.namaKelas
-            binding.tvNamaWalas.text = "Wali Kelas: ${item.namaWalas}"
-            binding.tvKuotaHadir.text = "${item.hadirCount} / ${item.kapasitas} Siswa"
 
-            // Persentase badge
-            binding.tvBadgePersentase.text = String.format(Locale.US, "%.1f%% Hadir", item.persentaseHadir)
+            // 2. Wali Kelas: relasi users!wali_kelas_id
+            binding.tvWaliKelas.text = "Wali Kelas: ${item.waliKelas?.namaLengkap ?: "-"}"
+
+            // 3. Kuota Siswa: "{hadir} / {kuota} Siswa" (jika 0 hadir: "0 / 35 Siswa" atau "0 / 36 Siswa")
+            binding.tvKapasitasSiswa.text = "${item.hadirCount} / $kuota Siswa"
+
+            // 4. Badge Persentase & LinearProgressIndicator
+            val percentText = if (item.persentaseHadir >= 100f && item.hadirCount > 0) {
+                "100% Lengkap"
+            } else {
+                String.format(Locale.US, "%.1f%% Hadir", item.persentaseHadir)
+            }
+            binding.tvBadgePersentase.text = percentText
+
             when {
-                item.persentaseHadir >= 95f -> {
+                item.persentaseHadir >= 95f && item.hadirCount > 0 -> {
                     binding.tvBadgePersentase.setBackgroundResource(R.drawable.bg_badge_hadir)
                     binding.tvBadgePersentase.setTextColor(ContextCompat.getColor(ctx, R.color.badge_hadir_text))
                 }
-                item.persentaseHadir >= 80f -> {
+                item.persentaseHadir >= 80f && item.hadirCount > 0 -> {
                     binding.tvBadgePersentase.setBackgroundResource(R.drawable.bg_badge_terlambat)
                     binding.tvBadgePersentase.setTextColor(ContextCompat.getColor(ctx, R.color.badge_terlambat_text))
                 }
                 else -> {
-                    binding.tvBadgePersentase.setBackgroundResource(R.drawable.bg_badge_alpa)
-                    binding.tvBadgePersentase.setTextColor(ContextCompat.getColor(ctx, R.color.badge_alpa_text))
+                    binding.tvBadgePersentase.setBackgroundResource(R.drawable.bg_badge_hadir)
+                    binding.tvBadgePersentase.setTextColor(ContextCompat.getColor(ctx, R.color.badge_hadir_text))
                 }
             }
 
-            // Progress bar
             binding.progressKehadiran.progress = item.persentaseHadir.toInt().coerceIn(0, 100)
 
-            // Rincian mini
+            // 5. Teks Rincian Mini
             binding.tvCountHadir.text = "${item.hadirCount} Hadir"
-            binding.tvCountIzin.text = "${item.izinCount} Sakit/Izin"
+            binding.tvCountIzin.text = "${item.izinCount} Izin/Sakit"
             binding.tvCountAlpa.text = "${item.alpaCount} Alpa"
 
+            // 6. Listener
             binding.btnLihatSiswa.setOnClickListener {
                 onLihatSiswaClick(item)
             }

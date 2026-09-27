@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="16dp"
+    android:layout_marginVertical="4dp"
+    app:cardBackgroundColor="@color/card_bg"
+    app:cardCornerRadius="14dp"
+    app:cardElevation="0dp"
+    app:strokeColor="@color/card_stroke"
+    app:strokeWidth="1dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:padding="12dp">
+
+        <!-- Avatar Lingkaran Inisial + Dot Online/Aktif -->
+        <FrameLayout
+            android:layout_width="42dp"
+            android:layout_height="42dp">
+
+            <TextView
+                android:id="@+id/tvAvatarInitials"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@drawable/bg_avatar_circle_mint"
+                android:gravity="center"
+                android:textColor="@color/primary_teal"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                tools:text="MF" />
+
+            <View
+                android:layout_width="9dp"
+                android:layout_height="9dp"
+                android:layout_gravity="bottom|end"
+                android:layout_marginEnd="1dp"
+                android:layout_marginBottom="1dp"
+                android:background="@drawable/bg_dot_emerald" />
+
+        </FrameLayout>
+
+        <!-- Informasi Siswa: Nama, Kelas & NISN -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tvNamaSiswa"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textColor="@color/text_primary"
+                android:textSize="13.5sp"
+                android:textStyle="bold"
+                tools:text="Muhammad Fadhil" />
+
+            <TextView
+                android:id="@+id/tvNisnKelas"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="3dp"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textColor="@color/text_secondary"
+                android:textSize="11.5sp"
+                tools:text="Kelas XII RPL • NISN: 0078129031" />
+
+        </LinearLayout>
+
+        <!-- 3 Tombol Aksi Sejajar: Edit, Mutasi, Hapus -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <!-- Tombol Edit Siswa (Biru) -->
+            <FrameLayout
+                android:id="@+id/btnEditSiswa"
+                android:layout_width="34dp"
+                android:layout_height="34dp"
+                android:background="@drawable/bg_action_btn_blue"
+                android:clickable="true"
+                android:focusable="true">
+
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:layout_gravity="center"
+                    android:contentDescription="Edit Siswa"
+                    android:src="@drawable/ic_edit"
+                    app:tint="#1D4ED8" />
+
+            </FrameLayout>
+
+            <!-- Tombol Mutasi Rombel (Amber) -->
+            <FrameLayout
+                android:id="@+id/btnMutasiRombel"
+                android:layout_width="34dp"
+                android:layout_height="34dp"
+                android:layout_marginStart="6dp"
+                android:background="@drawable/bg_action_btn_amber"
+                android:clickable="true"
+                android:focusable="true">
+
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:layout_gravity="center"
+                    android:contentDescription="Mutasi Rombel"
+                    android:src="@drawable/ic_arrow_swap"
+                    app:tint="#B45309" />
+
+            </FrameLayout>
+
+            <!-- Tombol Hapus Siswa (Merah) -->
+            <FrameLayout
+                android:id="@+id/btnHapusSiswa"
+                android:layout_width="34dp"
+                android:layout_height="34dp"
+                android:layout_marginStart="6dp"
+                android:background="@drawable/bg_action_btn_red"
+                android:clickable="true"
+                android:focusable="true">
+
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:layout_gravity="center"
+                    android:contentDescription="Hapus Siswa"
+                    android:src="@drawable/ic_trash"
+                    app:tint="#DC2626" />
+
+            </FrameLayout>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>

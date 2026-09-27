@@ -475,32 +475,30 @@ class WalasSetelanFragment : Fragment() {
 
         // 1. Bersihkan session SharedPreferences
         val pref = ctx.getSharedPreferences(PREF_SESSION_NAME, Context.MODE_PRIVATE)
-        val isRemembered = pref.getBoolean("KEY_REMEMBER_DEVICE", false)
-        val savedNisn = pref.getString("SAVED_NISN", "")
-        val savedPin = pref.getString("SAVED_PIN", "")
+        val isRemembered = pref.getBoolean("KEY_REMEMBER_DEVICE", false) || pref.getBoolean("KEY_REMEMBER_DEVICE_GURU", false)
 
-        pref.edit().apply {
-            putBoolean("KEY_IS_LOGGED_IN", false)
-            putBoolean("is_logged_in", false)
-            remove("user_id")
-            remove("ID_WALAS")
-            remove("nama")
-            remove("NAMA_WALAS")
-            remove("id_kelas")
-            remove("ID_KELAS")
-            remove("nama_kelas")
-            remove("NAMA_KELAS")
-            remove("jurusan")
-            remove("wali_kelas")
-            remove("role")
-            remove("ROLE")
-            if (!isRemembered) {
-                remove("KEY_REMEMBER_DEVICE")
-                remove("SAVED_NISN")
-                remove("SAVED_PIN")
-            }
-            apply()
+        val editor = pref.edit()
+        editor.putBoolean("KEY_IS_LOGGED_IN", false)
+        editor.putBoolean("is_logged_in", false)
+        editor.remove("user_id")
+        editor.remove("ID_WALAS")
+        editor.remove("nama")
+        editor.remove("NAMA_WALAS")
+        editor.remove("id_kelas")
+        editor.remove("ID_KELAS")
+        editor.remove("nama_kelas")
+        editor.remove("NAMA_KELAS")
+        editor.remove("jurusan")
+        editor.remove("wali_kelas")
+        editor.remove("role")
+        editor.remove("ROLE")
+        if (!isRemembered) {
+            editor.remove("KEY_REMEMBER_DEVICE")
+            editor.remove("KEY_REMEMBER_DEVICE_GURU")
+            editor.remove("SAVED_GURU_USERNAME")
+            editor.remove("SAVED_GURU_PASSWORD")
         }
+        editor.apply()
 
         sessionManager.clearSession()
 

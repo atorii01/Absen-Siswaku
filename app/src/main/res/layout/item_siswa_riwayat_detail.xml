@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="20dp"
+    android:layout_marginVertical="4dp"
+    app:cardBackgroundColor="@color/card_bg"
+    app:cardCornerRadius="14dp"
+    app:cardElevation="0dp"
+    app:strokeColor="@color/card_stroke"
+    app:strokeWidth="1dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:padding="12dp">
+
+        <!-- Nomor Absen / Avatar Bulat -->
+        <TextView
+            android:id="@+id/tvNomorAbsen"
+            android:layout_width="38dp"
+            android:layout_height="38dp"
+            android:background="@drawable/bg_avatar_circle_mint"
+            android:gravity="center"
+            android:textColor="@color/primary_teal"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            tools:text="01" />
+
+        <!-- Info Siswa: Nama, Jam + AI Score, Geotag -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_marginEnd="8dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tvNamaSiswa"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textColor="@color/text_primary"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                tools:text="Aditya Pratama" />
+
+            <TextView
+                android:id="@+id/tvWaktuDanScore"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textColor="@color/text_secondary"
+                android:textSize="11.5sp"
+                tools:text="06:42 WIB • AI Match 98.4%" />
+
+            <TextView
+                android:id="@+id/tvGeotagJarak"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textColor="@color/text_secondary"
+                android:textSize="11sp"
+                tools:text="📍 Geotag 14m dari gerbang SMKN 8" />
+
+        </LinearLayout>
+
+        <!-- Badge Status (Read-Only) -->
+        <TextView
+            android:id="@+id/tvBadgeStatus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_badge_hadir"
+            android:gravity="center"
+            android:paddingHorizontal="10dp"
+            android:paddingVertical="4dp"
+            android:textColor="@color/badge_hadir_text"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            tools:text="✓ Hadir" />
+
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>

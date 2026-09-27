@@ -7,6 +7,8 @@ data class PengajuanIzinResponse(
     val id: String? = null,
     @SerializedName("siswa_id")
     val siswaId: Int? = null,
+    @SerializedName("id_kelas")
+    val idKelas: Int? = null,
     @SerializedName("jenis_izin")
     val jenisIzin: String? = null,
     @SerializedName("tanggal_mulai")
