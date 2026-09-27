@@ -1,7 +1,7 @@
 # 🎓 Presensi Siswa & Guru SMKN 8 Jakarta
 
 <p align="center">
-  <img src="app/src/main/res/drawable/logo_smkn8.png" width="128" height="128" alt="Logo SMKN 8 Jakarta" style="border-radius: 28px;" />
+  <img src="app/src/main/res/mipmap-hdpi/logo_smkn8.webp" width="128" height="128" alt="Logo SMKN 8 Jakarta" style="border-radius: 28px;" />
 </p>
 
 <p align="center">
