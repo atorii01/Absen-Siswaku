@@ -3,13 +3,13 @@ package com.andev.absensiswaku
 import android.content.Context
 import android.content.Intent
 import android.content.res.ColorStateList
+import android.graphics.Color
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
-import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.andev.absensiswaku.data.network.RombelMapelResponse
@@ -28,6 +28,20 @@ class LoginActivity : AppCompatActivity() {
     private lateinit var sessionManager: SessionManager
     private var selectedRoleTab: String = "SISWA"
 
+    companion object {
+        private const val PREF_AUTH = "PREF_SMKN8_AUTH"
+        private const val KEY_REMEMBER = "KEY_REMEMBER"
+        private const val KEY_LAST_TAB = "KEY_LAST_TAB"
+
+        // Kredensial Siswa
+        private const val KEY_SAVED_NISN = "KEY_SAVED_NISN"
+        private const val KEY_SAVED_PIN = "KEY_SAVED_PIN"
+
+        // Kredensial Guru & Tendik
+        private const val KEY_SAVED_USERNAME = "KEY_SAVED_USERNAME"
+        private const val KEY_SAVED_PASSWORD = "KEY_SAVED_PASSWORD"
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -41,44 +55,6 @@ class LoginActivity : AppCompatActivity() {
 
         sessionManager = SessionManager(this)
 
-        // Periksa sesi dengan aman pada onCreate()
-        val isLoggedIn = pref.getBoolean("KEY_IS_LOGGED_IN", false)
-        if (isLoggedIn) {
-            val role = pref.getString("ROLE", "") ?: ""
-            when (role) {
-                "SISWA" -> {
-                    startActivity(Intent(this, MainActivity::class.java))
-                    finish()
-                    return
-                }
-                "WALI_KELAS" -> {
-                    startActivity(Intent(this, WalasMainActivity::class.java))
-                    finish()
-                    return
-                }
-                "GURU_MAPEL" -> {
-                    startActivity(Intent(this, GuruMainActivity::class.java))
-                    finish()
-                    return
-                }
-                "SUPER_ADMIN" -> {
-                    startActivity(Intent(this, AdminMainActivity::class.java))
-                    finish()
-                    return
-                }
-                "ADMIN" -> {
-                    startActivity(Intent(this, WalasMainActivity::class.java))
-                    finish()
-                    return
-                }
-                "GURU" -> {
-                    startActivity(Intent(this, WalasMainActivity::class.java))
-                    finish()
-                    return
-                }
-            }
-        }
-
         enableEdgeToEdge()
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
@@ -89,31 +65,39 @@ class LoginActivity : AppCompatActivity() {
             insets
         }
 
-        setupTabSwitcher()
+        setupRoleSwitcher()
+        loadSavedCredentials() // Prefill data tersimpan jika remember me aktif
         setupClickListeners()
-
-        // Set default role tab SISWA pada onCreate
-        binding.toggleRole.check(R.id.btnTabSiswa)
-        applyTabSelection(R.id.btnTabSiswa)
     }
 
-    private fun setupTabSwitcher() {
-        binding.toggleRole.addOnButtonCheckedListener { _, checkedId, isChecked ->
-            // WAJIB: Abaikan trigger uncheck agar tidak crash/error
-            if (!isChecked) return@addOnButtonCheckedListener
+    // ======================================================================
+    // 2. LOGIKA KOTLIN: ANTI-GLITCH TAB SWITCHER
+    // ======================================================================
+    private fun setupRoleSwitcher() {
+        binding.cardTabSiswa.setOnClickListener {
+            applyTabSelection(isSiswa = true)
+        }
 
-            applyTabSelection(checkedId)
+        binding.cardTabGuru.setOnClickListener {
+            applyTabSelection(isSiswa = false)
         }
     }
 
-    private fun applyTabSelection(checkedId: Int) {
-        val tealColor = ContextCompat.getColor(this, R.color.primary_teal)
-        val textPrimaryColor = ContextCompat.getColor(this, R.color.text_primary)
-        val whiteColor = ContextCompat.getColor(this, R.color.white)
-        val transparentColor = ContextCompat.getColor(this, android.R.color.transparent)
-
-        if (checkedId == R.id.btnTabSiswa) {
+    private fun applyTabSelection(isSiswa: Boolean) {
+        if (isSiswa) {
             selectedRoleTab = "SISWA"
+
+            // Tab Siswa: Aktif (Hijau Teal Solid, Teks & Ikon Putih)
+            binding.cardTabSiswa.setCardBackgroundColor(Color.parseColor("#00685F"))
+            binding.tvLabelSiswa.setTextColor(Color.WHITE)
+            binding.ivIconSiswa.imageTintList = ColorStateList.valueOf(Color.WHITE)
+
+            // Tab Guru: Inaktif (Transparan, Teks & Ikon Abu-abu)
+            binding.cardTabGuru.setCardBackgroundColor(Color.TRANSPARENT)
+            binding.tvLabelGuru.setTextColor(Color.parseColor("#64748B"))
+            binding.ivIconGuru.imageTintList = ColorStateList.valueOf(Color.parseColor("#64748B"))
+
+            // Transisi Form Siswa
             binding.layoutNisnSiswa.visibility = View.VISIBLE
             binding.layoutPinSiswa.visibility = View.VISIBLE
             binding.layoutNipGuru.visibility = View.GONE
@@ -121,19 +105,24 @@ class LoginActivity : AppCompatActivity() {
             binding.btnLogin.text = "Masuk ke Portal Siswa →"
             binding.cardInfoBawah.visibility = View.VISIBLE
             binding.btnGoogleAuth.visibility = View.VISIBLE
-
-            binding.btnTabSiswa.backgroundTintList = ColorStateList.valueOf(tealColor)
-            binding.btnTabSiswa.setTextColor(whiteColor)
-            binding.btnTabSiswa.iconTint = ColorStateList.valueOf(whiteColor)
-
-            binding.btnTabGuru.backgroundTintList = ColorStateList.valueOf(transparentColor)
-            binding.btnTabGuru.setTextColor(textPrimaryColor)
-            binding.btnTabGuru.iconTint = ColorStateList.valueOf(textPrimaryColor)
+            binding.layoutDividerAtau.visibility = View.VISIBLE
 
             clearErrors()
             restoreRememberedSiswaIfAvailable()
         } else {
             selectedRoleTab = "GURU"
+
+            // Tab Guru: Aktif (Hijau Teal Solid, Teks & Ikon Putih)
+            binding.cardTabGuru.setCardBackgroundColor(Color.parseColor("#00685F"))
+            binding.tvLabelGuru.setTextColor(Color.WHITE)
+            binding.ivIconGuru.imageTintList = ColorStateList.valueOf(Color.WHITE)
+
+            // Tab Siswa: Inaktif (Transparan, Teks & Ikon Abu-abu)
+            binding.cardTabSiswa.setCardBackgroundColor(Color.TRANSPARENT)
+            binding.tvLabelSiswa.setTextColor(Color.parseColor("#64748B"))
+            binding.ivIconSiswa.imageTintList = ColorStateList.valueOf(Color.parseColor("#64748B"))
+
+            // Transisi Form Guru & Tendik
             binding.layoutNisnSiswa.visibility = View.GONE
             binding.layoutPinSiswa.visibility = View.GONE
             binding.layoutNipGuru.visibility = View.VISIBLE
@@ -141,14 +130,7 @@ class LoginActivity : AppCompatActivity() {
             binding.btnLogin.text = "Masuk ke Portal Guru & Tendik →"
             binding.cardInfoBawah.visibility = View.GONE
             binding.btnGoogleAuth.visibility = View.GONE
-
-            binding.btnTabGuru.backgroundTintList = ColorStateList.valueOf(tealColor)
-            binding.btnTabGuru.setTextColor(whiteColor)
-            binding.btnTabGuru.iconTint = ColorStateList.valueOf(whiteColor)
-
-            binding.btnTabSiswa.backgroundTintList = ColorStateList.valueOf(transparentColor)
-            binding.btnTabSiswa.setTextColor(textPrimaryColor)
-            binding.btnTabSiswa.iconTint = ColorStateList.valueOf(textPrimaryColor)
+            binding.layoutDividerAtau.visibility = View.GONE
 
             clearErrors()
             restoreRememberedGuruIfAvailable()
@@ -162,33 +144,50 @@ class LoginActivity : AppCompatActivity() {
         binding.layoutPasswordGuru.error = null
     }
 
+    private fun loadSavedCredentials() {
+        val pref = getSharedPreferences(PREF_AUTH, Context.MODE_PRIVATE)
+        val isRemembered = pref.getBoolean(KEY_REMEMBER, false)
+
+        binding.cbRememberMe.isChecked = isRemembered
+
+        if (isRemembered) {
+            val lastTab = pref.getString(KEY_LAST_TAB, "SISWA") ?: "SISWA"
+            if (lastTab == "SISWA") {
+                applyTabSelection(isSiswa = true)
+                binding.etNisnSiswa.setText(pref.getString(KEY_SAVED_NISN, ""))
+                binding.etPinSiswa.setText(pref.getString(KEY_SAVED_PIN, ""))
+            } else {
+                applyTabSelection(isSiswa = false)
+                binding.etNipGuru.setText(pref.getString(KEY_SAVED_USERNAME, ""))
+                binding.etPasswordGuru.setText(pref.getString(KEY_SAVED_PASSWORD, ""))
+            }
+        } else {
+            // Default awal tab Siswa dengan input kosong
+            applyTabSelection(isSiswa = true)
+        }
+    }
+
     private fun restoreRememberedSiswaIfAvailable() {
-        val pref = getSharedPreferences("PREF_SMKN8_SESSION", Context.MODE_PRIVATE)
-        val isRemembered = pref.getBoolean("KEY_REMEMBER_DEVICE_SISWA", false) || pref.getBoolean("KEY_REMEMBER_DEVICE", false)
-        val savedNisn = pref.getString("SAVED_NISN", "") ?: ""
-        val savedPin = pref.getString("SAVED_PIN", "") ?: ""
+        val pref = getSharedPreferences(PREF_AUTH, Context.MODE_PRIVATE)
+        val isRemembered = pref.getBoolean(KEY_REMEMBER, false)
+        val savedNisn = pref.getString(KEY_SAVED_NISN, "") ?: ""
+        val savedPin = pref.getString(KEY_SAVED_PIN, "") ?: ""
 
         if (isRemembered && savedNisn.isNotEmpty()) {
             binding.etNisnSiswa.setText(savedNisn)
             binding.etPinSiswa.setText(savedPin)
-            binding.cbRememberMe.isChecked = true
-        } else {
-            binding.cbRememberMe.isChecked = false
         }
     }
 
     private fun restoreRememberedGuruIfAvailable() {
-        val pref = getSharedPreferences("PREF_SMKN8_SESSION", Context.MODE_PRIVATE)
-        val isRemembered = pref.getBoolean("KEY_REMEMBER_DEVICE_GURU", false)
-        val savedGuruUsername = pref.getString("SAVED_GURU_USERNAME", "") ?: ""
-        val savedGuruPassword = pref.getString("SAVED_GURU_PASSWORD", "") ?: ""
+        val pref = getSharedPreferences(PREF_AUTH, Context.MODE_PRIVATE)
+        val isRemembered = pref.getBoolean(KEY_REMEMBER, false)
+        val savedGuruUsername = pref.getString(KEY_SAVED_USERNAME, "") ?: ""
+        val savedGuruPassword = pref.getString(KEY_SAVED_PASSWORD, "") ?: ""
 
         if (isRemembered && savedGuruUsername.isNotEmpty()) {
             binding.etNipGuru.setText(savedGuruUsername)
             binding.etPasswordGuru.setText(savedGuruPassword)
-            binding.cbRememberMe.isChecked = true
-        } else {
-            binding.cbRememberMe.isChecked = false
         }
     }
 
@@ -276,35 +275,45 @@ class LoginActivity : AppCompatActivity() {
                         val namaWalas = siswa.rombelKelas?.waliKelas?.namaLengkap ?: "-"
 
                         val isRememberChecked = binding.cbRememberMe.isChecked
-                        val pref = getSharedPreferences("PREF_SMKN8_SESSION", Context.MODE_PRIVATE)
-                        val editor = pref.edit()
-                        editor.putString("ROLE", "SISWA")
-                        editor.putString("role", "SISWA")
-                        editor.putString("LAST_ROLE_TAB", "SISWA")
-                        editor.putInt("ID_SISWA", siswa.id ?: 0)
-                        editor.putString("NAMA_SISWA", siswa.namaLengkap ?: "")
-                        editor.putString("NISN", siswa.nisn ?: nisn)
-                        editor.putInt("ID_KELAS", siswa.idKelas ?: (siswa.rombelKelas?.id ?: 0))
-                        editor.putString("KELAS", namaKelas)
-                        editor.putString("WALI_KELAS", namaWalas)
-                        editor.putBoolean("KEY_IS_LOGGED_IN", true)
-                        editor.putBoolean("is_logged_in", true)
-                        editor.putBoolean("KEY_REMEMBER_DEVICE", isRememberChecked)
-                        editor.putBoolean("KEY_REMEMBER_DEVICE_SISWA", isRememberChecked)
+                        val roleUser = "SISWA"
+                        val idUser = "${siswa.id ?: 0}"
+                        val namaUser = siswa.namaLengkap ?: ""
+
+                        // Simpan kredensial form prefill jika Remember Me dicentang
+                        val prefAuth = getSharedPreferences(PREF_AUTH, Context.MODE_PRIVATE)
                         if (isRememberChecked) {
-                            editor.putString("SAVED_NISN", nisn)
-                            editor.putString("SAVED_PIN", pin)
+                            prefAuth.edit().apply {
+                                putBoolean(KEY_REMEMBER, true)
+                                putString(KEY_LAST_TAB, "SISWA")
+                                putString(KEY_SAVED_NISN, nisn)
+                                putString(KEY_SAVED_PIN, pin)
+                                commit()
+                            }
                         } else {
-                            editor.remove("SAVED_NISN")
-                            editor.remove("SAVED_PIN")
+                            prefAuth.edit().clear().commit()
                         }
-                        editor.commit()
+
+                        val pref = getSharedPreferences("PREF_SMKN8_SESSION", Context.MODE_PRIVATE)
+                        pref.edit().apply {
+                            putBoolean("KEY_IS_LOGGED_IN", true)
+                            putBoolean("KEY_REMEMBER_ME", isRememberChecked)
+                            putString("ROLE", roleUser)
+                            putString("ID_USER", idUser)
+                            putString("NAMA_LENGKAP", namaUser)
+                            putInt("ID_SISWA", siswa.id ?: 0)
+                            putString("NAMA_SISWA", namaUser)
+                            putString("NISN", siswa.nisn ?: nisn)
+                            putInt("ID_KELAS", siswa.idKelas ?: (siswa.rombelKelas?.id ?: 0))
+                            putString("KELAS", namaKelas)
+                            putString("WALI_KELAS", namaWalas)
+                            commit() // Gunakan commit() agar tersimpan langsung ke disk
+                        }
 
                         sessionManager.createSession(
-                            role = "SISWA",
+                            role = roleUser,
                             id = siswa.id,
                             nisn = siswa.nisn ?: nisn,
-                            nama = siswa.namaLengkap ?: "",
+                            nama = namaUser,
                             kelasId = siswa.idKelas ?: 0,
                             namaKelas = namaKelas,
                             jurusan = jurusan,
@@ -313,10 +322,11 @@ class LoginActivity : AppCompatActivity() {
 
                         Toast.makeText(
                             this@LoginActivity,
-                            "Login berhasil! Selamat datang, ${siswa.namaLengkap ?: ""}",
+                            "Login berhasil! Selamat datang, $namaUser",
                             Toast.LENGTH_SHORT
                         ).show()
 
+                        // Buka Activity sesuai Role dengan CLEAR_TASK agar tombol Back tidak balik ke Login:
                         val intent = Intent(this@LoginActivity, MainActivity::class.java).apply {
                             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                         }
@@ -446,7 +456,6 @@ class LoginActivity : AppCompatActivity() {
 
                                 override fun onFailure(call: Call<List<RombelMapelResponse>>, t: Throwable) {
                                     showLoading(false)
-                                    // Fallback default wali kelas
                                     saveGuruSessionAndNavigate(
                                         role = role,
                                         idWalas = idWalas,
@@ -511,37 +520,41 @@ class LoginActivity : AppCompatActivity() {
         mataPelajaran: String? = null,
         username: String? = null
     ) {
-        val pref = getSharedPreferences("PREF_SMKN8_SESSION", Context.MODE_PRIVATE)
-        val editor = pref.edit()
-        editor.putString("ROLE", role)
-        editor.putString("role", role)
-        editor.putString("LAST_ROLE_TAB", "GURU")
-        editor.putString("ID_USER", idWalas)
-        editor.putString("ID_WALAS", idWalas)
-        editor.putString("user_id", idWalas)
-        editor.putString("NAMA_LENGKAP", namaWalas)
-        editor.putString("NAMA_WALAS", namaWalas)
-        editor.putString("nama", namaWalas)
-        editor.putString("wali_kelas", namaWalas)
-        val finalMapel = mataPelajaran ?: if (isGuruMapel) "Mata Pelajaran Umum" else jurusan
-        editor.putString("MATA_PELAJARAN", finalMapel)
-        editor.putString("USERNAME", username ?: identifier)
-        editor.putInt("ID_KELAS", idKelas)
-        editor.putString("NAMA_KELAS", namaKelas)
-        editor.putString("nama_kelas", namaKelas)
-        editor.putString("jurusan", jurusan)
-        editor.putBoolean("KEY_IS_LOGGED_IN", true)
-        editor.putBoolean("is_logged_in", true)
-        editor.putBoolean("KEY_REMEMBER_DEVICE", isRememberChecked)
-        editor.putBoolean("KEY_REMEMBER_DEVICE_GURU", isRememberChecked)
+        // Simpan kredensial form prefill jika Remember Me dicentang
+        val prefAuth = getSharedPreferences(PREF_AUTH, Context.MODE_PRIVATE)
         if (isRememberChecked) {
-            editor.putString("SAVED_GURU_USERNAME", identifier)
-            editor.putString("SAVED_GURU_PASSWORD", secret)
+            prefAuth.edit().apply {
+                putBoolean(KEY_REMEMBER, true)
+                putString(KEY_LAST_TAB, "GURU")
+                putString(KEY_SAVED_USERNAME, identifier)
+                putString(KEY_SAVED_PASSWORD, secret)
+                commit()
+            }
         } else {
-            editor.remove("SAVED_GURU_USERNAME")
-            editor.remove("SAVED_GURU_PASSWORD")
+            prefAuth.edit().clear().commit()
         }
-        editor.commit() // Gunakan .commit() agar data sesi tersimpan seketika
+
+        val pref = getSharedPreferences("PREF_SMKN8_SESSION", Context.MODE_PRIVATE)
+        pref.edit().apply {
+            putBoolean("KEY_IS_LOGGED_IN", true)
+            putBoolean("KEY_REMEMBER_ME", isRememberChecked)
+            putString("ROLE", role)
+            putString("ID_USER", idWalas)
+            putString("NAMA_LENGKAP", namaWalas)
+            putString("ID_WALAS", idWalas)
+            putString("user_id", idWalas)
+            putString("NAMA_WALAS", namaWalas)
+            putString("nama", namaWalas)
+            putString("wali_kelas", namaWalas)
+            val finalMapel = mataPelajaran ?: if (isGuruMapel) "Mata Pelajaran Umum" else jurusan
+            putString("MATA_PELAJARAN", finalMapel)
+            putString("USERNAME", username ?: identifier)
+            putInt("ID_KELAS", idKelas)
+            putString("NAMA_KELAS", namaKelas)
+            putString("nama_kelas", namaKelas)
+            putString("jurusan", jurusan)
+            commit() // Gunakan commit() agar tersimpan langsung ke disk
+        }
 
         sessionManager.createSession(
             role = role,
@@ -554,12 +567,14 @@ class LoginActivity : AppCompatActivity() {
             waliKelas = namaWalas
         )
 
-        val targetActivity = if (role.equals("SUPER_ADMIN", true) || role.equals("ADMIN", true)) {
-            AdminMainActivity::class.java
-        } else if (isGuruMapel) {
-            GuruMainActivity::class.java
-        } else {
-            WalasMainActivity::class.java
+        // Buka Activity sesuai Role dengan CLEAR_TASK agar tombol Back tidak balik ke Login:
+        val intent = when (role) {
+            "SISWA" -> Intent(this, MainActivity::class.java)
+            "WALI_KELAS" -> Intent(this, WalasMainActivity::class.java)
+            "GURU_MAPEL" -> Intent(this, GuruMainActivity::class.java)
+            "SUPER_ADMIN" -> Intent(this, AdminMainActivity::class.java)
+            "ADMIN" -> Intent(this, AdminMainActivity::class.java)
+            else -> Intent(this, WalasMainActivity::class.java)
         }
 
         val roleLabel = when {
@@ -573,9 +588,7 @@ class LoginActivity : AppCompatActivity() {
             Toast.LENGTH_SHORT
         ).show()
 
-        val intent = Intent(this@LoginActivity, targetActivity).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-        }
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         startActivity(intent)
         finish()
     }
@@ -584,9 +597,8 @@ class LoginActivity : AppCompatActivity() {
         binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
         binding.btnLogin.isEnabled = !isLoading
         binding.btnGoogleAuth.isEnabled = !isLoading
-        binding.toggleRole.isEnabled = !isLoading
-        binding.btnTabSiswa.isEnabled = !isLoading
-        binding.btnTabGuru.isEnabled = !isLoading
+        binding.cardTabSiswa.isEnabled = !isLoading
+        binding.cardTabGuru.isEnabled = !isLoading
         binding.etNisnSiswa.isEnabled = !isLoading
         binding.etPinSiswa.isEnabled = !isLoading
         binding.etNipGuru.isEnabled = !isLoading

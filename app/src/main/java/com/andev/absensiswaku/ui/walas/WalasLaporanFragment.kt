@@ -23,6 +23,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.andev.absensiswaku.R
 import com.andev.absensiswaku.data.network.PengajuanIzinResponse
 import com.andev.absensiswaku.data.network.RiwayatModel
+import com.andev.absensiswaku.data.network.RombelMapelResponse
 import com.andev.absensiswaku.data.network.SiswaMiniResponse
 import com.andev.absensiswaku.data.network.SupabaseClient
 import com.andev.absensiswaku.databinding.FragmentWalasLaporanBinding
@@ -34,30 +35,22 @@ import retrofit2.Response
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import java.util.TimeZone
-
-// ViewBinding aliases agar selaras dengan naming convention
-private val FragmentWalasLaporanBinding.tvCountHadir get() = tvTotalHadir
-private val FragmentWalasLaporanBinding.tvCountTerlambat get() = tvTotalTerlambat
-private val FragmentWalasLaporanBinding.tvCountIzin get() = tvTotalIzinSakit
-private val FragmentWalasLaporanBinding.tvCountAlpa get() = tvTotalAlpa
-private val FragmentWalasLaporanBinding.tvPersentaseKelas get() = tvDisiplinPercentage
-private val FragmentWalasLaporanBinding.progressBarDisiplin get() = progressKehadiranKelas
 
 class WalasLaporanFragment : Fragment() {
 
     private var _binding: FragmentWalasLaporanBinding? = null
     private val binding get() = _binding!!
 
-    private var namaWalas: String = "Farauk Pratama, S.Kom."
-    private var idKelas: Int = 9
-    private var namaKelas: String = "XII RPL"
+    private var namaWalas: String = "Herlina S.E"
+    private var idKelas: Int = 1
+    private var namaKelas: String = "XII AKL 1"
     private var countTotalSiswa: Int = 0
 
     private var selectedFilterMode: Int = 1 // 1: Bulan Ini, 2: Semester Ganjil, 3: Rentang Kustom
     private var customStartMillis: Long = 0L
     private var customEndMillis: Long = 0L
 
+    private val listSiswaKelas = mutableListOf<SiswaMiniResponse>()
     private val allPresensiList = mutableListOf<RiwayatModel>()
     private val allIzinList = mutableListOf<PengajuanIzinResponse>()
     private val currentRekapHarianList = mutableListOf<RekapHarianKelasModel>()
@@ -76,11 +69,10 @@ class WalasLaporanFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        loadSessionData()
         setupRecyclerView()
         setupFilterChips()
         setupExportPdfButton()
-        loadDataFromSupabase()
+        loadSessionData()
     }
 
     override fun onResume() {
@@ -90,10 +82,67 @@ class WalasLaporanFragment : Fragment() {
 
     private fun loadSessionData() {
         val pref = requireContext().getSharedPreferences("PREF_SMKN8_SESSION", Context.MODE_PRIVATE)
-        namaWalas = pref.getString("NAMA_WALAS", "Farauk Pratama, S.Kom.") ?: "Farauk Pratama, S.Kom."
-        idKelas = pref.getInt("ID_KELAS", 9)
-        namaKelas = pref.getString("NAMA_KELAS", "XII RPL") ?: "XII RPL"
+        val idWalas = pref.getString("ID_WALAS", "")?.takeIf { it.isNotBlank() }
+            ?: pref.getString("user_id", "")?.takeIf { it.isNotBlank() }
+            ?: ""
 
+        namaWalas = pref.getString("NAMA_WALAS", "")?.takeIf { it.isNotBlank() }
+            ?: pref.getString("NAMA_LENGKAP", "")?.takeIf { it.isNotBlank() }
+            ?: pref.getString("nama", "")?.takeIf { it.isNotBlank() }
+            ?: "Herlina S.E"
+
+        val savedIdKelas = pref.getInt("ID_KELAS", 0)
+        val savedNamaKelas = pref.getString("NAMA_KELAS", "")?.takeIf { it.isNotBlank() }
+            ?: pref.getString("nama_kelas", "")?.takeIf { it.isNotBlank() }
+            ?: ""
+
+        if (savedIdKelas > 0 && savedNamaKelas.isNotBlank()) {
+            idKelas = savedIdKelas
+            namaKelas = savedNamaKelas
+            updateHeaderUi()
+            loadDataFromSupabase()
+        } else if (idWalas.isNotBlank()) {
+            // Ambil data kelas binaan asli berdasarkan wali_kelas_id milik user yang login
+            SupabaseClient.instance.getRombelByWalas(filterWalas = "eq.$idWalas")
+                .enqueue(object : Callback<List<RombelMapelResponse>> {
+                    override fun onResponse(
+                        call: Call<List<RombelMapelResponse>>,
+                        response: Response<List<RombelMapelResponse>>
+                    ) {
+                        if (!isAdded || _binding == null) return
+                        val rombel = response.body()?.firstOrNull()
+                        if (rombel != null) {
+                            idKelas = rombel.id ?: 1
+                            namaKelas = rombel.namaKelas ?: "XII AKL 1"
+                            pref.edit()
+                                .putInt("ID_KELAS", idKelas)
+                                .putString("NAMA_KELAS", namaKelas)
+                                .commit()
+                        } else {
+                            idKelas = 1
+                            namaKelas = "XII AKL 1"
+                        }
+                        updateHeaderUi()
+                        loadDataFromSupabase()
+                    }
+
+                    override fun onFailure(call: Call<List<RombelMapelResponse>>, t: Throwable) {
+                        if (!isAdded || _binding == null) return
+                        idKelas = 1
+                        namaKelas = "XII AKL 1"
+                        updateHeaderUi()
+                        loadDataFromSupabase()
+                    }
+                })
+        } else {
+            idKelas = 1
+            namaKelas = "XII AKL 1"
+            updateHeaderUi()
+            loadDataFromSupabase()
+        }
+    }
+
+    private fun updateHeaderUi() {
         binding.tvSubHeaderWalas.text = "Kelas binaan: $namaKelas • Wali Kelas: $namaWalas"
         binding.btnUnduhPdfKelas.text = "📥 Unduh Laporan PDF Kelas $namaKelas"
     }
@@ -115,7 +164,6 @@ class WalasLaporanFragment : Fragment() {
     }
 
     private fun setupFilterChips() {
-        // Label Bulan Ini dinamis berdasarkan tanggal sekarang
         val namaBulanIni = try {
             val sdfBulanIni = SimpleDateFormat("MMMM yyyy", Locale.forLanguageTag("id-ID"))
             sdfBulanIni.format(Date())
@@ -205,7 +253,8 @@ class WalasLaporanFragment : Fragment() {
         binding.progressBarLoading.visibility = View.VISIBLE
         binding.layoutEmptyState.visibility = View.GONE
 
-        // 1. Ambil jumlah siswa terdaftar di rombel binaan
+        // 1. Ambil jumlah siswa riil di kelas binaan dari Supabase:
+        //    siswa?id_kelas=eq.$idKelasBinaan&select=id
         SupabaseClient.instance.getSiswaByKelas(filterKelas = "eq.$idKelas")
             .enqueue(object : Callback<List<SiswaMiniResponse>> {
                 override fun onResponse(
@@ -213,13 +262,16 @@ class WalasLaporanFragment : Fragment() {
                     response: Response<List<SiswaMiniResponse>>
                 ) {
                     if (!isAdded || _binding == null) return
+                    listSiswaKelas.clear()
                     val body = response.body().orEmpty()
-                    countTotalSiswa = if (body.isNotEmpty()) body.size else 0
+                    listSiswaKelas.addAll(body)
+                    countTotalSiswa = listSiswaKelas.size
                     loadPresensiDanIzinSupabase()
                 }
 
                 override fun onFailure(call: Call<List<SiswaMiniResponse>>, t: Throwable) {
                     if (!isAdded || _binding == null) return
+                    listSiswaKelas.clear()
                     countTotalSiswa = 0
                     loadPresensiDanIzinSupabase()
                 }
@@ -228,7 +280,10 @@ class WalasLaporanFragment : Fragment() {
 
     private fun loadPresensiDanIzinSupabase() {
         if (!isAdded || _binding == null) return
-        // 2. Ambil data presensi harian kelas
+        // 2. Ambil catatan presensi dari Supabase:
+        //    presensi_harian?id_kelas=eq.$idKelasBinaan
+        val siswaIds = listSiswaKelas.mapNotNull { it.id }.toSet()
+
         SupabaseClient.instance.getPresensiKelas(filterKelas = "eq.$idKelas")
             .enqueue(object : Callback<List<RiwayatModel>> {
                 override fun onResponse(
@@ -237,8 +292,12 @@ class WalasLaporanFragment : Fragment() {
                 ) {
                     if (!isAdded || _binding == null) return
                     allPresensiList.clear()
-                    if (response.isSuccessful && response.body() != null) {
-                        allPresensiList.addAll(response.body()!!)
+                    val records = response.body().orEmpty()
+                    // Pastikan hanya catatan siswa kelas binaan yang disimpan
+                    if (siswaIds.isNotEmpty()) {
+                        allPresensiList.addAll(records.filter { it.siswaId in siswaIds })
+                    } else {
+                        allPresensiList.addAll(records)
                     }
                     fetchIzinDisetujuiSupabase()
                 }
@@ -253,7 +312,10 @@ class WalasLaporanFragment : Fragment() {
 
     private fun fetchIzinDisetujuiSupabase() {
         if (!isAdded || _binding == null) return
-        // 3. Ambil data pengajuan izin berstatus Disetujui
+        // 3. Ambil pengajuan izin sah dari Supabase:
+        //    pengajuan_izin?id_kelas=eq.$idKelasBinaan&status_verifikasi=eq.Disetujui
+        val siswaIds = listSiswaKelas.mapNotNull { it.id }.toSet()
+
         SupabaseClient.instance.getIzinKelas(status = "eq.Disetujui", filterKelas = "eq.$idKelas")
             .enqueue(object : Callback<List<PengajuanIzinResponse>> {
                 override fun onResponse(
@@ -262,9 +324,14 @@ class WalasLaporanFragment : Fragment() {
                 ) {
                     if (!isAdded || _binding == null) return
                     allIzinList.clear()
-                    if (response.isSuccessful && response.body() != null) {
-                        allIzinList.addAll(response.body()!!)
+                    val records = response.body().orEmpty()
+                    // Filter sah: hanya izin disetujui milik siswa rombel binaan ini
+                    val validIzin = records.filter { izin ->
+                        val isClassMatch = if (siswaIds.isNotEmpty()) (izin.siswaId in siswaIds) else true
+                        isClassMatch && izin.statusVerifikasi?.equals("Disetujui", ignoreCase = true) == true
                     }
+                    allIzinList.addAll(validIzin)
+
                     binding.progressBarLoading.visibility = View.GONE
                     processAndFilterAttendanceData()
                 }
@@ -332,88 +399,66 @@ class WalasLaporanFragment : Fragment() {
             }
         }
 
-        // 1. Ambil presensi unik per siswa (dengan safe filter siswaId != null)
-        val presensiUnikPerSiswa = (filteredPresensi ?: emptyList())
-            .filter { it.siswaId != null }
-            .sortedByDescending { it.waktuMasuk }
-            .distinctBy { it.siswaId }
-
-        // 2. Hitung jumlah siswa per kategori status (aman dari null)
-        val countHadir = presensiUnikPerSiswa.count { 
-            it.status?.equals("Hadir", ignoreCase = true) == true || 
-            it.status?.equals("TEPAT_WAKTU", ignoreCase = true) == true 
+        // ==========================================================
+        // PERHITUNGAN MURNI DATABASE:
+        // ==========================================================
+        val totalSiswa = listSiswaKelas.size // cth: 36
+        val hadir = filteredPresensi.distinctBy { it.siswaId }.count {
+            it.status.equals("Hadir", true) ||
+            it.status.equals("Terlambat", true) ||
+            it.status.equals("TEPAT_WAKTU", true)
         }
-        val countTerlambat = presensiUnikPerSiswa.count { 
-            it.status?.equals("Terlambat", ignoreCase = true) == true 
+        val terlambat = filteredPresensi.distinctBy { it.siswaId }.count {
+            it.status.equals("Terlambat", true)
         }
+        val izinSakit = filteredIzin.distinctBy { it.siswaId }.size
+        val alpa = (totalSiswa - (hadir + izinSakit)).coerceAtLeast(0)
 
-        // 3. Ambil pengajuan izin unik per siswa yang disetujui (aman dari null)
-        val izinUnikPerSiswa = (filteredIzin ?: emptyList())
-            .filter { it.siswaId != null && it.statusVerifikasi?.equals("Disetujui", ignoreCase = true) == true }
-            .distinctBy { it.siswaId }
-        val countIzin = izinUnikPerSiswa.size
+        // Pasang ke UI (JIKA DI DATABASE TIDAK ADA IZIN: WAJIB "0 Siswa", Hadir "0 Siswa", Alpa "$totalSiswa Siswa")
+        binding.tvStatHadir.text = "$hadir Siswa"
+        binding.tvStatTerlambat.text = "$terlambat Siswa"
+        binding.tvStatIzin.text = "$izinSakit Siswa"
+        binding.tvStatAlpa.text = "$alpa Siswa"
 
-        // 4. Hitung Alpa secara proporsional dari total kapasitas rombel (hindari division by zero dan negatif)
-        val totalSiswaKelas = countTotalSiswa.takeIf { it > 0 } ?: 36
-        val totalMasukDanIzin = countHadir + countTerlambat + countIzin
-        val countAlpa = (totalSiswaKelas - totalMasukDanIzin).coerceAtLeast(0)
-
-        // 5. Hitung Persentase Disiplin Kehadiran Kelas (hindari pembagian dengan nol)
-        val totalSiswaHadir = countHadir + countTerlambat
-        val persentaseDisiplin = if (totalSiswaKelas > 0) {
-            (totalSiswaHadir.toDouble() / totalSiswaKelas.toDouble()) * 100.0
+        // Hitung Persentase Disiplin
+        val persentaseDisiplin = if (totalSiswa > 0) {
+            (hadir.toDouble() / totalSiswa.toDouble()) * 100.0
         } else {
             0.0
         }
+        binding.tvDisiplinPercentage.text = String.format(Locale.getDefault(), "%.1f%% Disiplin", persentaseDisiplin)
+        binding.progressKehadiranKelas.progress = persentaseDisiplin.toInt().coerceIn(0, 100)
 
-        // Terapkan ke Komponen UI Header & Mini Card
-        binding.tvCountHadir.text = "$countHadir Siswa"
-        binding.tvCountTerlambat.text = "$countTerlambat Siswa"
-        binding.tvCountIzin.text = "$countIzin Siswa"
-        binding.tvCountAlpa.text = "$countAlpa Siswa"
-        binding.tvPersentaseKelas.text = String.format(Locale.getDefault(), "%.1f%% Disiplin", persentaseDisiplin)
-        binding.progressBarDisiplin.progress = persentaseDisiplin.toInt().coerceIn(0, 100)
+        // ==========================================================
+        // HISTORI KEHADIRAN HARIAN ROMBEL:
+        // Ambil rekaman asli dari database tanpa data dummy/mock!
+        // ==========================================================
+        val distinctDates = (
+            filteredPresensi.mapNotNull { it.tanggal?.takeIf { s -> s.isNotBlank() } } +
+            filteredIzin.mapNotNull { it.tanggalMulai?.takeIf { s -> s.isNotBlank() } }
+        ).distinct().sortedDescending()
 
-        // 2. Kelompokkan Data Berdasarkan Tanggal (groupBy { it.tanggal }) untuk Histori Harian
-        val distinctDates = (filteredPresensi.mapNotNull { it.tanggal?.takeIf { s -> s.isNotBlank() } } +
-                filteredIzin.mapNotNull { it.tanggalMulai?.takeIf { s -> s.isNotBlank() } }).distinct()
         val sdfDisplay = SimpleDateFormat("EEEE, d MMM yyyy", Locale.forLanguageTag("id-ID"))
-        val sortedDates = distinctDates.sortedDescending()
-
         currentRekapHarianList.clear()
 
-        sortedDates.forEach { tgl ->
+        distinctDates.forEach { tgl ->
             val presensiHariIni = filteredPresensi.filter { it.tanggal?.equals(tgl, ignoreCase = true) == true }
             val izinHariIni = filteredIzin.filter { it.tanggalMulai?.equals(tgl, ignoreCase = true) == true }
 
-            // 1. Ambil presensi unik per siswa hari ini (safe filter)
-            val presensiUnikHariIni = presensiHariIni
-                .filter { it.siswaId != null }
-                .sortedByDescending { it.waktuMasuk }
-                .distinctBy { it.siswaId }
-
-            // 2. Hitung jumlah siswa per kategori status
-            val h = presensiUnikHariIni.count { 
-                it.status?.equals("Hadir", ignoreCase = true) == true || 
-                it.status?.equals("TEPAT_WAKTU", ignoreCase = true) == true 
+            val h = presensiHariIni.distinctBy { it.siswaId }.count {
+                it.status.equals("Hadir", true) ||
+                it.status.equals("Terlambat", true) ||
+                it.status.equals("TEPAT_WAKTU", true)
             }
-            val t = presensiUnikHariIni.count { 
-                it.status?.equals("Terlambat", ignoreCase = true) == true 
+            val t = presensiHariIni.distinctBy { it.siswaId }.count {
+                it.status.equals("Terlambat", true)
             }
+            val i = izinHariIni.distinctBy { it.siswaId }.size
+            val a = (totalSiswa - (h + i)).coerceAtLeast(0)
 
-            // 3. Ambil pengajuan izin unik per siswa yang disetujui hari ini
-            val izinUnikHariIni = izinHariIni
-                .filter { it.siswaId != null && it.statusVerifikasi?.equals("Disetujui", ignoreCase = true) == true }
-                .distinctBy { it.siswaId }
-            val i = izinUnikHariIni.size
-
-            // 4. Hitung Alpa secara proporsional dari kapasitas rombel
-            val a = (totalSiswaKelas - (h + t + i)).coerceAtLeast(0)
-
-            // 5. Hitung Persentase Disiplin Kehadiran Kelas (hindari pembagian dengan nol)
-            val totalHadirHariIni = h + t
-            val pct = if (totalSiswaKelas > 0) {
-                (totalHadirHariIni.toDouble() / totalSiswaKelas.toDouble()) * 100.0
+            val totalHadirHariIni = h
+            val pct = if (totalSiswa > 0) {
+                (totalHadirHariIni.toDouble() / totalSiswa.toDouble()) * 100.0
             } else {
                 0.0
             }
@@ -429,18 +474,18 @@ class WalasLaporanFragment : Fragment() {
                 RekapHarianKelasModel(
                     tanggal = tgl,
                     tanggalFormatted = formattedDate,
-                    countHadir = h,
+                    countHadir = h - t,
                     countTerlambat = t,
                     countIzin = i,
                     countAlpa = a,
-                    totalSiswa = totalSiswaKelas,
+                    totalSiswa = totalSiswa,
                     persentase = pct,
-                    isLengkap = totalSiswaKelas > 0 && (h + t + i) >= (totalSiswaKelas * 0.90)
+                    isLengkap = totalSiswa > 0 && (h + i) >= (totalSiswa * 0.90)
                 )
             )
         }
 
-        // Tampilkan ke Adapter
+        // Tampilkan Empty State jika tidak ada rekaman riwayat di database
         if (currentRekapHarianList.isEmpty()) {
             binding.layoutEmptyState.visibility = View.VISIBLE
             binding.rvRiwayatHarianKelas.visibility = View.GONE
@@ -455,7 +500,11 @@ class WalasLaporanFragment : Fragment() {
         binding.btnUnduhPdfKelas.setOnClickListener {
             if (!isAdded || _binding == null) return@setOnClickListener
             if (currentRekapHarianList.isEmpty()) {
-                Toast.makeText(requireContext(), "Tidak ada data rekap presensi untuk diekspor pada periode ini.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    requireContext(),
+                    "Tidak ada data rekap presensi untuk diekspor pada periode ini.",
+                    Toast.LENGTH_SHORT
+                ).show()
                 return@setOnClickListener
             }
             generatePdfRekapKelas()
@@ -641,7 +690,6 @@ class WalasLaporanFragment : Fragment() {
                     }
                     .show()
 
-                // Otomatis buka preview PDF
                 openPdfFile(pdfUri)
 
             } catch (e: Exception) {

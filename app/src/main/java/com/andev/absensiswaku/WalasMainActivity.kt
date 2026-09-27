@@ -18,7 +18,7 @@ import com.andev.absensiswaku.ui.walas.WalasPresensiFragment
 import com.andev.absensiswaku.ui.walas.WalasSetelanFragment
 import com.andev.absensiswaku.ui.walas.WalasSiswaFragment
 
-class WalasMainActivity : AppCompatActivity() {
+open class WalasMainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityWalasMainBinding
     private lateinit var sessionManager: SessionManager

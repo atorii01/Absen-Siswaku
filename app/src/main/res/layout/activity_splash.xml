@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#00685F">
+
+    <!-- Container Tengah: Logo & Nama Aplikasi -->
+    <LinearLayout
+        android:id="@+id/layoutLogoContainer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <!-- Logo Toga / Sekolah (Rounded Container Putih Tebal) -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardSplashLogo"
+            android:layout_width="96dp"
+            android:layout_height="96dp"
+            app:cardBackgroundColor="#FFFFFF"
+            app:cardCornerRadius="28dp"
+            app:cardElevation="8dp"
+            app:strokeWidth="0dp">
+
+            <ImageView
+                android:id="@+id/ivSplashIcon"
+                android:layout_width="54dp"
+                android:layout_height="54dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_tab_siswa"
+                app:tint="#00685F" />
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Teks Brand Aplikasi -->
+        <TextView
+            android:id="@+id/tvAppName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:fontFamily="sans-serif-black"
+            android:letterSpacing="0.05"
+            android:text="SMKN 8 JAKARTA"
+            android:textColor="#FFFFFF"
+            android:textSize="24sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvAppSubtitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:fontFamily="sans-serif-medium"
+            android:text="Portal Presensi Siswa &amp; Guru"
+            android:textColor="#CCFBF1"
+            android:textSize="13sp" />
+    </LinearLayout>
+
+    <!-- Footer Copyright Bawah -->
+    <TextView
+        android:id="@+id/tvFooterSplash"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="28dp"
+        android:fontFamily="sans-serif"
+        android:text="Presensi Siswa Mandiri • SMKN 8"
+        android:textColor="#99E6DE"
+        android:textSize="11sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
