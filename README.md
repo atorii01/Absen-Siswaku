@@ -18,6 +18,15 @@
   <img src="https://img.shields.io/badge/Backend-Supabase%20PostgreSQL-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white" alt="Supabase" />
 </p>
 
+<p align="center">
+  <a href="https://drive.google.com/drive/folders/1LcCKqBAG9QNBFVJOs-0Wk0zwq5zIJxVD?usp=sharing" target="_blank">
+    <img src="https://img.shields.io/badge/Unduh%20Langsung%20APK-Google%20Drive-4285F4?style=for-the-badge&logo=googledrive&logoColor=white" alt="Download APK Google Drive" />
+  </a>
+  <a href="https://drive.google.com/drive/folders/1LcCKqBAG9QNBFVJOs-0Wk0zwq5zIJxVD?usp=sharing" target="_blank">
+    <img src="https://img.shields.io/badge/Versi%20Terbaru-Siap%20Pasang%20(APK)-00685F?style=for-the-badge&logo=android&logoColor=white" alt="Versi Terbaru Siap Pasang" />
+  </a>
+</p>
+
 ---
 
 ## 📌 Ringkasan Eksekutif & Sorotan Utama
@@ -145,20 +154,45 @@ app/src/main/
 
 ## 🚀 Panduan Instalasi & Menjalankan Proyek
 
-### 1. Prasyarat Lingkungan Pengembangan
+### 📥 Opsi 1: Unduh & Pasang Langsung APK (Siap Pakai / Non-Developer)
+Bagi siswa, guru, wali murid, atau penilai yang ingin langsung menguji aplikasi di smartphone Android tanpa perlu memasang Android Studio:
+1. **Akses Tautan Berkas APK:**
+   👉 [**Download APK Presensi SMKN 8 Jakarta (Google Drive)**](https://drive.google.com/drive/folders/1LcCKqBAG9QNBFVJOs-0Wk0zwq5zIJxVD?usp=sharing)
+2. **Unduh Berkas APK:** Pilih berkas APK rilis terbaru di dalam folder Google Drive tersebut lalu simpan ke penyimpanan ponsel.
+3. **Pemasangan di Ponsel Android:**
+   * Buka berkas `.apk` yang baru diunduh.
+   * Jika sistem menampilkan peringatan keamanan, aktifkan opsi **"Izinkan Penginstalan dari Sumber Ini / Sumber Tidak Dikenal"** (*Install Unknown Apps*).
+   * Ketuk **Instal** dan tunggu hingga proses selesai.
+4. **Izin Perangkat yang Diperlukan:**
+   * **Kamera:** Wajib diizinkan untuk verifikasi biometrik wajah (*Face Detection*).
+   * **Lokasi (GPS Presisi):** Wajib diizinkan dengan opsi *Tepat/Precise* untuk validasi radius perimeter gerbang sekolah (*Geofencing*).
+5. **Autentikasi & Masuk Akun:**
+   * Buka aplikasi, pilih tab peran yang sesuai (*Siswa* atau *Guru & Tendik*), lalu masuk menggunakan kredensial Anda.
+
+> [!WARNING]
+> **PEMBERITAHUAN PRIVASI & KEAMANAN KREDENSIAL:**
+> Demi mematuhi prinsip kerahasiaan data dan UU Pelindungan Data Pribadi (UU PDP), **KATA SANDI & KREDENSIAL ASLI SELURUH SISWA/GURU SENGAJA TIDAK DIBAGIKAN** di repositori publik ini.
+> * **Siswa & Guru Resmi SMKN 8 Jakarta:** Silakan gunakan kredensial resmi yang telah dibagikan secara tertutup oleh Tim Kurikulum / Administrator IT Sekolah.
+> * **Peninjau / Pengembang Eksternal:** Gunakan akun simulasi pengujian pada tabel demo di bawah.
+
+---
+
+### 💻 Opsi 2: Kompilasi Mandiri dari Kode Sumber (Untuk Developer)
+
+#### 1. Prasyarat Lingkungan Pengembangan
 * **Android Studio:** Ladybug (2024.2.1) / Koala / Hedgehog atau versi yang lebih baru.
 * **Java Development Kit (JDK):** JDK 11 atau JDK 17 (disarankan JDK 17 LTS).
 * **Android SDK:** Platform SDK 34 s/d 37.
 * **Perangkat Pengujian:** Ponsel Android fisik dengan fitur Kamera & GPS aktif (disarankan) atau Emulator Android API Level 26+ yang telah diatur koordinat lokasinya.
 
-### 2. Kloning Repositori
+#### 2. Kloning Repositori
 Buka terminal dan jalankan perintah:
 ```bash
 git clone https://github.com/atorii01/Absen-Siswaku.git
 cd Absen-Siswaku
 ```
 
-### 3. Konfigurasi Kredensial Backend (Supabase)
+#### 3. Konfigurasi Kredensial Backend (Supabase)
 Buka berkas `SupabaseClient.kt` di direktori:
 `app/src/main/java/com/andev/absensiswaku/data/network/SupabaseClient.kt`
 
@@ -176,7 +210,7 @@ object SupabaseClient {
 
 > **Keamanan Data:** Jangan pernah melakukan *commit* atau mempublikasikan Anon Key produksi Anda ke repositori publik.
 
-### 4. Sinkronisasi & Kompilasi
+#### 4. Sinkronisasi & Kompilasi
 1. Buka Android Studio, pilih **Open** lalu arahkan ke folder repositori `Absen-Siswaku`.
 2. Tunggu proses **Gradle Sync** selesai mengunduh seluruh dependensi.
 3. Jalankan verifikasi kompilasi melalui terminal Android Studio:
@@ -192,9 +226,14 @@ object SupabaseClient {
 
 ## 🧪 Akun Uji Coba Demo (Simulasi Lingkungan Uji)
 
+> [!IMPORTANT]
+> **Kebijakan Keamanan Akun & Perlindungan Data:**
+> Data pada tabel berikut adalah **data tiruan (mock/dummy data)** yang disediakan semata-mata untuk menguji alur logika aplikasi, validasi form, dan pergantian peran (*role switcher*).
+> **Kata sandi, NISN, dan data akun riil SMKN 8 Jakarta TIDAK DIBOCORKAN atau dicantumkan di sini** demi menjaga integritas data sekolah dan privasi seluruh warga belajar.
+
 Untuk keperluan peninjauan dan pengujian fitur tanpa menggunakan identitas nyata, gunakan kredensial tiruan berikut:
 
-| Role Pengguna | Kategori Tab | ID Masuk / Username / NISN | Kata Sandi / PIN | Cakupan Hak Akses |
+| Role Pengguna | Kategori Tab | ID Masuk / Username / NISN (Demo) | Kata Sandi / PIN (Demo) | Cakupan Hak Akses |
 | :--- | :--- | :--- | :--- | :--- |
 | **Siswa Demo** | Tab *Siswa* | `0081234567` | `12052007` | Presensi wajah/GPS, form izin sakit, riwayat PDF siswa |
 | **Wali Kelas** | Tab *Guru & Tendik* | `walas_akl1` | `Walas8#2026` | Monitoring XII AKL 1, verifikasi acc izin, rekap kelas |
