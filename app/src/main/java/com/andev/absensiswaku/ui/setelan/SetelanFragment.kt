@@ -401,35 +401,11 @@ class SetelanFragment : Fragment() {
     }
 
     private fun performLogout() {
-        val ctx = context ?: return
+        val pref = requireContext().getSharedPreferences("PREF_SMKN8_SESSION", Context.MODE_PRIVATE)
+        pref.edit().clear().commit()
+        sessionManager.clearSession()
 
-        // 1. Bersihkan status login aktif di SharedPreferences, namun pertahankan data remember me
-        val pref = ctx.getSharedPreferences(PREF_SESSION_NAME, Context.MODE_PRIVATE)
-        val isRemembered = pref.getBoolean("KEY_REMEMBER_DEVICE", false) || pref.getBoolean("KEY_REMEMBER_DEVICE_SISWA", false)
-
-        val editor = pref.edit()
-        editor.putBoolean("KEY_IS_LOGGED_IN", false)
-        editor.putBoolean("is_logged_in", false)
-        // Hapus session data runtime (nama, rombel, id_siswa)
-        editor.remove("user_id")
-        editor.remove("ID_SISWA")
-        editor.remove("nama")
-        editor.remove("NAMA_SISWA")
-        editor.remove("id_kelas")
-        editor.remove("ID_KELAS")
-        editor.remove("nama_kelas")
-        editor.remove("jurusan")
-        editor.remove("wali_kelas")
-        editor.remove("role")
-        if (!isRemembered) {
-            editor.remove("KEY_REMEMBER_DEVICE")
-            editor.remove("KEY_REMEMBER_DEVICE_SISWA")
-            editor.remove("SAVED_NISN")
-            editor.remove("SAVED_PIN")
-        }
-        editor.apply()
-
-        Toast.makeText(ctx, "Anda telah keluar dari Portal Siswa.", Toast.LENGTH_SHORT).show()
+        Toast.makeText(requireContext(), "Anda telah keluar dari Portal Siswa.", Toast.LENGTH_SHORT).show()
 
         // 2. Navigasi kembali ke LoginActivity dengan menghapus seluruh tumpukan aktivitas
         val intent = Intent(requireContext(), LoginActivity::class.java).apply {

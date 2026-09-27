@@ -13,9 +13,9 @@ data class RekapHarianKelasModel(
     val countTerlambat: Int = 0,
     val countIzin: Int = 0,
     val countAlpa: Int = 0,
-    val totalSiswa: Int = 36,
+    val totalSiswa: Int = 0,
     val persentase: Double = 0.0,
-    val isLengkap: Boolean = true,
+    val isLengkap: Boolean = false,
     val countSakit: Int = 0
 )
 

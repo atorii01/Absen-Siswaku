@@ -79,6 +79,6 @@ class SessionManager(context: Context) {
             editor.putString("SAVED_GURU_PASSWORD", savedGuruPass)
         }
         editor.putString("LAST_ROLE_TAB", lastRoleTab)
-        editor.apply()
+        editor.commit()
     }
 }

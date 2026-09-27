@@ -358,14 +358,14 @@
                             </LinearLayout>
 
                             <TextView
-                                android:id="@+id/tvTotalHadir"
+                                android:id="@+id/tvStatHadir"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="2dp"
                                 android:textColor="@color/text_primary"
                                 android:textSize="13sp"
                                 android:textStyle="bold"
-                                tools:text="34 Siswa" />
+                                tools:text="0 Siswa" />
                         </LinearLayout>
 
                         <!-- Terlambat -->
@@ -396,14 +396,14 @@
                             </LinearLayout>
 
                             <TextView
-                                android:id="@+id/tvTotalTerlambat"
+                                android:id="@+id/tvStatTerlambat"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="2dp"
                                 android:textColor="@color/text_primary"
                                 android:textSize="13sp"
                                 android:textStyle="bold"
-                                tools:text="1 Siswa" />
+                                tools:text="0 Siswa" />
                         </LinearLayout>
 
                         <!-- Sakit & Izin -->
@@ -434,14 +434,14 @@
                             </LinearLayout>
 
                             <TextView
-                                android:id="@+id/tvTotalIzinSakit"
+                                android:id="@+id/tvStatIzin"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="2dp"
                                 android:textColor="@color/text_primary"
                                 android:textSize="13sp"
                                 android:textStyle="bold"
-                                tools:text="1 Siswa" />
+                                tools:text="0 Siswa" />
                         </LinearLayout>
 
                         <!-- Alpa -->
@@ -472,7 +472,7 @@
                             </LinearLayout>
 
                             <TextView
-                                android:id="@+id/tvTotalAlpa"
+                                android:id="@+id/tvStatAlpa"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="2dp"

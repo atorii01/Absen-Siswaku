@@ -305,45 +305,12 @@ class GuruSetelanFragment : Fragment() {
     }
 
     private fun performLogout() {
-        val ctx = context ?: return
-
-        // 1. Bersihkan sesi SharedPreferences
-        val pref = ctx.getSharedPreferences(PREF_SESSION_NAME, Context.MODE_PRIVATE)
-        val isRemembered = pref.getBoolean("KEY_REMEMBER_DEVICE", false) ||
-                pref.getBoolean("KEY_REMEMBER_DEVICE_GURU", false)
-
-        val editor = pref.edit()
-        editor.putBoolean("KEY_IS_LOGGED_IN", false)
-        editor.putBoolean("is_logged_in", false)
-        editor.remove("user_id")
-        editor.remove("ID_USER")
-        editor.remove("ID_WALAS")
-        editor.remove("nama")
-        editor.remove("NAMA_LENGKAP")
-        editor.remove("NAMA_WALAS")
-        editor.remove("MATA_PELAJARAN")
-        editor.remove("USERNAME")
-        editor.remove("id_kelas")
-        editor.remove("ID_KELAS")
-        editor.remove("nama_kelas")
-        editor.remove("NAMA_KELAS")
-        editor.remove("jurusan")
-        editor.remove("wali_kelas")
-        editor.remove("role")
-        editor.remove("ROLE")
-        if (!isRemembered) {
-            editor.remove("KEY_REMEMBER_DEVICE")
-            editor.remove("KEY_REMEMBER_DEVICE_GURU")
-            editor.remove("SAVED_GURU_USERNAME")
-            editor.remove("SAVED_GURU_PASSWORD")
-        }
-        editor.apply()
-
+        val pref = requireContext().getSharedPreferences("PREF_SMKN8_SESSION", Context.MODE_PRIVATE)
+        pref.edit().clear().commit()
         sessionManager.clearSession()
 
-        Toast.makeText(ctx, "Anda telah keluar dari Portal Guru Mapel.", Toast.LENGTH_SHORT).show()
+        Toast.makeText(requireContext(), "Anda telah keluar dari Portal Guru Mapel.", Toast.LENGTH_SHORT).show()
 
-        // 2. Navigasi ke LoginActivity dengan menghapus backstack
         val intent = Intent(requireContext(), LoginActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }

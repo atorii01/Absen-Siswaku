@@ -64,7 +64,7 @@
 
         <!-- Segmented Tab Switcher Toggle Group -->
         <com.google.android.material.button.MaterialButtonToggleGroup
-            android:id="@+id/toggleGroupRole"
+            android:id="@+id/toggleRole"
             android:layout_width="match_parent"
             android:layout_height="48dp"
             android:layout_marginTop="20dp"
@@ -133,7 +133,7 @@
             app:cardElevation="2dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/toggleGroupRole"
+            app:layout_constraintTop_toBottomOf="@id/toggleRole"
             app:strokeColor="@color/card_stroke"
             app:strokeWidth="1dp">
 
@@ -143,45 +143,19 @@
                 android:orientation="vertical"
                 android:padding="20dp">
 
-                <!-- Row Label 1 -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal">
-
-                    <TextView
-                        android:id="@+id/tvLabelIdentifier"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="NISN Siswa"
-                        android:textColor="@color/text_primary"
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:id="@+id/tvSubLabelIdentifier"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="10 Digit NISN"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="12sp" />
-                </LinearLayout>
-
-                <!-- Input Box 1 -->
+                <!-- 1. Input NISN Siswa -->
                 <com.google.android.material.textfield.TextInputLayout
-                    android:id="@+id/tilIdentifier"
+                    android:id="@+id/layoutNisnSiswa"
                     style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
                     app:boxBackgroundMode="none"
                     app:hintEnabled="false"
                     app:startIconDrawable="@drawable/ic_school"
                     app:startIconTint="@color/text_secondary">
 
                     <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/etIdentifier"
+                        android:id="@+id/etNisnSiswa"
                         android:layout_width="match_parent"
                         android:layout_height="50dp"
                         android:background="@drawable/bg_input_box"
@@ -195,42 +169,13 @@
                         android:textSize="14sp" />
                 </com.google.android.material.textfield.TextInputLayout>
 
-                <!-- Row Label 2 -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:orientation="horizontal">
-
-                    <TextView
-                        android:id="@+id/tvLabelSecret"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Tanggal Lahir / PIN Presensi"
-                        android:textColor="@color/text_primary"
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:id="@+id/tvForgotPassword"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:text="Lupa PIN?"
-                        android:textColor="@color/primary_teal"
-                        android:textSize="12sp"
-                        android:textStyle="bold" />
-                </LinearLayout>
-
-                <!-- Input Box 2 -->
+                <!-- 2. Input PIN Siswa -->
                 <com.google.android.material.textfield.TextInputLayout
-                    android:id="@+id/tilSecret"
+                    android:id="@+id/layoutPinSiswa"
                     style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
+                    android:layout_marginTop="12dp"
                     app:boxBackgroundMode="none"
                     app:endIconMode="password_toggle"
                     app:endIconTint="@color/text_secondary"
@@ -239,12 +184,67 @@
                     app:startIconTint="@color/text_secondary">
 
                     <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/etSecret"
+                        android:id="@+id/etPinSiswa"
                         android:layout_width="match_parent"
                         android:layout_height="50dp"
                         android:background="@drawable/bg_input_box"
                         android:hint="DDMMAAAA atau PIN presensi"
                         android:inputType="numberPassword"
+                        android:maxLines="1"
+                        android:paddingVertical="0dp"
+                        android:textColor="@color/text_primary"
+                        android:textColorHint="@color/text_secondary"
+                        android:textSize="14sp" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <!-- 3. Input NIP Guru (Default Gone) -->
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/layoutNipGuru"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:visibility="gone"
+                    app:boxBackgroundMode="none"
+                    app:hintEnabled="false"
+                    app:startIconDrawable="@drawable/ic_badge"
+                    app:startIconTint="@color/text_secondary">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/etNipGuru"
+                        android:layout_width="match_parent"
+                        android:layout_height="50dp"
+                        android:background="@drawable/bg_input_box"
+                        android:hint="NIP atau Username Guru"
+                        android:inputType="text"
+                        android:maxLines="1"
+                        android:paddingVertical="0dp"
+                        android:textColor="@color/text_primary"
+                        android:textColorHint="@color/text_secondary"
+                        android:textSize="14sp" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <!-- 4. Input Password Guru (Default Gone) -->
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/layoutPasswordGuru"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:visibility="gone"
+                    app:boxBackgroundMode="none"
+                    app:endIconMode="password_toggle"
+                    app:endIconTint="@color/text_secondary"
+                    app:hintEnabled="false"
+                    app:startIconDrawable="@drawable/ic_lock"
+                    app:startIconTint="@color/text_secondary">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/etPasswordGuru"
+                        android:layout_width="match_parent"
+                        android:layout_height="50dp"
+                        android:background="@drawable/bg_input_box"
+                        android:hint="Masukkan password"
+                        android:inputType="textPassword"
                         android:maxLines="1"
                         android:paddingVertical="0dp"
                         android:textColor="@color/text_primary"
@@ -315,6 +315,7 @@
 
                 <!-- Info Banner Card -->
                 <LinearLayout
+                    android:id="@+id/cardInfoBawah"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
@@ -341,39 +342,9 @@
                         android:textSize="12sp" />
                 </LinearLayout>
 
-                <!-- Divider -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="20dp"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <View
-                        android:layout_width="0dp"
-                        android:layout_height="1dp"
-                        android:layout_weight="1"
-                        android:background="@color/input_stroke" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginHorizontal="12dp"
-                        android:text="ATAU MASUK CEPAT"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="11sp"
-                        android:textStyle="bold" />
-
-                    <View
-                        android:layout_width="0dp"
-                        android:layout_height="1dp"
-                        android:layout_weight="1"
-                        android:background="@color/input_stroke" />
-                </LinearLayout>
-
                 <!-- Google / Belajar.id Button -->
                 <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnBelajarId"
+                    android:id="@+id/btnGoogleAuth"
                     style="@style/Widget.Material3.Button.UnelevatedButton"
                     android:layout_width="match_parent"
                     android:layout_height="48dp"

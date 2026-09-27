@@ -1,0 +1,81 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="360dp"
+    android:height="150dp"
+    android:viewportWidth="360"
+    android:viewportHeight="150">
+
+    <!-- Background Land -->
+    <path
+        android:fillColor="#E2EBF5"
+        android:pathData="M0,0h360v150h-360z" />
+
+    <!-- Water Body / Sea / Lake -->
+    <path
+        android:fillColor="#BAE6FD"
+        android:pathData="M0,0 Q90,30 180,10 T360,25 L360,0 L0,0 Z" />
+
+    <!-- Secondary Water Area (Dam / Bay) -->
+    <path
+        android:fillColor="#7DD3FC"
+        android:pathData="M240,0 Q270,45 320,35 Q350,25 360,40 L360,0 Z" />
+
+    <!-- Parks / Green Belts -->
+    <path
+        android:fillColor="#DCFCE7"
+        android:pathData="M20,60 Q50,55 70,80 Q40,110 15,95 Z" />
+
+    <path
+        android:fillColor="#DCFCE7"
+        android:pathData="M260,70 Q300,60 330,85 Q310,120 250,105 Z" />
+
+    <!-- Urban Blocks -->
+    <path
+        android:fillColor="#CBD5E1"
+        android:pathData="M110,35 h45 v25 h-45 z
+                          M170,40 h50 v20 h-50 z
+                          M80,80 h55 v30 h-55 z
+                          M200,85 h45 v25 h-45 z" />
+
+    <!-- Secondary Roads (Gray lines) -->
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M0,75 C90,75 120,60 170,60 C230,60 270,80 360,80
+                          M100,10 L100,150
+                          M220,10 L220,150
+                          M40,30 L160,150
+                          M250,20 L340,150" />
+
+    <!-- Primary Highway / Boulevard (Light Yellowish / Orange) -->
+    <path
+        android:strokeColor="#FED7AA"
+        android:strokeWidth="6"
+        android:strokeLineCap="round"
+        android:pathData="M0,110 C80,110 140,95 180,95 C240,95 280,120 360,115" />
+
+    <!-- Center Radar Waves (Concentric Rings) -->
+    <path
+        android:strokeColor="#2000685F"
+        android:strokeWidth="1.5"
+        android:fillColor="#1500685F"
+        android:pathData="M180,75 m-36,0 a36,36 0 1,0 72,0 a36,36 0 1,0 -72,0" />
+
+    <path
+        android:strokeColor="#4000685F"
+        android:strokeWidth="1.5"
+        android:fillColor="#2500685F"
+        android:pathData="M180,75 m-22,0 a22,22 0 1,0 44,0 a22,22 0 1,0 -44,0" />
+
+    <path
+        android:strokeColor="#8000685F"
+        android:strokeWidth="2"
+        android:fillColor="#5000685F"
+        android:pathData="M180,75 m-10,0 a10,10 0 1,0 20,0 a10,10 0 1,0 -20,0" />
+
+    <!-- Center Pin Head Dot -->
+    <path
+        android:fillColor="#00685F"
+        android:pathData="M180,75 m-4,0 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0" />
+</vector>

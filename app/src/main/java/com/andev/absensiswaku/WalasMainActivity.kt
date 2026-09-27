@@ -127,7 +127,11 @@ class WalasMainActivity : AppCompatActivity() {
                 }
 
                 R.id.nav_walas_setelan -> {
-                    loadFragment(WalasSetelanFragment())
+                    if (isAdmin) {
+                        loadFragment(com.andev.absensiswaku.ui.admin.AdminSetelanFragment())
+                    } else {
+                        loadFragment(WalasSetelanFragment())
+                    }
                     true
                 }
 

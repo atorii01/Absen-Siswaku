@@ -91,11 +91,17 @@ interface SupabaseService {
 
     @GET("pengajuan_izin")
     fun getIzinKelas(
-        @Query("status_verifikasi") status: String = "eq.Disetujui",
-        @Query("select") select: String = "*,siswa(*,rombel_kelas(*))",
         @Query("siswa.id_kelas") filterKelas: String,
+        @Query("status_verifikasi") status: String = "eq.Disetujui",
+        @Query("select") select: String = "*,siswa!inner(*,rombel_kelas(*))",
         @Query("order") order: String = "tanggal_mulai.desc"
     ): Call<List<PengajuanIzinResponse>>
+
+    @GET("rombel_kelas")
+    fun getRombelByWalas(
+        @Query("wali_kelas_id") filterWalas: String,
+        @Query("select") select: String = "id,nama_kelas,jurusan,wali_kelas_id,tahun_ajaran,users!wali_kelas_id(nama_lengkap)"
+    ): Call<List<RombelMapelResponse>>
 
     @GET("siswa")
     fun getAllSiswa(
@@ -142,8 +148,16 @@ interface SupabaseService {
 
     @GET("konfigurasi_sistem")
     fun getKonfigurasiSistem(
+        @Query("id") idFilter: String? = null,
         @Query("select") select: String = "*"
     ): Call<List<KonfigurasiSistemResponse>>
+
+    @Headers("Prefer: return=representation")
+    @PATCH("konfigurasi_sistem")
+    fun updateKonfigurasiSistem(
+        @Query("id") filterId: String = "eq.1",
+        @Body payload: Map<String, @JvmSuppressWildcards Any>
+    ): Call<ResponseBody>
 
     // ================= GURU MAPEL READ-ONLY ENDPOINTS =================
     @GET("rombel_kelas")
