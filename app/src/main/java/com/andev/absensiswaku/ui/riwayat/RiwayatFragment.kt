@@ -24,7 +24,6 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.andev.absensiswaku.R
-import com.andev.absensiswaku.data.network.ApiClient
 import com.andev.absensiswaku.data.network.PengajuanIzinModel
 import com.andev.absensiswaku.data.network.RiwayatModel
 import com.andev.absensiswaku.data.network.SupabaseClient
