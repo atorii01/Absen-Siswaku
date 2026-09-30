@@ -107,7 +107,7 @@
 
             <!-- Tombol / Indikator Rincian -->
             <LinearLayout
-                android:id="@+id/btnRincianHarian"
+                android:id="@+id/btnRincian"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:background="?attr/selectableItemBackgroundBorderless"

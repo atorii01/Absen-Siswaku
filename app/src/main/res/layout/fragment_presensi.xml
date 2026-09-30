@@ -291,26 +291,53 @@
                             android:layout_height="1dp"
                             android:layout_weight="1" />
 
-                        <!-- Chip Kanan: AI Face Match & GPS Valid -->
-                        <LinearLayout
+                        <!-- Chip Kanan: High-Contrast Face Detection Status Badge -->
+                        <com.google.android.material.card.MaterialCardView
+                            android:id="@+id/cardBadgeWarningWajah"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:background="@drawable/bg_chip_ai"
-                            android:gravity="center_vertical"
-                            android:orientation="horizontal"
-                            android:paddingHorizontal="10dp"
-                            android:paddingVertical="6dp">
+                            app:cardBackgroundColor="@color/camera_badge_alert_bg"
+                            app:cardCornerRadius="20dp"
+                            app:cardElevation="4dp"
+                            app:strokeColor="@color/camera_badge_alert_stroke"
+                            app:strokeWidth="1dp">
 
-                            <TextView
-                                android:id="@+id/tvStatusAiChip"
+                            <LinearLayout
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="✓ AI Face Match &amp; GPS Valid"
-                                android:textColor="@color/white"
-                                android:textSize="11sp"
-                                android:textStyle="bold" />
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal"
+                                android:paddingHorizontal="12dp"
+                                android:paddingVertical="6dp">
 
-                        </LinearLayout>
+                                <ImageView
+                                    android:id="@+id/ivStatusWarningIcon"
+                                    android:layout_width="14dp"
+                                    android:layout_height="14dp"
+                                    android:contentDescription="Ikon Status Wajah"
+                                    android:src="@drawable/ic_warning"
+                                    app:tint="@color/camera_badge_alert_icon_yellow" />
+
+                                <TextView
+                                    android:id="@+id/tvStatusWajah"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="6dp"
+                                    android:ellipsize="end"
+                                    android:fontFamily="sans-serif-medium"
+                                    android:maxLines="1"
+                                    android:shadowColor="#000000"
+                                    android:shadowDx="1"
+                                    android:shadowDy="1"
+                                    android:shadowRadius="2"
+                                    android:text="Wajah Di Luar Lingkaran"
+                                    android:textColor="@color/white"
+                                    android:textSize="12sp"
+                                    android:textStyle="bold" />
+
+                            </LinearLayout>
+
+                        </com.google.android.material.card.MaterialCardView>
 
                     </LinearLayout>
 

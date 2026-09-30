@@ -53,9 +53,9 @@ class WalasLaporanFragment : Fragment() {
     private val listSiswaKelas = mutableListOf<SiswaMiniResponse>()
     private val allPresensiList = mutableListOf<RiwayatModel>()
     private val allIzinList = mutableListOf<PengajuanIzinResponse>()
-    private val currentRekapHarianList = mutableListOf<RekapHarianKelasModel>()
+    private val currentRekapHarianList = mutableListOf<HistoriKehadiranModel>()
 
-    private lateinit var rekapHarianAdapter: RekapHarianWalasAdapter
+    private lateinit var rekapHarianAdapter: HistoriKehadiranAdapter
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -148,13 +148,10 @@ class WalasLaporanFragment : Fragment() {
     }
 
     private fun setupRecyclerView() {
-        rekapHarianAdapter = RekapHarianWalasAdapter(emptyList()) { item ->
-            Toast.makeText(
-                requireContext(),
-                "${item.tanggalFormatted}: ${item.countHadir} Hadir, ${item.countTerlambat} Terlambat, ${item.countIzin} Izin, ${item.countAlpa} Alpa",
-                Toast.LENGTH_SHORT
-            ).show()
-        }
+        rekapHarianAdapter = HistoriKehadiranAdapter(
+            listData = emptyList(),
+            fragmentManager = childFragmentManager
+        )
 
         binding.rvRiwayatHarianKelas.apply {
             layoutManager = LinearLayoutManager(requireContext())
@@ -433,17 +430,40 @@ class WalasLaporanFragment : Fragment() {
         // HISTORI KEHADIRAN HARIAN ROMBEL:
         // Ambil rekaman asli dari database tanpa data dummy/mock!
         // ==========================================================
-        val distinctDates = (
+        val todayIso = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
+        val allDates = (
             filteredPresensi.mapNotNull { it.tanggal?.takeIf { s -> s.isNotBlank() } } +
             filteredIzin.mapNotNull { it.tanggalMulai?.takeIf { s -> s.isNotBlank() } }
-        ).distinct().sortedDescending()
+        ).toMutableSet()
+
+        // Pastikan tanggal hari ini otomatis tercatat dalam histori harian pada mode filter aktif
+        if (selectedFilterMode == 1) {
+            allDates.add(todayIso)
+        } else if (selectedFilterMode == 2) {
+            val cal = java.util.Calendar.getInstance()
+            val m = cal.get(java.util.Calendar.MONTH) + 1
+            if (m in 7..12) allDates.add(todayIso)
+        } else if (selectedFilterMode == 3) {
+            if (customStartMillis != 0L && customEndMillis != 0L) {
+                val nowTime = System.currentTimeMillis()
+                if (nowTime in customStartMillis..customEndMillis) {
+                    allDates.add(todayIso)
+                }
+            }
+        }
+
+        val distinctDates = allDates.distinct().sortedDescending()
 
         val sdfDisplay = SimpleDateFormat("EEEE, d MMM yyyy", Locale.forLanguageTag("id-ID"))
         currentRekapHarianList.clear()
 
         distinctDates.forEach { tgl ->
             val presensiHariIni = filteredPresensi.filter { it.tanggal?.equals(tgl, ignoreCase = true) == true }
-            val izinHariIni = filteredIzin.filter { it.tanggalMulai?.equals(tgl, ignoreCase = true) == true }
+            val izinHariIni = filteredIzin.filter { izin ->
+                val tMulai = izin.tanggalMulai ?: ""
+                val tSelesai = izin.tanggalSelesai ?: tMulai
+                tgl in tMulai..tSelesai || tMulai == tgl
+            }
 
             val h = presensiHariIni.distinctBy { it.siswaId }.count {
                 it.status.equals("Hadir", true) ||
@@ -471,10 +491,13 @@ class WalasLaporanFragment : Fragment() {
             }
 
             currentRekapHarianList.add(
-                RekapHarianKelasModel(
+                HistoriKehadiranModel(
                     tanggal = tgl,
+                    rawTanggal = tgl,
                     tanggalFormatted = formattedDate,
-                    countHadir = h - t,
+                    idKelas = idKelas,
+                    namaKelas = namaKelas,
+                    countHadir = (h - t).coerceAtLeast(0),
                     countTerlambat = t,
                     countIzin = i,
                     countAlpa = a,

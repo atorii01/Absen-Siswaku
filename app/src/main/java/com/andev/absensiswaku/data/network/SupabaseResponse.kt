@@ -108,3 +108,45 @@ data class KonfigurasiSistemResponse(
     val biometrikAiLiveness: Boolean? = true
 )
 
+data class TambahRombelRequest(
+    @SerializedName("id") val id: Int,
+    @SerializedName("nama_kelas") val namaKelas: String,
+    @SerializedName("jurusan") val jurusan: String,
+    @SerializedName("tingkat") val tingkat: String = "12",
+    @SerializedName("wali_kelas_id") val waliKelasId: String?,
+    @SerializedName("tahun_ajaran") val tahunAjaran: String = "2026/2027",
+    @SerializedName("kapasitas_kuota") val kapasitasKuota: Int
+)
+
+data class RombelIdResponse(
+    @SerializedName("id") val id: Int? = null
+)
+
+data class SiswaExportResponse(
+    @SerializedName("id") val id: Int? = null,
+    @SerializedName("nisn") val nisn: String? = null,
+    @SerializedName("nama_lengkap") val namaLengkap: String? = null,
+    @SerializedName("id_kelas") val idKelas: Int? = null,
+    @SerializedName("rombel_kelas") val rombelKelas: RombelInfoResponse? = null
+)
+
+data class PresensiRecordResponse(
+    @SerializedName("id") val id: String? = null,
+    @SerializedName("siswa_id") val siswaId: Int? = null,
+    @SerializedName("id_kelas") val idKelas: Int? = null,
+    @SerializedName("tanggal") val tanggal: String? = null,
+    @SerializedName("waktu_masuk") val waktuMasuk: String? = null,
+    @SerializedName("status") val status: String? = null
+)
+
+data class IzinRecordResponse(
+    @SerializedName("id") val id: String? = null,
+    @SerializedName("siswa_id") val siswaId: Int? = null,
+    @SerializedName("id_kelas") val idKelas: Int? = null,
+    @SerializedName("jenis_izin") val jenisIzin: String? = null,
+    @SerializedName("status_verifikasi") val statusVerifikasi: String? = null,
+    @SerializedName("tanggal_mulai") val tanggalMulai: String? = null,
+    @SerializedName("tanggal_selesai") val tanggalSelesai: String? = null
+)
+
+

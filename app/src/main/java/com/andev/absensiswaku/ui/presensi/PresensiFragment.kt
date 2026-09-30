@@ -4,6 +4,7 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
+import android.content.res.ColorStateList
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.location.Location
@@ -150,6 +151,7 @@ class PresensiFragment : Fragment() {
         setupCameraControls()
         setupSubmitButton()
         startLiveClock()
+        updateFaceWarningBadge(FaceWarningBadgeState.NOT_DETECTED)
         checkAndRequestPermissions()
     }
 
@@ -577,12 +579,10 @@ class PresensiFragment : Fragment() {
 
                     if (isFaceInsideCircle) {
                         binding.tvStatusKameraChip.text = "• Kamera Aktif • Wajah Terdeteksi"
-                        binding.tvStatusAiChip.text = "✓ AI Face Match $scoreStr%"
-                        binding.tvStatusAiChip.setBackgroundResource(R.drawable.bg_chip_ai)
+                        updateFaceWarningBadge(FaceWarningBadgeState.MATCHED, scoreStr)
                     } else {
                         binding.tvStatusKameraChip.text = "• Kamera Aktif • Wajah Di Luar Radius"
-                        binding.tvStatusAiChip.text = "⚠ Wajah Di Luar Lingkaran"
-                        binding.tvStatusAiChip.setBackgroundResource(R.drawable.bg_badge_pill_red)
+                        updateFaceWarningBadge(FaceWarningBadgeState.OUTSIDE_CIRCLE)
                     }
                 } else {
                     isFaceDetected = false
@@ -590,8 +590,7 @@ class PresensiFragment : Fragment() {
                     lastBiometricScore = 0.0
 
                     binding.tvStatusKameraChip.text = "• Kamera Aktif • Wajah Tidak Terdeteksi"
-                    binding.tvStatusAiChip.text = "✕ Wajah Tidak Terdeteksi"
-                    binding.tvStatusAiChip.setBackgroundResource(R.drawable.bg_badge_pill_red)
+                    updateFaceWarningBadge(FaceWarningBadgeState.NOT_DETECTED)
                 }
 
                 val calendar = Calendar.getInstance(TimeZone.getTimeZone("Asia/Jakarta"))
@@ -603,6 +602,7 @@ class PresensiFragment : Fragment() {
                 if (!isAdded || _binding == null) return@addOnFailureListener
                 isFaceDetected = false
                 isFaceInsideCircle = false
+                updateFaceWarningBadge(FaceWarningBadgeState.NOT_DETECTED)
             }
             .addOnCompleteListener {
                 imageProxy.close()
@@ -621,11 +621,13 @@ class PresensiFragment : Fragment() {
                     isFaceDetected = true
                     isFaceInsideCircle = true
                     lastBiometricScore = 95.0
+                    updateFaceWarningBadge(FaceWarningBadgeState.MATCHED, "95.0")
                     Toast.makeText(ctx, "Wajah Terdeteksi dari foto!", Toast.LENGTH_SHORT).show()
                 } else {
                     isFaceDetected = false
                     isFaceInsideCircle = false
                     lastBiometricScore = 0.0
+                    updateFaceWarningBadge(FaceWarningBadgeState.NOT_DETECTED)
                     Toast.makeText(ctx, "Wajah tidak terdeteksi dalam foto!", Toast.LENGTH_LONG).show()
                 }
             }
@@ -633,7 +635,68 @@ class PresensiFragment : Fragment() {
                 if (!isAdded || _binding == null) return@addOnFailureListener
                 isFaceDetected = false
                 isFaceInsideCircle = false
+                updateFaceWarningBadge(FaceWarningBadgeState.NOT_DETECTED)
             }
+    }
+
+    private enum class FaceWarningBadgeState {
+        MATCHED,
+        OUTSIDE_CIRCLE,
+        NOT_DETECTED
+    }
+
+    /**
+     * Memperbarui kontras visual badge status deteksi wajah pada overlay kamera presensi
+     * sesuai standar High-Contrast Semantic Alert (WCAG AAA contrast on camera feeds).
+     */
+    private fun updateFaceWarningBadge(state: FaceWarningBadgeState, scoreStr: String = "") {
+        if (!isAdded || _binding == null) return
+        val ctx = context ?: return
+
+        when (state) {
+            FaceWarningBadgeState.MATCHED -> {
+                // Status Berhasil / Wajah Terdeteksi & Presisi di Dalam Lingkaran
+                binding.cardBadgeWarningWajah.setCardBackgroundColor(
+                    ContextCompat.getColor(ctx, R.color.camera_badge_success_bg)
+                )
+                binding.cardBadgeWarningWajah.strokeColor =
+                    ContextCompat.getColor(ctx, R.color.camera_badge_success_stroke)
+                binding.cardBadgeWarningWajah.strokeWidth =
+                    (1 * resources.displayMetrics.density).roundToInt()
+                binding.ivStatusWarningIcon.setImageResource(R.drawable.ic_check_circle)
+                binding.ivStatusWarningIcon.imageTintList =
+                    ColorStateList.valueOf(ContextCompat.getColor(ctx, R.color.white))
+                binding.tvStatusWajah.text = "AI Match $scoreStr%"
+            }
+            FaceWarningBadgeState.OUTSIDE_CIRCLE -> {
+                // Status Peringatan: Wajah terdeteksi namun di luar area oval lingkaran panduan
+                binding.cardBadgeWarningWajah.setCardBackgroundColor(
+                    ContextCompat.getColor(ctx, R.color.camera_badge_alert_bg)
+                )
+                binding.cardBadgeWarningWajah.strokeColor =
+                    ContextCompat.getColor(ctx, R.color.camera_badge_alert_stroke)
+                binding.cardBadgeWarningWajah.strokeWidth =
+                    (1 * resources.displayMetrics.density).roundToInt()
+                binding.ivStatusWarningIcon.setImageResource(R.drawable.ic_warning)
+                binding.ivStatusWarningIcon.imageTintList =
+                    ColorStateList.valueOf(ContextCompat.getColor(ctx, R.color.camera_badge_alert_icon_yellow))
+                binding.tvStatusWajah.text = "Wajah Di Luar Lingkaran"
+            }
+            FaceWarningBadgeState.NOT_DETECTED -> {
+                // Status Peringatan: Wajah belum/tidak terdeteksi oleh kamera
+                binding.cardBadgeWarningWajah.setCardBackgroundColor(
+                    ContextCompat.getColor(ctx, R.color.camera_badge_alert_bg)
+                )
+                binding.cardBadgeWarningWajah.strokeColor =
+                    ContextCompat.getColor(ctx, R.color.camera_badge_alert_stroke)
+                binding.cardBadgeWarningWajah.strokeWidth =
+                    (1 * resources.displayMetrics.density).roundToInt()
+                binding.ivStatusWarningIcon.setImageResource(R.drawable.ic_warning)
+                binding.ivStatusWarningIcon.imageTintList =
+                    ColorStateList.valueOf(ContextCompat.getColor(ctx, R.color.white))
+                binding.tvStatusWajah.text = "Wajah Tidak Terdeteksi"
+            }
+        }
     }
 
     private fun setupCameraControls() {

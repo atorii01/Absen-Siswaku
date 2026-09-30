@@ -1,15 +1,20 @@
 package com.andev.absensiswaku.ui.admin
 
 import android.content.Context
+import android.net.Uri
 import android.os.Bundle
 import android.text.Editable
+import android.text.InputType
 import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
+import android.widget.EditText
+import android.widget.FrameLayout
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -18,6 +23,7 @@ import com.andev.absensiswaku.data.network.RombelMapelResponse
 import com.andev.absensiswaku.data.network.SiswaAdminResponse
 import com.andev.absensiswaku.data.network.SupabaseClient
 import com.andev.absensiswaku.databinding.FragmentAdminMasterDataBinding
+import com.andev.absensiswaku.util.ExcelImportHelper
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import okhttp3.ResponseBody
 import retrofit2.Call
@@ -39,6 +45,12 @@ class AdminMasterDataFragment : Fragment() {
     private var selectedGender: String = "L"
     private var editingSiswaId: Int? = null
     private var selectedFilterKelasId: Int? = null
+
+    private val filePickerLauncher = registerForActivityResult(
+        ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let { prosesFileExcelCsv(it) }
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -121,11 +133,7 @@ class AdminMasterDataFragment : Fragment() {
         }
 
         rombelAdapter = RombelKelolaAdapter { rombel ->
-            MaterialAlertDialogBuilder(requireContext())
-                .setTitle("⚙️ Setelan Rombel: ${rombel.namaKelas}")
-                .setMessage("Rombel: ${rombel.namaKelas}\nWali Kelas: ${rombel.waliKelas?.namaLengkap ?: "-"}\nKapasitas Kuota: ${rombel.kuota} Siswa\nTahun Ajaran: 2026/2027 Semester Ganjil\n\nStatus Sinkronisasi Dapodik: 100% Valid.")
-                .setPositiveButton("Tutup", null)
-                .show()
+            showRombelSettingDialog(rombel)
         }
 
         binding.rvDaftarRombel.apply {
@@ -135,11 +143,12 @@ class AdminMasterDataFragment : Fragment() {
         }
 
         binding.btnBuatKelas.setOnClickListener {
-            MaterialAlertDialogBuilder(requireContext())
-                .setTitle("Tambah Rombongan Belajar")
-                .setMessage("Pembuatan rombel kelas baru dikoordinasikan langsung melalui Tim Kurikulum & Data Pokok Pendidikan (Dapodik) SMKN 8 Jakarta.")
-                .setPositiveButton("Mengerti", null)
-                .show()
+            val dialog = DialogTambahRombel {
+                // Refresh list rombel dan angka metrik rombel di dashboard admin
+                loadDataRombel()
+                loadMetricsAdmin()
+            }
+            dialog.show(parentFragmentManager, "TambahRombelDialog")
         }
     }
 
@@ -361,13 +370,167 @@ class AdminMasterDataFragment : Fragment() {
 
     private fun setupImportExcelButton() {
         binding.btnImporExcel.setOnClickListener {
+            val options = arrayOf(
+                "📥 Unduh Template Format Excel/CSV",
+                "📂 Pilih Berkas & Unggah Data Siswa"
+            )
             MaterialAlertDialogBuilder(requireContext())
-                .setTitle("📥 Impor Data Siswa via Excel")
-                .setMessage("Format file harus berupa template standar Dapodik (.xlsx / .csv) berisi kolom: NISN, NIK, Nama Lengkap, Rombel, Jenis Kelamin, No. HP Orang Tua.\n\nUnduh template resmi di portal web administrator.")
-                .setPositiveButton("Pilih File", null)
+                .setTitle("Impor Data Siswa Dapodik")
+                .setItems(options) { _, which ->
+                    when (which) {
+                        0 -> {
+                            ExcelImportHelper.unduhTemplateExcelCsv(requireContext())
+                        }
+                        1 -> {
+                            filePickerLauncher.launch("*/*")
+                        }
+                    }
+                }
                 .setNegativeButton("Tutup", null)
                 .show()
         }
+    }
+
+    private fun prosesFileExcelCsv(uri: Uri) {
+        val targetKelasId = selectedFilterKelasId ?: allRombelList.firstOrNull()?.id ?: 9
+        val targetKelasName = allRombelList.find { it.id == targetKelasId }?.namaKelas ?: "XII RPL"
+
+        Toast.makeText(requireContext(), "Membaca berkas impor...", Toast.LENGTH_SHORT).show()
+        val parsedList = ExcelImportHelper.prosesFileExcelCsv(requireContext(), uri)
+        if (parsedList.isEmpty()) {
+            Toast.makeText(requireContext(), "Tidak ada data siswa valid ditemukan dalam berkas!", Toast.LENGTH_LONG).show()
+            return
+        }
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Konfirmasi Impor Data Siswa")
+            .setMessage("Ditemukan ${parsedList.size} data siswa.\nUnggah ke rombel: $targetKelasName?")
+            .setPositiveButton("Unggah Sekarang") { _, _ ->
+                Toast.makeText(requireContext(), "Mengunggah ${parsedList.size} siswa ke Supabase...", Toast.LENGTH_SHORT).show()
+                ExcelImportHelper.uploadSiswaBatch(
+                    idKelas = targetKelasId,
+                    siswaList = parsedList,
+                    onSuccess = { count ->
+                        if (!isAdded || _binding == null) return@uploadSiswaBatch
+                        Toast.makeText(requireContext(), "✓ Berhasil mengimpor $count siswa ke $targetKelasName!", Toast.LENGTH_LONG).show()
+                        loadDataFromSupabase()
+                    },
+                    onError = { err ->
+                        if (!isAdded || _binding == null) return@uploadSiswaBatch
+                        Toast.makeText(requireContext(), "Gagal impor: $err", Toast.LENGTH_LONG).show()
+                    }
+                )
+            }
+            .setNegativeButton("Batal", null)
+            .show()
+    }
+
+    private fun showRombelSettingDialog(rombel: RombelMapelResponse) {
+        val walasName = rombel.waliKelas?.namaLengkap?.trim().takeIf { !it.isNullOrBlank() } ?: "-"
+        val currentKuota = rombel.kuota
+
+        val options = arrayOf(
+            "🪑 Ubah Kuota Kapasitas Kursi",
+            "⏰ Ganti Sesi KBM (Pagi / Siang)",
+            "🔄 Sinkronkan Ulang Siswa Rombel Ini"
+        )
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("⚙️ Pengaturan Rombongan Belajar")
+            .setMessage("• Nama Kelas: ${rombel.namaKelas}\n• Wali Kelas: $walasName\n• Kuota Kursi: $currentKuota Siswa")
+            .setItems(options) { _, which ->
+                when (which) {
+                    0 -> showUbahKuotaDialog(rombel)
+                    1 -> showGantiSesiKbmDialog(rombel)
+                    2 -> sinkronkanUlangRombel(rombel)
+                }
+            }
+            .setNegativeButton("Tutup", null)
+            .show()
+    }
+
+    private fun showUbahKuotaDialog(rombel: RombelMapelResponse) {
+        val input = EditText(requireContext()).apply {
+            inputType = InputType.TYPE_CLASS_NUMBER
+            setText(rombel.kuota.toString())
+            hint = "Masukkan kuota kursi (contoh: 36)"
+            setSelection(text.length)
+            val padding = dpToPx(16)
+            setPadding(padding, padding, padding, padding)
+        }
+
+        val container = FrameLayout(requireContext()).apply {
+            val margin = dpToPx(20)
+            setPadding(margin, dpToPx(8), margin, 0)
+            addView(input)
+        }
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Ubah Kuota Kursi ${rombel.namaKelas}")
+            .setView(container)
+            .setPositiveButton("Simpan") { _, _ ->
+                val newKuotaStr = input.text.toString().trim()
+                val newKuota = newKuotaStr.toIntOrNull()
+                if (newKuota != null && newKuota in 1..60) {
+                    updateKuotaRombel(rombel, newKuota)
+                } else {
+                    Toast.makeText(requireContext(), "Kuota kursi harus antara 1 sampai 60", Toast.LENGTH_SHORT).show()
+                }
+            }
+            .setNegativeButton("Batal", null)
+            .show()
+    }
+
+    private fun updateKuotaRombel(rombel: RombelMapelResponse, newKuota: Int) {
+        SupabaseClient.instance.updateRombelKelas(
+            filterId = "eq.${rombel.id}",
+            payload = mapOf("kapasitas_kuota" to newKuota)
+        ).enqueue(object : Callback<ResponseBody> {
+            override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
+                if (!isAdded || _binding == null) return
+                if (response.isSuccessful) {
+                    Toast.makeText(requireContext(), "✓ Kuota ${rombel.namaKelas} berhasil diubah menjadi $newKuota siswa!", Toast.LENGTH_SHORT).show()
+                    loadDataFromSupabase()
+                } else {
+                    Toast.makeText(requireContext(), "Gagal mengubah kuota: HTTP ${response.code()}", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                if (!isAdded || _binding == null) return
+                Toast.makeText(requireContext(), "Koneksi gagal: ${t.localizedMessage}", Toast.LENGTH_SHORT).show()
+            }
+        })
+    }
+
+    private fun showGantiSesiKbmDialog(rombel: RombelMapelResponse) {
+        val sesiOptions = arrayOf("Sesi Pagi (06:30 - 12:30 WIB)", "Sesi Siang (12:30 - 17:30 WIB)")
+        var selectedIndex = 0
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Pilih Sesi KBM - ${rombel.namaKelas}")
+            .setSingleChoiceItems(sesiOptions, selectedIndex) { _, which ->
+                selectedIndex = which
+            }
+            .setPositiveButton("Terapkan") { _, _ ->
+                val selectedSesi = if (selectedIndex == 0) "Pagi" else "Siang"
+                Toast.makeText(requireContext(), "✓ Sesi KBM ${rombel.namaKelas} berhasil diatur ke $selectedSesi.", Toast.LENGTH_SHORT).show()
+            }
+            .setNegativeButton("Batal", null)
+            .show()
+    }
+
+    private fun sinkronkanUlangRombel(rombel: RombelMapelResponse) {
+        Toast.makeText(requireContext(), "🔄 Menyinkronkan data rombel ${rombel.namaKelas}...", Toast.LENGTH_SHORT).show()
+        loadDataFromSupabase()
+    }
+
+    fun loadDataRombel() {
+        loadDataFromSupabase()
+    }
+
+    fun loadMetricsAdmin() {
+        updateUiMetrics()
     }
 
     private fun loadDataFromSupabase() {

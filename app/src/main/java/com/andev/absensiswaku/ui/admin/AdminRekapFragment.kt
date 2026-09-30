@@ -1,21 +1,20 @@
 package com.andev.absensiswaku.ui.admin
 
+import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
-import android.widget.FrameLayout
-import android.widget.ImageView
-import android.widget.TextView
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.andev.absensiswaku.R
-import com.andev.absensiswaku.data.network.PengajuanIzinResponse
-import com.andev.absensiswaku.data.network.PresensiHarianResponse
+import com.andev.absensiswaku.data.network.IzinRecordResponse
+import com.andev.absensiswaku.data.network.PresensiRecordResponse
 import com.andev.absensiswaku.data.network.RombelMapelResponse
+import com.andev.absensiswaku.data.network.SiswaExportResponse
 import com.andev.absensiswaku.data.network.SupabaseClient
 import com.andev.absensiswaku.databinding.FragmentAdminRekapBinding
 import com.google.android.material.snackbar.Snackbar
@@ -35,8 +34,9 @@ class AdminRekapFragment : Fragment() {
     private lateinit var riwayatAdapter: RiwayatUnduhanAdapter
 
     private var allRombelList: List<RombelMapelResponse> = emptyList()
-    private var presensiList: List<PresensiHarianResponse> = emptyList()
-    private var izinList: List<PengajuanIzinResponse> = emptyList()
+    private var allSiswaForExport: List<SiswaExportResponse> = emptyList()
+    private var presensiRecords: List<PresensiRecordResponse> = emptyList()
+    private var izinRecords: List<IzinRecordResponse> = emptyList()
 
     private enum class PeriodType {
         HARI_INI, MINGGUAN, BULANAN, SEMESTER
@@ -152,12 +152,19 @@ class AdminRekapFragment : Fragment() {
     }
 
     private fun updateEstimasiOutput() {
+        val totalSiswa = allSiswaForExport.size.takeIf { it > 0 } ?: 357
+        val totalRombel = allRombelList.size.takeIf { it > 0 } ?: 10
+
         if (selectedRombelIndex == 0) {
-            binding.tvEstimasiDataOutput.text = "10 Tab Rombel • 357 Baris Data"
+            binding.tvEstimasiDataOutput.text = "$totalRombel Tab Rombel • $totalSiswa Baris Data"
             binding.tvBadgeUkuranEstimasi.text = "~1.2 MB"
         } else {
             val rombelName = binding.actvCakupanRombel.text.toString()
-            binding.tvEstimasiDataOutput.text = "1 Rombel ($rombelName) • 36 Baris Data"
+            val siswaInRombel = allSiswaForExport.count { s ->
+                val namaKelas = s.rombelKelas?.namaKelas ?: ""
+                rombelName.contains(namaKelas, ignoreCase = true)
+            }.takeIf { it > 0 } ?: 36
+            binding.tvEstimasiDataOutput.text = "1 Rombel ($rombelName) • $siswaInRombel Baris Data"
             binding.tvBadgeUkuranEstimasi.text = "~120 KB"
         }
     }
@@ -178,19 +185,31 @@ class AdminRekapFragment : Fragment() {
     private fun setupRecyclerViewHistory() {
         riwayatAdapter = RiwayatUnduhanAdapter { item ->
             if (item.uriString != null) {
-                val file = File(item.uriString)
-                if (file.exists()) {
-                    val mime = when (item.format) {
-                        "XLSX" -> "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                        "PDF" -> "application/pdf"
-                        else -> "text/csv"
+                val mime = when (item.format) {
+                    "XLSX" -> "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                    "PDF" -> "application/pdf"
+                    else -> "text/csv"
+                }
+                val uri = try {
+                    Uri.parse(item.uriString)
+                } catch (e: Exception) {
+                    null
+                }
+                if (uri != null && uri.scheme == "file") {
+                    val file = File(uri.path ?: item.uriString)
+                    if (file.exists()) {
+                        ExportReportHelper.openFile(requireContext(), file, mime)
+                    } else {
+                        ExportReportHelper.openUri(requireContext(), uri, mime)
                     }
-                    ExportReportHelper.openFile(requireContext(), file, mime)
+                } else if (uri != null) {
+                    ExportReportHelper.openUri(requireContext(), uri, mime)
                 } else {
                     Toast.makeText(requireContext(), "Membuka ${item.namaFile}...", Toast.LENGTH_SHORT).show()
                 }
             } else {
                 Toast.makeText(requireContext(), "Mengunduh ulang ${item.namaFile}...", Toast.LENGTH_SHORT).show()
+                performExport(item.format)
             }
         }
 
@@ -243,112 +262,10 @@ class AdminRekapFragment : Fragment() {
         }
     }
 
-    private fun performExport(format: String) {
-        val selectedRombel = binding.actvCakupanRombel.text.toString()
-        val periodName = when (selectedPeriod) {
-            PeriodType.HARI_INI -> "Hari_Ini"
-            PeriodType.MINGGUAN -> "Mingguan"
-            PeriodType.BULANAN -> "Bulanan"
-            PeriodType.SEMESTER -> "Semester_Ganjil"
-        }
-
-        val rows = generateExportRows(selectedRombel)
-
-        ExportReportHelper.exportReport(
-            context = requireContext(),
-            format = format,
-            rombelName = if (selectedRombelIndex == 0) "Semua_Rombel" else selectedRombel,
-            periodName = periodName,
-            dataRows = rows,
-            includeGps = binding.switchGpsTimestamp.isChecked,
-            includeWalasNotes = binding.switchCatatanWalas.isChecked,
-            includeDapodik = binding.switchStandarDapodik.isChecked
-        ) { success, fileName, sizeKb, file ->
-            if (success) {
-                val newHistory = RiwayatUnduhanModel(
-                    namaFile = fileName,
-                    ukuranFileKb = sizeKb,
-                    waktuLalu = "Baru saja",
-                    rolePengunduh = "Super Admin",
-                    format = format,
-                    uriString = file?.absolutePath
-                )
-                riwayatAdapter.addFirst(newHistory)
-
-                Snackbar.make(
-                    binding.root,
-                    "Berkas $fileName berhasil diunduh ke folder Download.",
-                    Snackbar.LENGTH_LONG
-                ).setAction("Buka") {
-                    if (file != null && file.exists()) {
-                        val mime = when (format) {
-                            "XLSX" -> "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                            "PDF" -> "application/pdf"
-                            else -> "text/csv"
-                        }
-                        ExportReportHelper.openFile(requireContext(), file, mime)
-                    }
-                }.show()
-            } else {
-                Toast.makeText(requireContext(), "Gagal: $fileName", Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
-
-    private fun generateExportRows(selectedRombel: String): List<ExportStudentRow> {
-        val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
-        val rows = mutableListOf<ExportStudentRow>()
-
-        val rombelsToExport = if (selectedRombelIndex == 0) {
-            allRombelList.ifEmpty { defaultMockRombels() }
-        } else {
-            val matching = allRombelList.find { selectedRombel.contains(it.namaKelas, true) }
-            if (matching != null) listOf(matching) else defaultMockRombels().take(1)
-        }
-
-        var counter = 1
-        rombelsToExport.forEach { rombel ->
-            val kuota = rombel.kuota
-            for (i in 1..kuota) {
-                val nisn = String.format(Locale.getDefault(), "00%08d", (rombel.id * 1000 + i))
-                val studentName = "Siswa $i ${rombel.namaKelas}"
-                rows.add(
-                    ExportStudentRow(
-                        nomor = counter++,
-                        nisn = nisn,
-                        namaSiswa = studentName,
-                        namaKelas = rombel.namaKelas,
-                        tanggal = today,
-                        jamMasuk = "06:25 WIB",
-                        status = "Hadir",
-                        jarakMeter = "14m",
-                        skorAi = "98.2%",
-                        catatan = "Terverifikasi Valid Gerbang SMKN 8"
-                    )
-                )
-            }
-        }
-        return rows
-    }
-
-    private fun defaultMockRombels(): List<RombelMapelResponse> {
-        return listOf(
-            RombelMapelResponse(1, "XII AKL 1", "AKL", "w-akl1", "2026/2027", 36, null),
-            RombelMapelResponse(2, "XII AKL 2", "AKL", "w-akl2", "2026/2027", 36, null),
-            RombelMapelResponse(3, "XII AKL 3", "AKL", "w-akl3", "2026/2027", 36, null),
-            RombelMapelResponse(4, "XII MP 1", "MP", "w-mp1", "2026/2027", 36, null),
-            RombelMapelResponse(5, "XII MP 2", "MP", "w-mp2", "2026/2027", 36, null),
-            RombelMapelResponse(6, "XII BR 1", "BR", "w-br1", "2026/2027", 36, null),
-            RombelMapelResponse(7, "XII BR 2", "BR", "w-br2", "2026/2027", 36, null),
-            RombelMapelResponse(8, "XII BD", "BD", "w-bd", "2026/2027", 35, null),
-            RombelMapelResponse(9, "XII RPL", "RPL", "w-rpl", "2026/2027", 36, null),
-            RombelMapelResponse(10, "XII UPW", "UPW", "w-upw", "2026/2027", 35, null)
-        )
-    }
-
     private fun loadDataFromSupabase() {
         val todayDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
 
+        // 1. Ambil daftar rombel
         SupabaseClient.instance.getRombelMapel()
             .enqueue(object : Callback<List<RombelMapelResponse>> {
                 override fun onResponse(
@@ -357,15 +274,76 @@ class AdminRekapFragment : Fragment() {
                 ) {
                     if (!isAdded || _binding == null) return
                     allRombelList = response.body().orEmpty()
-
                     updateDropdownWithLoadedRombel()
-                    loadPresensiData(todayDate)
+                    loadAllSiswa(todayDate)
                 }
 
                 override fun onFailure(call: Call<List<RombelMapelResponse>>, t: Throwable) {
                     if (!isAdded || _binding == null) return
-                    allRombelList = defaultMockRombels()
+                    loadAllSiswa(todayDate)
+                }
+            })
+    }
+
+    private fun loadAllSiswa(todayDate: String) {
+        // Ambil 357 data siswa asli dari Supabase
+        SupabaseClient.instance.getAllSiswaForExport(limit = 500)
+            .enqueue(object : Callback<List<SiswaExportResponse>> {
+                override fun onResponse(
+                    call: Call<List<SiswaExportResponse>>,
+                    response: Response<List<SiswaExportResponse>>
+                ) {
+                    if (!isAdded || _binding == null) return
+                    allSiswaForExport = response.body().orEmpty()
+                    updateEstimasiOutput()
                     loadPresensiData(todayDate)
+                }
+
+                override fun onFailure(call: Call<List<SiswaExportResponse>>, t: Throwable) {
+                    if (!isAdded || _binding == null) return
+                    loadPresensiData(todayDate)
+                }
+            })
+    }
+
+    private fun loadPresensiData(todayDate: String) {
+        // Ambil catatan presensi riil sesuai tanggal
+        SupabaseClient.instance.getPresensiByDate(tanggal = "eq.$todayDate", limit = 500)
+            .enqueue(object : Callback<List<PresensiRecordResponse>> {
+                override fun onResponse(
+                    call: Call<List<PresensiRecordResponse>>,
+                    response: Response<List<PresensiRecordResponse>>
+                ) {
+                    if (!isAdded || _binding == null) return
+                    presensiRecords = response.body().orEmpty()
+                    loadIzinData(todayDate)
+                }
+
+                override fun onFailure(call: Call<List<PresensiRecordResponse>>, t: Throwable) {
+                    if (!isAdded || _binding == null) return
+                    presensiRecords = emptyList()
+                    loadIzinData(todayDate)
+                }
+            })
+    }
+
+    private fun loadIzinData(todayDate: String) {
+        // Ambil izin yang sudah disetujui walas
+        SupabaseClient.instance.getIzinSah(status = "eq.Disetujui", limit = 500)
+            .enqueue(object : Callback<List<IzinRecordResponse>> {
+                override fun onResponse(
+                    call: Call<List<IzinRecordResponse>>,
+                    response: Response<List<IzinRecordResponse>>
+                ) {
+                    if (!isAdded || _binding == null) return
+                    izinRecords = response.body().orEmpty()
+                    calculateMetrics(todayDate)
+                }
+
+                override fun onFailure(call: Call<List<IzinRecordResponse>>, t: Throwable) {
+                    if (!isAdded || _binding == null) return
+                    izinRecords = emptyList()
+                    calculateMetrics(todayDate)
                 }
             })
     }
@@ -380,74 +358,34 @@ class AdminRekapFragment : Fragment() {
         binding.tvLabelRombelTersedia.text = "${allRombelList.size} Rombel Tersedia"
     }
 
-    private fun loadPresensiData(todayDate: String) {
-        SupabaseClient.instance.getPresensiHariIniSemuaKelas(filterTanggal = "eq.$todayDate")
-            .enqueue(object : Callback<List<PresensiHarianResponse>> {
-                override fun onResponse(
-                    call: Call<List<PresensiHarianResponse>>,
-                    response: Response<List<PresensiHarianResponse>>
-                ) {
-                    if (!isAdded || _binding == null) return
-                    presensiList = response.body().orEmpty()
-                    loadIzinData(todayDate)
-                }
-
-                override fun onFailure(call: Call<List<PresensiHarianResponse>>, t: Throwable) {
-                    if (!isAdded || _binding == null) return
-                    presensiList = emptyList()
-                    loadIzinData(todayDate)
-                }
-            })
-    }
-
-    private fun loadIzinData(todayDate: String) {
-        SupabaseClient.instance.getIzinDisetujuiSemuaKelas()
-            .enqueue(object : Callback<List<PengajuanIzinResponse>> {
-                override fun onResponse(
-                    call: Call<List<PengajuanIzinResponse>>,
-                    response: Response<List<PengajuanIzinResponse>>
-                ) {
-                    if (!isAdded || _binding == null) return
-                    izinList = response.body().orEmpty()
-                    calculateMetrics(todayDate)
-                }
-
-                override fun onFailure(call: Call<List<PengajuanIzinResponse>>, t: Throwable) {
-                    if (!isAdded || _binding == null) return
-                    izinList = emptyList()
-                    calculateMetrics(todayDate)
-                }
-            })
-    }
-
     private fun calculateMetrics(todayDate: String) {
         if (_binding == null) return
 
         val totalRombel = allRombelList.size.takeIf { it > 0 } ?: 10
-        val totalSiswa = 357 // Total standar SMKN 8 Jakarta
+        val totalSiswa = allSiswaForExport.size.takeIf { it > 0 } ?: 357 // Total standar SMKN 8 Jakarta
 
         binding.tvMetricTotalRombel.text = "$totalRombel Kelas"
         binding.tvMetricTotalSiswa.text = "$totalSiswa Siswa Aktif"
 
-        val hadirCount = presensiList.count {
+        val hadirCount = presensiRecords.count {
             it.status.equals("Hadir", true) || it.status.equals("Terlambat", true)
         }
 
-        val izinCount = izinList.count {
+        val izinCount = izinRecords.count {
             it.jenisIzin.equals("Izin", true)
         }
 
-        val sakitCount = izinList.count {
+        val sakitCount = izinRecords.count {
             it.jenisIzin.equals("Sakit", true)
         }
 
-        val dispensasiCount = izinList.count {
+        val dispensasiCount = izinRecords.count {
             it.jenisIzin.equals("Dispensasi", true)
         }
 
         val alpaCount = (totalSiswa - (hadirCount + izinCount + sakitCount + dispensasiCount)).coerceAtLeast(0)
 
-        // Rerata kehadiran minggu berjalan
+        // Rerata kehadiran
         val rerata = if (totalSiswa > 0) {
             (hadirCount.toDouble() / totalSiswa.toDouble()) * 100.0
         } else 0.0
@@ -460,6 +398,142 @@ class AdminRekapFragment : Fragment() {
         binding.tvCountFilterSakit.text = "$sakitCount Siswa"
         binding.tvCountFilterDispensasi.text = "$dispensasiCount Siswa"
         binding.tvCountFilterAlpa.text = "$alpaCount Siswa"
+    }
+
+    private fun performExport(format: String) {
+        val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+
+        if (allSiswaForExport.isEmpty()) {
+            Toast.makeText(requireContext(), "Menyiapkan data 357 siswa asli SMKN 8...", Toast.LENGTH_SHORT).show()
+            SupabaseClient.instance.getAllSiswaForExport(limit = 500)
+                .enqueue(object : Callback<List<SiswaExportResponse>> {
+                    override fun onResponse(
+                        call: Call<List<SiswaExportResponse>>,
+                        response: Response<List<SiswaExportResponse>>
+                    ) {
+                        if (!isAdded || _binding == null) return
+                        allSiswaForExport = response.body().orEmpty()
+                        executeExport(format, today)
+                    }
+
+                    override fun onFailure(call: Call<List<SiswaExportResponse>>, t: Throwable) {
+                        if (!isAdded || _binding == null) return
+                        Toast.makeText(requireContext(), "Gagal terhubung ke Supabase: ${t.localizedMessage}", Toast.LENGTH_SHORT).show()
+                    }
+                })
+        } else {
+            executeExport(format, today)
+        }
+    }
+
+    private fun executeExport(format: String, today: String) {
+        val mapPresensi = presensiRecords.filter { it.siswaId != null }.associateBy { it.siswaId!! }
+        val mapIzin = izinRecords.filter { it.siswaId != null }.associateBy { it.siswaId!! }
+        val rombelMap = allRombelList.associateBy { it.id }
+
+        // Bangun data siswa riil dengan status kehadiran aktual
+        val listSiswa = allSiswaForExport.map { siswa ->
+            val presensi = mapPresensi[siswa.id]
+            val izin = mapIzin[siswa.id]
+
+            val statusFinal: String = when {
+                presensi != null -> presensi.status?.takeIf { it.isNotBlank() } ?: "Hadir"
+                izin != null -> izin.jenisIzin?.takeIf { it.isNotBlank() } ?: "Izin"
+                else -> "Alpa"
+            }
+            val waktuMasuk = presensi?.waktuMasuk?.takeIf { it.isNotBlank() } ?: "-"
+            val namaKelas = siswa.rombelKelas?.namaKelas?.takeIf { it.isNotBlank() }
+                ?: rombelMap[siswa.idKelas]?.namaKelas
+                ?: "XII RPL"
+
+            SiswaItem(
+                id = siswa.id ?: 0,
+                nisn = siswa.nisn ?: "-",
+                namaLengkap = siswa.namaLengkap?.trim()?.uppercase(Locale.getDefault()) ?: "SISWA SMKN 8",
+                namaKelas = namaKelas,
+                jamMasuk = waktuMasuk,
+                status = statusFinal,
+                idKelas = siswa.idKelas ?: 0
+            )
+        }
+
+        // Filter berdasarkan rombel yang dipilih pada dropdown
+        val filteredByClass = if (selectedRombelIndex == 0) {
+            listSiswa
+        } else {
+            val selectedRombel = binding.actvCakupanRombel.text.toString()
+            listSiswa.filter { s ->
+                selectedRombel.contains(s.namaKelas, ignoreCase = true)
+            }
+        }
+
+        // Filter berdasarkan checklist status
+        val allowedStatuses = mutableSetOf<String>()
+        if (binding.cbHadirOtomatis.isChecked) {
+            allowedStatuses.add("Hadir")
+            allowedStatuses.add("Terlambat")
+        }
+        if (binding.cbIzinVerif.isChecked) allowedStatuses.add("Izin")
+        if (binding.cbSakit.isChecked) allowedStatuses.add("Sakit")
+        if (binding.cbDispensasi.isChecked) allowedStatuses.add("Dispensasi")
+        if (binding.cbAlpa.isChecked) allowedStatuses.add("Alpa")
+
+        val dataToExport = if (allowedStatuses.isEmpty()) {
+            filteredByClass
+        } else {
+            filteredByClass.filter { s ->
+                allowedStatuses.any { it.equals(s.status, ignoreCase = true) }
+            }
+        }.ifEmpty { filteredByClass }
+
+        val todayFormatted = SimpleDateFormat("dd MMMM yyyy", Locale.forLanguageTag("id-ID")).format(Date())
+
+        val uri: Uri? = when (format.uppercase(Locale.getDefault())) {
+            "PDF" -> ExportReportHelper.exportToPdfMultiPage(requireContext(), dataToExport, todayFormatted)
+            "CSV" -> ExportReportHelper.exportToCsv(requireContext(), dataToExport, today)
+            "XLSX" -> ExportReportHelper.exportToXlsx(requireContext(), dataToExport, today)
+            else -> ExportReportHelper.exportToCsv(requireContext(), dataToExport, today)
+        }
+
+        if (uri != null) {
+            val fileName = when (format.uppercase(Locale.getDefault())) {
+                "PDF" -> "Laporan_Presensi_Resmi_SMKN8_${System.currentTimeMillis()}.pdf"
+                "XLSX" -> "Rekap_Presensi_SMKN8_${today.replace("-", "")}.xlsx"
+                else -> "Rekap_Presensi_SMKN8_${today.replace("-", "")}.csv"
+            }
+
+            val mimeType = when (format.uppercase(Locale.getDefault())) {
+                "PDF" -> "application/pdf"
+                "XLSX" -> "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                else -> "text/csv"
+            }
+
+            val estSizeKb = when (format.uppercase(Locale.getDefault())) {
+                "PDF" -> 850L
+                "XLSX" -> 1228L
+                else -> 420L
+            }
+
+            val newHistory = RiwayatUnduhanModel(
+                namaFile = fileName,
+                ukuranFileKb = estSizeKb,
+                waktuLalu = "Baru saja",
+                rolePengunduh = "Super Admin",
+                format = format,
+                uriString = uri.toString()
+            )
+            riwayatAdapter.addFirst(newHistory)
+
+            Snackbar.make(
+                binding.root,
+                "Berkas $fileName (${dataToExport.size} siswa) berhasil disimpan di folder Download.",
+                Snackbar.LENGTH_LONG
+            ).setAction("Buka") {
+                ExportReportHelper.openUri(requireContext(), uri, mimeType)
+            }.show()
+        } else {
+            Toast.makeText(requireContext(), "Gagal membuat berkas ekspor", Toast.LENGTH_SHORT).show()
+        }
     }
 
     override fun onDestroyView() {

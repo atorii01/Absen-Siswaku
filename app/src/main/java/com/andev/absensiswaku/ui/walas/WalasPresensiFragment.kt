@@ -26,7 +26,6 @@ import com.andev.absensiswaku.data.network.SiswaHadirWalasModel
 import com.andev.absensiswaku.data.network.SiswaMiniResponse
 import com.andev.absensiswaku.data.network.SupabaseClient
 import com.andev.absensiswaku.data.pref.SessionManager
-import com.andev.absensiswaku.databinding.DialogPreviewSuratBinding
 import com.andev.absensiswaku.databinding.FragmentWalasPresensiBinding
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.Dispatchers
@@ -468,126 +467,11 @@ class WalasPresensiFragment : Fragment() {
      * Menampilkan Modal Dialog Pratinjau Surat Bukti In-App
      */
     fun tampilkanDialogPreview(context: Context, item: PengajuanIzinResponse) {
-        val dialog = Dialog(context)
-        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
-        val dialogBinding = DialogPreviewSuratBinding.inflate(LayoutInflater.from(context))
-        dialog.setContentView(dialogBinding.root)
-
-        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-        val displayWidth = (context.resources.displayMetrics.widthPixels * 0.90).toInt()
-        dialog.window?.setLayout(displayWidth, ViewGroup.LayoutParams.WRAP_CONTENT)
-
-        // 1. Data Siswa & Kelas
         val namaSiswa = item.siswa?.namaLengkap ?: item.siswaId?.let { siswaKelasMap[it]?.namaLengkap } ?: "Siswa"
-        dialogBinding.tvNamaSiswa.text = "$namaSiswa • Kelas $namaKelas"
-
-        // 2. Badge Jenis Izin
-        val jenis = item.jenisIzin?.trim().orEmpty().ifEmpty { "Izin" }
-        dialogBinding.tvJenisIzin.text = jenis
-        when (jenis.uppercase()) {
-            "SAKIT" -> dialogBinding.tvJenisIzin.setBackgroundResource(R.drawable.bg_badge_pill_sakit)
-            "IZIN" -> dialogBinding.tvJenisIzin.setBackgroundResource(R.drawable.bg_badge_pill_amber)
-            "DISPENSASI" -> dialogBinding.tvJenisIzin.setBackgroundResource(R.drawable.bg_badge_pill_dispensasi)
-            else -> dialogBinding.tvJenisIzin.setBackgroundResource(R.drawable.bg_badge_pill_gray)
+        if (item.siswa == null) {
+            item.siswa = SiswaMiniResponse(namaLengkap = namaSiswa)
         }
-
-        // 3. Nama File
-        val isBase64 = item.buktiBerkasUrl?.startsWith("data:image") == true || (item.buktiBerkasUrl?.length ?: 0) > 500
-        val rawFileName = if (isBase64) {
-            "Foto_Bukti_Fisik_${jenis}.jpg"
-        } else {
-            item.buktiBerkasUrl?.substringAfterLast("/")?.takeIf { it.isNotEmpty() }
-                ?: "Surat_Keterangan_${jenis}.jpg"
-        }
-        dialogBinding.tvNamaFile.text = "📄 $rawFileName"
-
-        // 4. Keterangan / Alasan Siswa
-        val quote = item.keterangan?.takeIf { it.isNotBlank() } ?: "Tidak ada keterangan tambahan."
-        dialogBinding.tvKeterangan.text = "\"$quote\""
-
-        // 5. Muat Gambar: Cek apakah Base64, URL eksternal, Content/File URI, atau Ilustrasi Surat Resmi
-        val berkasUrl = item.buktiBerkasUrl.orEmpty()
-        if (berkasUrl.startsWith("data:image") || berkasUrl.length > 500) {
-            // Gambar berupa data Base64: Decode dan pasang langsung ke ImageView dengan pengaman OOM
-            try {
-                val cleanBase64 = berkasUrl.substringAfter("base64,")
-                val decodedBytes = Base64.decode(cleanBase64, Base64.DEFAULT)
-
-                val options = BitmapFactory.Options().apply {
-                    inJustDecodeBounds = true
-                }
-                BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size, options)
-
-                // Perkecil sample size jika ukuran gambar lebih dari 1000px
-                var inSampleSize = 1
-                while ((options.outHeight / inSampleSize) >= 1000 || (options.outWidth / inSampleSize) >= 1000) {
-                    inSampleSize *= 2
-                }
-
-                options.inJustDecodeBounds = false
-                options.inSampleSize = inSampleSize
-                val bitmap = BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size, options)
-                if (bitmap != null) {
-                    dialogBinding.ivPreviewSurat.setImageBitmap(bitmap)
-                    dialogBinding.ivPreviewSurat.scaleType = ImageView.ScaleType.FIT_CENTER
-                    dialogBinding.ivPreviewSurat.setBackgroundColor(Color.TRANSPARENT)
-                } else {
-                    dialogBinding.ivPreviewSurat.setImageResource(R.drawable.ic_surat_dokter_preview)
-                }
-            } catch (oom: OutOfMemoryError) {
-                System.gc()
-                dialogBinding.ivPreviewSurat.setImageResource(R.drawable.ic_surat_dokter_preview)
-                Toast.makeText(context, "Ukuran foto terlalu besar untuk ditampilkan.", Toast.LENGTH_SHORT).show()
-            } catch (e: Exception) {
-                dialogBinding.ivPreviewSurat.setImageResource(R.drawable.ic_surat_dokter_preview)
-            }
-        } else if (berkasUrl.startsWith("http://") || berkasUrl.startsWith("https://")) {
-            viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-                try {
-                    val input = URL(berkasUrl).openStream()
-                    val bitmap = BitmapFactory.decodeStream(input)
-                    withContext(Dispatchers.Main) {
-                        if (bitmap != null) {
-                            dialogBinding.ivPreviewSurat.setImageBitmap(bitmap)
-                            dialogBinding.ivPreviewSurat.scaleType = ImageView.ScaleType.FIT_CENTER
-                            dialogBinding.ivPreviewSurat.setBackgroundColor(Color.TRANSPARENT)
-                        } else {
-                            dialogBinding.ivPreviewSurat.setImageResource(R.drawable.ic_surat_dokter_preview)
-                        }
-                    }
-                } catch (oom: OutOfMemoryError) {
-                    System.gc()
-                    withContext(Dispatchers.Main) {
-                        dialogBinding.ivPreviewSurat.setImageResource(R.drawable.ic_surat_dokter_preview)
-                        Toast.makeText(context, "Ukuran foto terlalu besar untuk ditampilkan.", Toast.LENGTH_SHORT).show()
-                    }
-                } catch (e: Exception) {
-                    withContext(Dispatchers.Main) {
-                        dialogBinding.ivPreviewSurat.setImageResource(R.drawable.ic_surat_dokter_preview)
-                    }
-                }
-            }
-        } else if (berkasUrl.startsWith("content://") || berkasUrl.startsWith("file://")) {
-            try {
-                dialogBinding.ivPreviewSurat.setImageURI(Uri.parse(berkasUrl))
-                dialogBinding.ivPreviewSurat.scaleType = ImageView.ScaleType.FIT_CENTER
-                dialogBinding.ivPreviewSurat.setBackgroundColor(Color.TRANSPARENT)
-            } catch (oom: OutOfMemoryError) {
-                System.gc()
-                dialogBinding.ivPreviewSurat.setImageResource(R.drawable.ic_surat_dokter_preview)
-                Toast.makeText(context, "Ukuran foto terlalu besar untuk ditampilkan.", Toast.LENGTH_SHORT).show()
-            } catch (e: Exception) {
-                dialogBinding.ivPreviewSurat.setImageResource(R.drawable.ic_surat_dokter_preview)
-            }
-        } else {
-            dialogBinding.ivPreviewSurat.setImageResource(R.drawable.ic_surat_dokter_preview)
-        }
-
-        // 6. Action Dismiss Listeners
-        dialogBinding.btnTutup.setOnClickListener { dialog.dismiss() }
-        dialogBinding.btnCloseHeader.setOnClickListener { dialog.dismiss() }
-
-        dialog.show()
+        DialogPratinjauBuktiIzin.tampilkan(context, item, namaKelas)
     }
 
     /**

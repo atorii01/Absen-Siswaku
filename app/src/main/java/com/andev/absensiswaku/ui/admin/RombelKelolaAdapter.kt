@@ -7,7 +7,7 @@ import com.andev.absensiswaku.data.network.RombelMapelResponse
 import com.andev.absensiswaku.databinding.ItemRombelKelolaBinding
 
 class RombelKelolaAdapter(
-    private val onSettingsClick: (RombelMapelResponse) -> Unit
+    private val onSettingClick: (RombelMapelResponse) -> Unit
 ) : RecyclerView.Adapter<RombelKelolaAdapter.RombelKelolaViewHolder>() {
 
     private val items = mutableListOf<RombelMapelResponse>()
@@ -33,7 +33,7 @@ class RombelKelolaAdapter(
 
     override fun getItemCount(): Int = items.size
 
-    inner class RombelKelolaViewHolder(private val binding: ItemRombelKelolaBinding) :
+    inner class RombelKelolaViewHolder(val binding: ItemRombelKelolaBinding) :
         RecyclerView.ViewHolder(binding.root) {
 
         fun bind(item: RombelMapelResponse) {
@@ -55,8 +55,8 @@ class RombelKelolaAdapter(
             val statusDesc = if (sisa <= 0) "Penuh" else "Sisa $sisa"
             binding.tvStatusKapasitasKursi.text = "$countSiswa / $kuota Siswa ($statusDesc)"
 
-            binding.btnSetelanRombel.setOnClickListener {
-                onSettingsClick(item)
+            binding.btnSettingRombel.setOnClickListener {
+                onSettingClick(item)
             }
         }
 

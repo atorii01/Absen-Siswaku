@@ -752,7 +752,7 @@
 
                     <!-- Dropzone / Upload Box -->
                     <LinearLayout
-                        android:id="@+id/btnUploadBox"
+                        android:id="@+id/cardUploadBukti"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="12dp"
@@ -795,7 +795,7 @@
 
                     <!-- Card Berkas Terunggah (Preview) -->
                     <LinearLayout
-                        android:id="@+id/cardUploadedFile"
+                        android:id="@+id/layoutPreviewUploaded"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="10dp"
@@ -822,7 +822,7 @@
                             android:orientation="vertical">
 
                             <TextView
-                                android:id="@+id/tvFileName"
+                                android:id="@+id/tvNamaFileUploaded"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:ellipsize="end"
@@ -840,21 +840,12 @@
                                 android:orientation="horizontal">
 
                                 <TextView
-                                    android:id="@+id/tvFileSize"
+                                    android:id="@+id/tvUkuranFileUploaded"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:textColor="@color/text_secondary"
                                     android:textSize="11sp"
-                                    tools:text="1.4 MB" />
-
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginStart="6dp"
-                                    android:text="•  ✓ Terunggah"
-                                    android:textColor="@color/emerald_green"
-                                    android:textSize="11sp"
-                                    android:textStyle="bold" />
+                                    tools:text="1.4 MB • Siap Diunggah" />
 
                             </LinearLayout>
 

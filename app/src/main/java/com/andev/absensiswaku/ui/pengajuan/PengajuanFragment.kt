@@ -56,28 +56,75 @@ class PengajuanFragment : Fragment() {
     private var attachedFileUri: Uri? = null
     private var attachedFileName: String = ""
 
-    private val pickFileLauncher =
-        registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
-            if (!isAdded || _binding == null) return@registerForActivityResult
+    private var selectedFileUri: Uri?
+        get() = attachedFileUri
+        set(value) { attachedFileUri = value }
 
-            if (uri != null) {
-                attachedFileUri = uri
-                attachedFileName = getFileNameFromUri(uri)
-                val fileSizeStr = getFileSizeFromUri(uri)
+    private val filePickerLauncher = registerForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri: Uri? ->
+        uri?.let { validasiDanProsesBerkas(it) }
+    }
 
-                binding.tvFileName.text = attachedFileName
-                binding.tvFileSize.text = fileSizeStr
+    private fun validasiDanProsesBerkas(uri: Uri) {
+        val contentResolver = requireContext().contentResolver
 
-                if (attachedFileName.endsWith(".pdf", ignoreCase = true)) {
-                    binding.imgFileTypeIcon.setImageResource(R.drawable.ic_pdf_doc)
-                } else {
-                    binding.imgFileTypeIcon.setImageResource(R.drawable.ic_medical)
-                }
+        // 1. Cek MIME Type
+        val mimeType = contentResolver.getType(uri) ?: ""
+        val validMimeTypes = listOf("image/jpeg", "image/png", "application/pdf")
+        if (!validMimeTypes.contains(mimeType)) {
+            Toast.makeText(
+                requireContext(),
+                "Format berkas tidak valid! Hanya diperbolehkan JPG, PNG, atau PDF.",
+                Toast.LENGTH_LONG
+            ).show()
+            return
+        }
 
-                binding.cardUploadedFile.visibility = View.VISIBLE
-                Toast.makeText(requireContext(), "Berkas $attachedFileName berhasil dipilih", Toast.LENGTH_SHORT).show()
+        // 2. Cek Ukuran Berkas via OpenableColumns.SIZE (Maksimal 5 MB = 5 * 1024 * 1024 bytes)
+        var fileSize: Long = 0
+        var fileName = "Dokumen_Lampiran"
+
+        contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+            val sizeIndex = cursor.getColumnIndex(OpenableColumns.SIZE)
+            val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+            if (cursor.moveToFirst()) {
+                if (sizeIndex != -1) fileSize = cursor.getLong(sizeIndex)
+                if (nameIndex != -1) fileName = cursor.getString(nameIndex)
             }
         }
+
+        val maxSizeBytes = 5 * 1024 * 1024L // 5 MB
+        if (fileSize > maxSizeBytes) {
+            val sizeInMb = String.format(Locale.getDefault(), "%.2f", fileSize / (1024.0 * 1024.0))
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("Ukuran Berkas Terlalu Besar")
+                .setMessage("Ukuran berkas Anda ($sizeInMb MB) melebihi batas ketentuan 5 MB. Harap kompres atau pilih berkas lain.")
+                .setPositiveButton("Mengerti", null)
+                .show()
+            return
+        }
+
+        // 3. Jika Lolos: Simpan URI, tampilkan nama berkas dan badge hijau di form
+        selectedFileUri = uri
+        attachedFileName = fileName
+        binding.layoutPreviewUploaded.visibility = View.VISIBLE
+        binding.cardUploadBukti.visibility = View.GONE
+        binding.tvNamaFileUploaded.text = fileName
+        val sizeText = if (fileSize > 1024 * 1024) {
+            "${String.format(Locale.getDefault(), "%.1f", fileSize / (1024.0 * 1024.0))} MB"
+        } else {
+            "${fileSize / 1024} KB"
+        }
+        binding.tvUkuranFileUploaded.text = "$sizeText • Siap Diunggah"
+
+        if (fileName.endsWith(".pdf", ignoreCase = true) || mimeType == "application/pdf") {
+            binding.imgFileTypeIcon.setImageResource(R.drawable.ic_pdf_doc)
+        } else {
+            binding.imgFileTypeIcon.setImageResource(R.drawable.ic_medical)
+        }
+        Toast.makeText(requireContext(), "Berkas $fileName berhasil dipilih", Toast.LENGTH_SHORT).show()
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -275,15 +322,17 @@ class PengajuanFragment : Fragment() {
     }
 
     private fun setupFileUpload() {
-        binding.btnUploadBox.setOnClickListener {
-            pickFileLauncher.launch("*/*")
+        binding.cardUploadBukti.setOnClickListener {
+            filePickerLauncher.launch(
+                arrayOf("image/jpeg", "image/png", "application/pdf")
+            )
         }
 
         binding.btnDeleteFile.setOnClickListener {
-            attachedFileUri = null
+            selectedFileUri = null
             attachedFileName = ""
-            binding.cardUploadedFile.visibility = View.GONE
-            binding.btnUploadBox.visibility = View.VISIBLE
+            binding.layoutPreviewUploaded.visibility = View.GONE
+            binding.cardUploadBukti.visibility = View.VISIBLE
             Toast.makeText(requireContext(), "Berkas lampiran dihapus", Toast.LENGTH_SHORT).show()
         }
     }
@@ -394,8 +443,19 @@ class PengajuanFragment : Fragment() {
             else -> jenisIzinDipilih.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
         }
 
-        // Konversi berkas bukti foto ke Base64 agar dapat langsung dipratinjau oleh Wali Kelas
-        val base64Bukti = attachedFileUri?.let { uriToBase64(it) } ?: (attachedFileName.ifEmpty { "surat_keterangan.jpg" })
+        // Konversi berkas bukti foto/PDF ke Base64 agar dapat langsung dipratinjau oleh Wali Kelas
+        val base64Bukti = if (attachedFileName.endsWith(".pdf", ignoreCase = true)) {
+            try {
+                val bytes = context?.contentResolver?.openInputStream(selectedFileUri ?: attachedFileUri!!)?.readBytes()
+                if (bytes != null) {
+                    "data:application/pdf;base64," + Base64.encodeToString(bytes, Base64.NO_WRAP)
+                } else attachedFileName
+            } catch (e: Exception) {
+                attachedFileName
+            }
+        } else {
+            (selectedFileUri ?: attachedFileUri)?.let { uriToBase64(it) } ?: (attachedFileName.ifEmpty { "surat_keterangan.jpg" })
+        }
 
         val payload: Map<String, Any> = mapOf(
             "id" to "iz-" + System.currentTimeMillis(),
@@ -419,10 +479,10 @@ class PengajuanFragment : Fragment() {
                     Toast.makeText(requireContext(), "✓ Pengajuan izin berhasil dikirim!", Toast.LENGTH_SHORT).show()
 
                     binding.etKeterangan.text?.clear()
-                    attachedFileUri = null
+                    selectedFileUri = null
                     attachedFileName = ""
-                    binding.cardUploadedFile.visibility = View.GONE
-                    binding.btnUploadBox.visibility = View.VISIBLE
+                    binding.layoutPreviewUploaded.visibility = View.GONE
+                    binding.cardUploadBukti.visibility = View.VISIBLE
 
                     MaterialAlertDialogBuilder(requireContext())
                         .setTitle("✓ Pengajuan Berhasil Dikirim")

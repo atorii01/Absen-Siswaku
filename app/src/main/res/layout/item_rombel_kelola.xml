@@ -65,17 +65,17 @@
                 android:textStyle="bold" />
 
             <!-- Ikon Gerigi Setelan -->
-            <ImageView
-                android:id="@+id/btnSetelanRombel"
-                android:layout_width="28dp"
-                android:layout_height="28dp"
+            <ImageButton
+                android:id="@+id/btnSettingRombel"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:clickable="true"
-                android:contentDescription="Setelan Kelas"
+                android:contentDescription="Setelan Rombel"
                 android:focusable="true"
-                android:padding="5dp"
+                android:padding="6dp"
                 android:src="@drawable/ic_settings"
-                app:tint="@color/text_secondary" />
+                app:tint="#64748B" />
 
         </LinearLayout>
 

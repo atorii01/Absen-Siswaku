@@ -75,6 +75,12 @@
     <!-- Camera Overlay & AI Chips -->
     <color name="chip_camera_bg">#A0000000</color>
     <color name="chip_ai_bg">#D0064E3B</color>
+    <color name="camera_badge_alert_bg">#DC2626</color>
+    <color name="camera_badge_alert_stroke">#EF4444</color>
+    <color name="camera_badge_alert_dark_glass">#E6111827</color>
+    <color name="camera_badge_alert_icon_yellow">#FDE047</color>
+    <color name="camera_badge_success_bg">#059669</color>
+    <color name="camera_badge_success_stroke">#10B981</color>
     <color name="camera_btn_bg">#80000000</color>
     <color name="biometric_frame_green">#34D399</color>
 

@@ -1108,12 +1108,17 @@
                     </LinearLayout>
 
                     <!-- Ikon Gerigi Pengaturan -->
-                    <ImageView
-                        android:layout_width="20dp"
-                        android:layout_height="20dp"
-                        android:contentDescription="Pengaturan Rombel"
+                    <ImageButton
+                        android:id="@+id/btnSettingRombelWalas"
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:clickable="true"
+                        android:contentDescription="Setelan Rombel"
+                        android:focusable="true"
+                        android:padding="6dp"
                         android:src="@drawable/ic_settings"
-                        app:tint="@color/text_secondary" />
+                        app:tint="#64748B" />
                 </LinearLayout>
 
                 <!-- Bilah Progres Kapasitas Kursi -->

@@ -1,13 +1,18 @@
 package com.andev.absensiswaku.ui.walas
 
 import android.content.Context
+import android.net.Uri
 import android.os.Bundle
 import android.text.Editable
+import android.text.InputType
 import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.EditText
+import android.widget.FrameLayout
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -17,7 +22,9 @@ import com.andev.absensiswaku.data.network.SiswaKelolaResponse
 import com.andev.absensiswaku.data.network.SupabaseClient
 import com.andev.absensiswaku.data.pref.SessionManager
 import com.andev.absensiswaku.databinding.FragmentWalasSiswaBinding
+import com.andev.absensiswaku.util.ExcelImportHelper
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.andev.absensiswaku.ui.admin.DialogTambahRombel
 import okhttp3.ResponseBody
 import retrofit2.Call
 import retrofit2.Callback
@@ -36,6 +43,12 @@ class WalasSiswaFragment : Fragment() {
     private var namaWalas: String = "Farauk Pratama, S.Kom."
 
     private var editingStudentId: Int? = null
+
+    private val filePickerLauncher = registerForActivityResult(
+        ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let { prosesFileExcelCsv(it) }
+    }
 
     companion object {
         private const val PREF_SESSION_NAME = "PREF_SMKN8_SESSION"
@@ -158,41 +171,170 @@ class WalasSiswaFragment : Fragment() {
 
         // Tombol Impor Excel
         binding.btnImporExcel.setOnClickListener {
+            val options = arrayOf(
+                "📥 Unduh Template Format Excel/CSV",
+                "📂 Pilih Berkas & Unggah Data Siswa"
+            )
             MaterialAlertDialogBuilder(requireContext())
-                .setTitle("Impor Data Siswa (Excel / CSV)")
-                .setMessage(
-                    "Anda dapat mengunggah lembar kerja format .xlsx / .csv yang telah disesuaikan dengan template Dapodik Kemendikbudristek untuk kelas $namaKelas."
-                )
-                .setPositiveButton("Unduh Template") { dialog, _ ->
-                    dialog.dismiss()
-                    Toast.makeText(
-                        requireContext(),
-                        "✓ Template Dapodik SMKN 8 Jakarta kelas $namaKelas diunduh ke folder Download.",
-                        Toast.LENGTH_LONG
-                    ).show()
+                .setTitle("Impor Data Siswa Kelas $namaKelas")
+                .setItems(options) { _, which ->
+                    when (which) {
+                        0 -> {
+                            ExcelImportHelper.unduhTemplateExcelCsv(requireContext())
+                        }
+                        1 -> {
+                            filePickerLauncher.launch("*/*")
+                        }
+                    }
                 }
-                .setNegativeButton("Pilih Berkas") { dialog, _ ->
-                    dialog.dismiss()
-                    Toast.makeText(
-                        requireContext(),
-                        "Fitur sinkronisasi unggah Excel sedang membaca direktori...",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
-                .setNeutralButton("Tutup") { dialog, _ ->
-                    dialog.dismiss()
-                }
+                .setNegativeButton("Tutup", null)
                 .show()
         }
 
         // Tombol Buat Kelas
         binding.btnBuatKelas.setOnClickListener {
-            Toast.makeText(
-                requireContext(),
-                "Pembuatan rombel baru dapat diajukan melalui Admin Kurikulum / Tata Usaha SMKN 8 Jakarta.",
-                Toast.LENGTH_LONG
-            ).show()
+            val dialog = DialogTambahRombel {
+                loadDataSiswaFromSupabase()
+            }
+            dialog.show(parentFragmentManager, "TambahRombelDialog")
         }
+
+        // Ikon Gerigi Setelan Rombel Binaan Walas
+        binding.btnSettingRombelWalas.setOnClickListener {
+            showRombelSettingDialog()
+        }
+    }
+
+    private fun prosesFileExcelCsv(uri: Uri) {
+        Toast.makeText(requireContext(), "Membaca berkas impor...", Toast.LENGTH_SHORT).show()
+        val parsedList = ExcelImportHelper.prosesFileExcelCsv(requireContext(), uri)
+        if (parsedList.isEmpty()) {
+            Toast.makeText(requireContext(), "Tidak ada data siswa valid ditemukan dalam berkas!", Toast.LENGTH_LONG).show()
+            return
+        }
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Konfirmasi Impor Siswa Kelas $namaKelas")
+            .setMessage("Ditemukan ${parsedList.size} data siswa.\nUnggah ke rombel aktif ($namaKelas)?")
+            .setPositiveButton("Unggah Sekarang") { _, _ ->
+                Toast.makeText(requireContext(), "Mengunggah ${parsedList.size} siswa ke Supabase...", Toast.LENGTH_SHORT).show()
+                ExcelImportHelper.uploadSiswaBatch(
+                    idKelas = idKelas,
+                    siswaList = parsedList,
+                    onSuccess = { count ->
+                        if (!isAdded || _binding == null) return@uploadSiswaBatch
+                        Toast.makeText(requireContext(), "✓ Berhasil mengimpor $count siswa ke kelas $namaKelas!", Toast.LENGTH_LONG).show()
+                        loadDataSiswaFromSupabase()
+                    },
+                    onError = { err ->
+                        if (!isAdded || _binding == null) return@uploadSiswaBatch
+                        Toast.makeText(requireContext(), "Gagal impor: $err", Toast.LENGTH_LONG).show()
+                    }
+                )
+            }
+            .setNegativeButton("Batal", null)
+            .show()
+    }
+
+    private fun showRombelSettingDialog() {
+        val options = arrayOf(
+            "🪑 Ubah Kuota Kapasitas Kursi",
+            "⏰ Ganti Sesi KBM (Pagi / Siang)",
+            "🔄 Sinkronkan Ulang Siswa Rombel Ini"
+        )
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("⚙️ Pengaturan Rombongan Belajar")
+            .setMessage("• Nama Kelas: $namaKelas\n• Wali Kelas: $namaWalas\n• Kuota Kursi: 36 Siswa")
+            .setItems(options) { _, which ->
+                when (which) {
+                    0 -> showUbahKuotaDialog()
+                    1 -> showGantiSesiKbmDialog()
+                    2 -> sinkronkanUlangRombel()
+                }
+            }
+            .setNegativeButton("Tutup", null)
+            .show()
+    }
+
+    private fun showUbahKuotaDialog() {
+        val input = EditText(requireContext()).apply {
+            inputType = InputType.TYPE_CLASS_NUMBER
+            setText("36")
+            hint = "Masukkan kuota kursi (contoh: 36)"
+            setSelection(text.length)
+            val padding = dpToPx(16)
+            setPadding(padding, padding, padding, padding)
+        }
+
+        val container = FrameLayout(requireContext()).apply {
+            val margin = dpToPx(20)
+            setPadding(margin, dpToPx(8), margin, 0)
+            addView(input)
+        }
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Ubah Kuota Kursi $namaKelas")
+            .setView(container)
+            .setPositiveButton("Simpan") { _, _ ->
+                val newKuotaStr = input.text.toString().trim()
+                val newKuota = newKuotaStr.toIntOrNull()
+                if (newKuota != null && newKuota in 1..60) {
+                    updateKuotaRombel(newKuota)
+                } else {
+                    Toast.makeText(requireContext(), "Kuota kursi harus antara 1 sampai 60", Toast.LENGTH_SHORT).show()
+                }
+            }
+            .setNegativeButton("Batal", null)
+            .show()
+    }
+
+    private fun updateKuotaRombel(newKuota: Int) {
+        SupabaseClient.instance.updateRombelKelas(
+            filterId = "eq.$idKelas",
+            payload = mapOf("kapasitas_kuota" to newKuota)
+        ).enqueue(object : Callback<ResponseBody> {
+            override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
+                if (!isAdded || _binding == null) return
+                if (response.isSuccessful) {
+                    Toast.makeText(requireContext(), "✓ Kuota kelas $namaKelas berhasil diubah menjadi $newKuota siswa!", Toast.LENGTH_SHORT).show()
+                    loadDataSiswaFromSupabase()
+                } else {
+                    Toast.makeText(requireContext(), "Gagal mengubah kuota: HTTP ${response.code()}", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                if (!isAdded || _binding == null) return
+                Toast.makeText(requireContext(), "Koneksi gagal: ${t.localizedMessage}", Toast.LENGTH_SHORT).show()
+            }
+        })
+    }
+
+    private fun showGantiSesiKbmDialog() {
+        val sesiOptions = arrayOf("Sesi Pagi (06:30 - 12:30 WIB)", "Sesi Siang (12:30 - 17:30 WIB)")
+        var selectedIndex = 0
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Pilih Sesi KBM - $namaKelas")
+            .setSingleChoiceItems(sesiOptions, selectedIndex) { _, which ->
+                selectedIndex = which
+            }
+            .setPositiveButton("Terapkan") { _, _ ->
+                val selectedSesi = if (selectedIndex == 0) "Pagi" else "Siang"
+                Toast.makeText(requireContext(), "✓ Sesi KBM kelas $namaKelas berhasil diatur ke $selectedSesi.", Toast.LENGTH_SHORT).show()
+            }
+            .setNegativeButton("Batal", null)
+            .show()
+    }
+
+    private fun sinkronkanUlangRombel() {
+        Toast.makeText(requireContext(), "🔄 Menyinkronkan data rombel $namaKelas...", Toast.LENGTH_SHORT).show()
+        loadDataSiswaFromSupabase()
+    }
+
+    private fun dpToPx(dp: Int): Int {
+        return (dp * resources.displayMetrics.density).toInt()
     }
 
     private fun setupFormEntri() {
@@ -585,3 +727,5 @@ class WalasSiswaFragment : Fragment() {
         _binding = null
     }
 }
+
+typealias WalasMasterDataFragment = WalasSiswaFragment

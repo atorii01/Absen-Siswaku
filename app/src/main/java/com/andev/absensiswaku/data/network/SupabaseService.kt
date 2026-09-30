@@ -100,7 +100,7 @@ interface SupabaseService {
     @GET("rombel_kelas")
     fun getRombelByWalas(
         @Query("wali_kelas_id") filterWalas: String,
-        @Query("select") select: String = "id,nama_kelas,jurusan,wali_kelas_id,tahun_ajaran,users!wali_kelas_id(nama_lengkap)"
+        @Query("select") select: String = "id,nama_kelas,jurusan,wali_kelas_id,tahun_ajaran,kapasitas_kuota,users!wali_kelas_id(nama_lengkap)"
     ): Call<List<RombelMapelResponse>>
 
     @GET("siswa")
@@ -129,6 +129,12 @@ interface SupabaseService {
     ): Call<ResponseBody>
 
     @Headers("Prefer: return=representation")
+    @POST("siswa")
+    fun tambahSiswaBatch(
+        @Body payload: List<Map<String, @JvmSuppressWildcards Any>>
+    ): Call<ResponseBody>
+
+    @Headers("Prefer: return=representation")
     @PATCH("siswa")
     fun updateSiswa(
         @Query("id") filterId: String,
@@ -138,6 +144,13 @@ interface SupabaseService {
     @DELETE("siswa")
     fun deleteSiswa(
         @Query("id") filterId: String
+    ): Call<ResponseBody>
+
+    @Headers("Prefer: return=representation")
+    @PATCH("rombel_kelas")
+    fun updateRombelKelas(
+        @Query("id") filterId: String,
+        @Body payload: Map<String, @JvmSuppressWildcards Any>
     ): Call<ResponseBody>
 
     @GET("users")
@@ -162,7 +175,7 @@ interface SupabaseService {
     // ================= GURU MAPEL READ-ONLY ENDPOINTS =================
     @GET("rombel_kelas")
     fun getRombelMapel(
-        @Query("select") select: String = "id,nama_kelas,jurusan,wali_kelas_id,tahun_ajaran,users!wali_kelas_id(nama_lengkap)",
+        @Query("select") select: String = "id,nama_kelas,jurusan,wali_kelas_id,tahun_ajaran,kapasitas_kuota,users!wali_kelas_id(nama_lengkap)",
         @Query("order") order: String = "id.asc"
     ): Call<List<RombelMapelResponse>>
 
@@ -191,4 +204,45 @@ interface SupabaseService {
         @Query("order") order: String = "nama_lengkap.asc",
         @Query("limit") limit: Int = 500
     ): Call<List<SiswaAdminResponse>>
-}
+
+    @POST("rombel_kelas")
+    fun tambahRombel(
+        @Body request: TambahRombelRequest
+    ): Call<Void>
+
+    @GET("rombel_kelas")
+    fun getMaxRombelId(
+        @Query("select") select: String = "id",
+        @Query("order") order: String = "id.desc",
+        @Query("limit") limit: Int = 1
+    ): Call<List<RombelIdResponse>>
+
+    @GET("users")
+    fun getWaliKelasList(
+        @Query("role") roleFilter: String = "eq.WALI_KELAS",
+        @Query("select") select: String = "id,nama_lengkap",
+        @Query("order") order: String = "nama_lengkap.asc"
+    ): Call<List<UserResponse>>
+
+    // Ambil 357 data siswa asli lengkap dengan rombelnya
+    @GET("siswa")
+    fun getAllSiswaForExport(
+        @Query("select") select: String = "id,nisn,nama_lengkap,id_kelas,rombel_kelas(nama_kelas)",
+        @Query("order") order: String = "id_kelas.asc,nama_lengkap.asc",
+        @Query("limit") limit: Int = 500
+    ): Call<List<SiswaExportResponse>>
+
+    // Ambil catatan presensi riil sesuai tanggal/periode
+    @GET("presensi_harian")
+    fun getPresensiByDate(
+        @Query("tanggal") tanggal: String,
+        @Query("limit") limit: Int = 500
+    ): Call<List<PresensiRecordResponse>>
+
+    // Ambil izin yang sudah disetujui walas
+    @GET("pengajuan_izin")
+    fun getIzinSah(
+        @Query("status_verifikasi") status: String = "eq.Disetujui",
+        @Query("limit") limit: Int = 500
+    ): Call<List<IzinRecordResponse>>
+}

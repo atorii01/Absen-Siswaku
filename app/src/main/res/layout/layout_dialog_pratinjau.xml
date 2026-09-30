@@ -127,8 +127,9 @@
 
         </LinearLayout>
 
-        <!-- Area Preview Dokumen / Foto (Card container membulat, tinggi 280dp, bg #F1F5F9) -->
+        <!-- Area Preview Dokumen / Foto (Card container membulat, tinggi adaptif min 220dp, bg #F1F5F9) -->
         <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardPreviewContainer"
             android:layout_width="match_parent"
             android:layout_height="280dp"
             android:layout_marginTop="12dp"
@@ -142,18 +143,55 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent">
 
-                <!-- ImageView Dokumen / Surat -->
+                <!-- ImageView Adaptif Penampil Gambar Foto Surat Asli -->
                 <ImageView
-                    android:id="@+id/ivPreviewSurat"
+                    android:id="@+id/ivPratinjauFoto"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:contentDescription="Pratinjau Dokumen"
-                    android:padding="12dp"
+                    android:adjustViewBounds="true"
+                    android:contentDescription="Pratinjau Foto Bukti"
+                    android:padding="8dp"
                     android:scaleType="fitCenter"
                     android:src="@drawable/ic_surat_dokter_preview" />
 
+                <!-- Placeholder / Ikon PDF saat dokumen non-gambar ditampilkan -->
+                <LinearLayout
+                    android:id="@+id/layoutDokumenPlaceholder"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:visibility="gone"
+                    tools:visibility="gone">
+
+                    <ImageView
+                        android:layout_width="64dp"
+                        android:layout_height="64dp"
+                        android:contentDescription="Ikon Dokumen PDF"
+                        android:src="@drawable/ic_pdf_doc" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="Berkas Lampiran PDF"
+                        android:textColor="@color/text_primary"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="Tekan tombol di bawah untuk membuka dokumen"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="11sp" />
+                </LinearLayout>
+
                 <!-- Badge / Pill Nama File di Bagian Bawah Gambar -->
                 <LinearLayout
+                    android:id="@+id/layoutPillNamaFile"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="bottom|center_horizontal"
@@ -175,7 +213,7 @@
                         android:textColor="@color/text_primary"
                         android:textSize="11sp"
                         android:textStyle="bold"
-                        tools:text="📄 TimePhoto_20260924_150602.jpg" />
+                        tools:text="📄 Surat_Keterangan_Sakit.pdf" />
                 </LinearLayout>
 
             </FrameLayout>
@@ -198,7 +236,7 @@
             app:cornerRadius="10dp"
             tools:visibility="visible" />
 
-        <!-- Box Keterangan / Alasan (bg halus #F8F9FF, border 1dp #E2E8F0) -->
+        <!-- Box Keterangan / Alasan Siswa (bg halus #F8F9FF, border 1dp #E2E8F0) -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -241,12 +279,12 @@
                 tools:text="&quot;Demam tinggi sejak semalam, istirahat dokter 2 hari.&quot;" />
         </LinearLayout>
 
-        <!-- Tombol Aksi Bawah: Tutup Pratinjau Solid Teal (#00685F, corner radius 10dp) -->
+        <!-- Tombol Aksi Bawah: Tutup Pratinjau (Solid Teal atau Outlined) -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnTutup"
             android:layout_width="match_parent"
             android:layout_height="48dp"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="14dp"
             android:backgroundTint="@color/primary_teal"
             android:text="Tutup Pratinjau"
             android:textAllCaps="false"
