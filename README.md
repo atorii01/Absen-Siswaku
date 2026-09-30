@@ -127,7 +127,6 @@ app/src/main/
 │   ├── AdminMainActivity.kt          # Shell penampung portal super admin
 │   ├── data/
 │   │   ├── network/
-│   │   │   ├── ApiClient.kt          # Inisialisasi HTTP client umum
 │   │   │   ├── SupabaseClient.kt     # Konfigurasi Retrofit & Header Token Supabase
 │   │   │   ├── SupabaseService.kt    # Definisi kontrak query RESTful PostgREST
 │   │   │   └── *Response.kt / Model  # DTO (Data Transfer Objects) respons API
