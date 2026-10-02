@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:animateLayoutChanges="true"
     android:background="@drawable/bg_bottom_sheet"
     android:orientation="vertical"
     android:paddingBottom="24dp">
@@ -404,6 +405,7 @@
         android:id="@+id/rvDetailSiswaPresensi"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layoutAnimation="@anim/layout_animation_cascading"
         android:clipToPadding="false"
         android:nestedScrollingEnabled="true"
         tools:itemCount="5"

@@ -10,6 +10,7 @@ import com.andev.absensiswaku.data.network.RombelMapelResponse
 import com.andev.absensiswaku.data.network.SiswaAdminResponse
 import com.andev.absensiswaku.data.network.SupabaseClient
 import com.andev.absensiswaku.databinding.DialogMutasiRombelBinding
+import com.andev.absensiswaku.util.applyBounceEffect
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import okhttp3.ResponseBody
 import retrofit2.Call
@@ -53,7 +54,7 @@ class DialogMutasiRombel : BottomSheetDialogFragment() {
         val currentKelasName = siswa.rombelKelas?.namaKelas ?: "Kelas ID ${siswa.idKelas}"
         binding.tvMutasiSubtitle.text = "${siswa.namaLengkap} (Rombel Saat Ini: $currentKelasName)"
 
-        binding.btnCloseMutasiDialog.setOnClickListener {
+        binding.btnCloseMutasiDialog.applyBounceEffect {
             dismiss()
         }
 
@@ -65,18 +66,18 @@ class DialogMutasiRombel : BottomSheetDialogFragment() {
             binding.actvMutasiRombelTujuan.setText(rombelOptions[0], false)
         }
 
-        binding.btnKonfirmasiMutasi.setOnClickListener {
+        binding.btnKonfirmasiMutasi.applyBounceEffect {
             val alasan = binding.etAlasanMutasi.text?.toString()?.trim().orEmpty()
             if (alasan.isEmpty()) {
                 binding.etAlasanMutasi.error = "Harap masukkan alasan mutasi rombel"
-                return@setOnClickListener
+                return@applyBounceEffect
             }
 
             val selectedText = binding.actvMutasiRombelTujuan.text.toString()
             val targetRombel = availableRombels.find { "Kelas ${it.namaKelas}" == selectedText || it.namaKelas == selectedText }
             if (targetRombel == null) {
                 Toast.makeText(requireContext(), "Pilih rombel tujuan yang valid", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
+                return@applyBounceEffect
             }
 
             binding.btnKonfirmasiMutasi.isEnabled = false

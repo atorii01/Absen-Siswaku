@@ -17,6 +17,8 @@ import com.andev.absensiswaku.data.network.RombelMapelResponse
 import com.andev.absensiswaku.data.network.SupabaseClient
 import com.andev.absensiswaku.databinding.FragmentAdminPresensiBinding
 import com.andev.absensiswaku.ui.guru.BottomSheetRiwayatDialog
+import com.andev.absensiswaku.util.MotionUtils
+import com.andev.absensiswaku.util.applyBounceEffect
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import retrofit2.Call
 import retrofit2.Callback
@@ -56,6 +58,12 @@ class AdminPresensiFragment : Fragment() {
         setupFilterChips()
         setupBroadcastButton()
         loadDataFromSupabase()
+
+        MotionUtils.animateStaggeredEntrance(
+            binding.cardHeroTingkatKehadiran,
+            binding.cardBottomActionBar,
+            binding.btnBroadcastWalas
+        )
     }
 
     private fun setupDateHeader() {
@@ -103,7 +111,7 @@ class AdminPresensiFragment : Fragment() {
         )
 
         chips.forEach { (chipView, categoryKey, _) ->
-            chipView.setOnClickListener {
+            chipView.applyBounceEffect {
                 selectedCategory = categoryKey
                 updateChipStates(chips, chipView)
                 applyFilter()
@@ -145,11 +153,17 @@ class AdminPresensiFragment : Fragment() {
             binding.layoutEmptyRombelAdmin.visibility = View.GONE
             binding.rvRombelAdmin.visibility = View.VISIBLE
             rombelAdapter.submitList(filteredRombelList)
+            binding.rvRombelAdmin.scheduleLayoutAnimation()
         }
     }
 
     private fun setupBroadcastButton() {
-        binding.btnBroadcastWalas.setOnClickListener {
+        binding.tvStatusLiveSync.applyBounceEffect {
+            Toast.makeText(requireContext(), "Menyinkronkan data presensi SMKN 8...", Toast.LENGTH_SHORT).show()
+            loadDataFromSupabase()
+        }
+
+        binding.btnBroadcastWalas.applyBounceEffect {
             val rombelWithAlpa = allRombelList.filter { it.alpaCount > 0 }
             if (rombelWithAlpa.isEmpty()) {
                 MaterialAlertDialogBuilder(requireContext())

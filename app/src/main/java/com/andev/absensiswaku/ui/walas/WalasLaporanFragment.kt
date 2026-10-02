@@ -27,6 +27,8 @@ import com.andev.absensiswaku.data.network.RombelMapelResponse
 import com.andev.absensiswaku.data.network.SiswaMiniResponse
 import com.andev.absensiswaku.data.network.SupabaseClient
 import com.andev.absensiswaku.databinding.FragmentWalasLaporanBinding
+import com.andev.absensiswaku.util.MotionUtils
+import com.andev.absensiswaku.util.applyBounceEffect
 import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.android.material.snackbar.Snackbar
 import retrofit2.Call
@@ -73,6 +75,13 @@ class WalasLaporanFragment : Fragment() {
         setupFilterChips()
         setupExportPdfButton()
         loadSessionData()
+
+        MotionUtils.animateStaggeredEntrance(
+            binding.tvTitleLaporan,
+            binding.tvSubHeaderWalas,
+            binding.cardRingkasanKehadiran,
+            binding.cardEksporPdf
+        )
     }
 
     override fun onResume() {
@@ -169,13 +178,13 @@ class WalasLaporanFragment : Fragment() {
         }
         binding.tvChipBulanIni.text = "Bulan Ini ($namaBulanIni)"
 
-        binding.chipBulanIni.setOnClickListener {
+        binding.chipBulanIni.applyBounceEffect {
             switchFilterSelection(1)
         }
-        binding.chipSemester.setOnClickListener {
+        binding.chipSemester.applyBounceEffect {
             switchFilterSelection(2)
         }
-        binding.chipRentangKustom.setOnClickListener {
+        binding.chipRentangKustom.applyBounceEffect {
             showCustomDateRangePicker()
         }
     }
@@ -516,19 +525,20 @@ class WalasLaporanFragment : Fragment() {
             binding.layoutEmptyState.visibility = View.GONE
             binding.rvRiwayatHarianKelas.visibility = View.VISIBLE
             rekapHarianAdapter.updateData(currentRekapHarianList)
+            binding.rvRiwayatHarianKelas.scheduleLayoutAnimation()
         }
     }
 
     private fun setupExportPdfButton() {
-        binding.btnUnduhPdfKelas.setOnClickListener {
-            if (!isAdded || _binding == null) return@setOnClickListener
+        binding.btnUnduhPdfKelas.applyBounceEffect {
+            if (!isAdded || _binding == null) return@applyBounceEffect
             if (currentRekapHarianList.isEmpty()) {
                 Toast.makeText(
                     requireContext(),
                     "Tidak ada data rekap presensi untuk diekspor pada periode ini.",
                     Toast.LENGTH_SHORT
                 ).show()
-                return@setOnClickListener
+                return@applyBounceEffect
             }
             generatePdfRekapKelas()
         }

@@ -18,6 +18,8 @@ import com.andev.absensiswaku.data.network.RiwayatModel
 import com.andev.absensiswaku.data.network.SupabaseClient
 import com.andev.absensiswaku.data.pref.SessionManager
 import com.andev.absensiswaku.databinding.FragmentSetelanBinding
+import com.andev.absensiswaku.util.MotionUtils
+import com.andev.absensiswaku.util.applyBounceEffect
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import retrofit2.Call
 import retrofit2.Callback
@@ -59,6 +61,12 @@ class SetelanFragment : Fragment() {
         setupActionButtons()
         setupLogoutButton()
         loadAttendanceSummary()
+
+        MotionUtils.animateStaggeredEntrance(
+            binding.cardProfilSiswa,
+            binding.cardRekapSemester,
+            binding.btnLogout
+        )
     }
 
     override fun onResume() {
@@ -290,7 +298,7 @@ class SetelanFragment : Fragment() {
      */
     private fun setupActionButtons() {
         // Tombol 1: Perbarui Data
-        binding.btnPerbaruiData.setOnClickListener {
+        binding.btnPerbaruiData.applyBounceEffect {
             val nama = sessionManager.getNama().ifEmpty { "Muhammad Fadhil" }
             val nisn = sessionManager.getNisn().ifEmpty { "0061829103" }
             val walas = sessionManager.getWaliKelas().ifEmpty { "Farauk Pratama S.Kom" }
@@ -319,7 +327,7 @@ class SetelanFragment : Fragment() {
         }
 
         // Tombol 2: Ubah Kata Sandi
-        binding.btnUbahPassword.setOnClickListener {
+        binding.btnUbahPassword.applyBounceEffect {
             showDialogUbahPassword()
         }
     }
@@ -385,7 +393,7 @@ class SetelanFragment : Fragment() {
      * - Navigasi ke LoginActivity dengan FLAG_ACTIVITY_NEW_TASK or FLAG_ACTIVITY_CLEAR_TASK
      */
     private fun setupLogoutButton() {
-        binding.btnLogout.setOnClickListener {
+        binding.btnLogout.applyBounceEffect {
             MaterialAlertDialogBuilder(requireContext())
                 .setTitle("Konfirmasi Keluar")
                 .setMessage("Apakah Anda yakin ingin keluar dari Portal Siswa?")

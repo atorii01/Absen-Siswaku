@@ -13,8 +13,10 @@
         android:scrollbars="none">
 
         <LinearLayout
+            android:id="@+id/llSetelanContent"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:animateLayoutChanges="true"
             android:clipToPadding="false"
             android:orientation="vertical"
             android:paddingTop="12dp"
@@ -110,6 +112,7 @@
 
             <!-- ================= 2b. CARD PROFIL SISWA ================= -->
             <LinearLayout
+                android:id="@+id/cardProfilSiswa"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="16dp"
@@ -295,6 +298,7 @@
 
             <!-- ================= 2c. CARD PRESENSI SEMESTER GANJIL ================= -->
             <LinearLayout
+                android:id="@+id/cardRekapSemester"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="16dp"

@@ -15,6 +15,8 @@ import androidx.fragment.app.Fragment
 import com.andev.absensiswaku.LoginActivity
 import com.andev.absensiswaku.data.pref.SessionManager
 import com.andev.absensiswaku.databinding.FragmentGuruSetelanBinding
+import com.andev.absensiswaku.util.MotionUtils
+import com.andev.absensiswaku.util.applyBounceEffect
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 
 class GuruSetelanFragment : Fragment() {
@@ -56,6 +58,13 @@ class GuruSetelanFragment : Fragment() {
         setupPreferenceSwitches()
         setupActionButtons()
         setupLogoutButton()
+
+        MotionUtils.animateStaggeredEntrance(
+            binding.cardProfilGuruSetelan,
+            binding.btnUbahKataSandi,
+            binding.btnEditKontak,
+            binding.btnLogoutGuru
+        )
     }
 
     override fun onResume() {
@@ -153,17 +162,17 @@ class GuruSetelanFragment : Fragment() {
      */
     private fun setupActionButtons() {
         // Tombol Ubah Sandi
-        binding.btnUbahKataSandi.setOnClickListener {
+        binding.btnUbahKataSandi.applyBounceEffect {
             showDialogUbahSandi()
         }
 
         // Tombol Edit Kontak
-        binding.btnEditKontak.setOnClickListener {
+        binding.btnEditKontak.applyBounceEffect {
             showDialogEditKontak()
         }
 
         // Tombol Pusat Bantuan & Panduan Guru
-        binding.btnPusatBantuan.setOnClickListener {
+        binding.btnPusatBantuan.applyBounceEffect {
             showDialogPusatBantuan()
         }
     }
@@ -291,8 +300,8 @@ class GuruSetelanFragment : Fragment() {
      * Tombol Logout Akun Guru dengan dialog konfirmasi
      */
     private fun setupLogoutButton() {
-        binding.btnLogoutGuru.setOnClickListener {
-            val ctx = context ?: return@setOnClickListener
+        binding.btnLogoutGuru.applyBounceEffect {
+            val ctx = context ?: return@applyBounceEffect
             MaterialAlertDialogBuilder(ctx)
                 .setTitle("Keluar Akun Guru")
                 .setMessage("Apakah Anda yakin ingin keluar dari Portal Guru Mapel SMKN 8 Jakarta?")

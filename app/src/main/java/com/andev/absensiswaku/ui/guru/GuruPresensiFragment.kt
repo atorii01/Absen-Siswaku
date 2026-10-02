@@ -19,6 +19,8 @@ import com.andev.absensiswaku.data.network.PresensiHarianResponse
 import com.andev.absensiswaku.data.network.RombelMapelResponse
 import com.andev.absensiswaku.data.network.SupabaseClient
 import com.andev.absensiswaku.databinding.FragmentGuruPresensiBinding
+import com.andev.absensiswaku.util.MotionUtils
+import com.andev.absensiswaku.util.applyBounceEffect
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -58,6 +60,12 @@ class GuruPresensiFragment : Fragment() {
         setupLiveSyncButton()
 
         loadDataPresensiGlobal()
+
+        MotionUtils.animateStaggeredEntrance(
+            binding.cardInfoReadOnly,
+            binding.layoutStatistikGlobal,
+            binding.etSearchRombel
+        )
     }
 
     private fun setupHeaderAndDate() {
@@ -98,7 +106,7 @@ class GuruPresensiFragment : Fragment() {
             override fun afterTextChanged(s: Editable?) {}
         })
 
-        binding.btnClearSearch.setOnClickListener {
+        binding.btnClearSearch.applyBounceEffect {
             binding.etSearchRombel.text?.clear()
         }
 
@@ -114,7 +122,7 @@ class GuruPresensiFragment : Fragment() {
         )
 
         chips.forEach { (chipView, majorKey) ->
-            chipView.setOnClickListener {
+            chipView.applyBounceEffect {
                 selectedMajorFilter = majorKey
                 updateChipStates(chips, chipView)
                 applyFilters()
@@ -144,7 +152,7 @@ class GuruPresensiFragment : Fragment() {
     }
 
     private fun setupLiveSyncButton() {
-        binding.tvStatusLiveSync.setOnClickListener {
+        binding.tvStatusLiveSync.applyBounceEffect {
             Toast.makeText(requireContext(), "Menyinkronkan data presensi SMKN 8 Jakarta...", Toast.LENGTH_SHORT).show()
             loadDataPresensiGlobal(isRefreshing = true)
         }
@@ -322,6 +330,7 @@ class GuruPresensiFragment : Fragment() {
 
         // Masukkan daftar rombel langsung ke RombelMapelAdapter.submitList(listRombel)
         rombelAdapter.submitList(filtered)
+        binding.rvRombelPresensi.scheduleLayoutAnimation()
 
         // Update Header Counter: Rombongan Belajar (10 Kelas Aktif)
         binding.tvHeaderDaftarRombel.text = "Rombongan Belajar (${filtered.size} Kelas Aktif)"

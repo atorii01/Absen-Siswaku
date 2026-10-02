@@ -16,6 +16,7 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:animateLayoutChanges="true"
             android:clipToPadding="false"
             android:orientation="vertical"
             android:paddingTop="12dp"
@@ -130,6 +131,7 @@
 
             <!-- ================= 2b. 3 KARTU RINGKASAN METRIK HORIZONTAL ================= -->
             <LinearLayout
+                android:id="@+id/layoutMetrikSiswa"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="16dp"
@@ -997,6 +999,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="6dp"
+                    android:layoutAnimation="@anim/layout_animation_cascading"
                     android:nestedScrollingEnabled="false"
                     android:overScrollMode="never"
                     app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"

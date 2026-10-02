@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:animateLayoutChanges="true"
     android:background="@drawable/bg_bottom_sheet"
     android:orientation="vertical"
     android:paddingBottom="24dp">
@@ -196,6 +197,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
+        android:layoutAnimation="@anim/layout_animation_cascading"
         android:nestedScrollingEnabled="false"
         tools:itemCount="3"
         tools:listitem="@layout/item_siswa_audit_presensi" />

@@ -13,8 +13,10 @@
         android:scrollbars="none">
 
         <LinearLayout
+            android:id="@+id/llRiwayatContent"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:animateLayoutChanges="true"
             android:clipToPadding="false"
             android:orientation="vertical"
             android:paddingTop="12dp"
@@ -104,6 +106,7 @@
 
             <!-- Title Row & Info Subtext -->
             <LinearLayout
+                android:id="@+id/llRiwayatTitleRow"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
@@ -149,6 +152,7 @@
 
             <!-- Dynamic Horizontal Month Selector -->
             <HorizontalScrollView
+                android:id="@+id/scrollMonthSelector"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="14dp"
@@ -263,6 +267,7 @@
 
             <!-- ================= 2b. CARD STATISTIK KEHADIRAN BULANAN ================= -->
             <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardStatistikKehadiran"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="16dp"
@@ -541,6 +546,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
+                android:layoutAnimation="@anim/layout_animation_cascading"
                 android:nestedScrollingEnabled="false"
                 android:visibility="gone"
                 tools:itemCount="3"
@@ -548,6 +554,7 @@
 
             <!-- ================= 2d. CARD EKSPOR LAPORAN RESMI ================= -->
             <LinearLayout
+                android:id="@+id/cardExportLaporan"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="16dp"

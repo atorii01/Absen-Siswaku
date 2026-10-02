@@ -16,6 +16,7 @@ import com.andev.absensiswaku.data.network.SiswaMiniResponse
 import com.andev.absensiswaku.data.network.SupabaseClient
 import com.andev.absensiswaku.databinding.DialogDetailRiwayatBinding
 import com.andev.absensiswaku.databinding.ItemSiswaRiwayatDetailBinding
+import com.andev.absensiswaku.util.applyBounceEffect
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import retrofit2.Call
 import retrofit2.Callback
@@ -115,7 +116,7 @@ class BottomSheetRiwayatDialog : BottomSheetDialogFragment() {
         binding.tvDialogTitle.text = titleText
         binding.tvDialogSubtitle.text = "Rekap Riwayat Presensi Tervalidasi Sistem • SMKN 8 Jakarta"
 
-        binding.btnCloseDialog.setOnClickListener {
+        binding.btnCloseDialog.applyBounceEffect {
             dismiss()
         }
     }
@@ -135,13 +136,14 @@ class BottomSheetRiwayatDialog : BottomSheetDialogFragment() {
                 val query = s?.toString().orEmpty().trim()
                 binding.btnClearSearch.visibility = if (query.isNotEmpty()) View.VISIBLE else View.GONE
                 adapter.filter(query)
+                binding.rvSiswaRiwayat.scheduleLayoutAnimation()
                 binding.tvEmptyRiwayat.visibility =
                     if (adapter.itemCount == 0) View.VISIBLE else View.GONE
             }
             override fun afterTextChanged(s: Editable?) {}
         })
 
-        binding.btnClearSearch.setOnClickListener {
+        binding.btnClearSearch.applyBounceEffect {
             binding.etSearchSiswa.text?.clear()
         }
     }
@@ -324,6 +326,7 @@ class BottomSheetRiwayatDialog : BottomSheetDialogFragment() {
             "● $hadir Hadir  •  $sakit Sakit  •  $izin Izin  •  $alpa Alpa (Total $total Siswa)"
 
         adapter.updateData(items)
+        binding.rvSiswaRiwayat.scheduleLayoutAnimation()
         binding.tvEmptyRiwayat.visibility = if (items.isEmpty()) View.VISIBLE else View.GONE
     }
 }

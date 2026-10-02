@@ -13,6 +13,7 @@ import com.andev.absensiswaku.data.network.RiwayatModel
 import com.andev.absensiswaku.data.network.SiswaMiniResponse
 import com.andev.absensiswaku.data.network.SupabaseClient
 import com.andev.absensiswaku.databinding.LayoutBottomSheetDetailPresensiBinding
+import com.andev.absensiswaku.util.applyBounceEffect
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import retrofit2.Call
 import retrofit2.Callback
@@ -95,7 +96,7 @@ class BottomSheetDetailPresensiDialog : BottomSheetDialogFragment() {
             namaKelas
         }
 
-        binding.btnCloseDialog.setOnClickListener {
+        binding.btnCloseDialog.applyBounceEffect {
             dismiss()
         }
     }
@@ -111,16 +112,16 @@ class BottomSheetDetailPresensiDialog : BottomSheetDialogFragment() {
     }
 
     private fun setupFilterChips() {
-        binding.chipFilterSemua.setOnClickListener {
+        binding.chipFilterSemua.applyBounceEffect {
             switchChipFilter("SEMUA")
         }
-        binding.chipFilterHadir.setOnClickListener {
+        binding.chipFilterHadir.applyBounceEffect {
             switchChipFilter("HADIR")
         }
-        binding.chipFilterIzin.setOnClickListener {
+        binding.chipFilterIzin.applyBounceEffect {
             switchChipFilter("IZIN")
         }
-        binding.chipFilterAlpa.setOnClickListener {
+        binding.chipFilterAlpa.applyBounceEffect {
             switchChipFilter("ALPA")
         }
     }
@@ -165,6 +166,7 @@ class BottomSheetDetailPresensiDialog : BottomSheetDialogFragment() {
         }
 
         adapter.filter(category)
+        binding.rvDetailSiswaPresensi.scheduleLayoutAnimation()
         updateEmptyStateVisibility()
     }
 
@@ -428,6 +430,7 @@ class BottomSheetDetailPresensiDialog : BottomSheetDialogFragment() {
 
         // Tampilkan data ke adapter
         adapter.setAllData(items)
+        binding.rvDetailSiswaPresensi.scheduleLayoutAnimation()
         updateEmptyStateVisibility()
     }
 }

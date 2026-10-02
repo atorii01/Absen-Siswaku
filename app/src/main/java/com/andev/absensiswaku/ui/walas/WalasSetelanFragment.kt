@@ -18,6 +18,8 @@ import com.andev.absensiswaku.data.network.SiswaKelolaResponse
 import com.andev.absensiswaku.data.network.SupabaseClient
 import com.andev.absensiswaku.data.pref.SessionManager
 import com.andev.absensiswaku.databinding.FragmentWalasSetelanBinding
+import com.andev.absensiswaku.util.MotionUtils
+import com.andev.absensiswaku.util.applyBounceEffect
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import retrofit2.Call
 import retrofit2.Callback
@@ -68,6 +70,13 @@ class WalasSetelanFragment : Fragment() {
         setupActionButtons()
         setupLogoutButton()
         loadDataFromSupabase()
+
+        MotionUtils.animateStaggeredEntrance(
+            binding.cardProfilWalas,
+            binding.btnUbahSandi,
+            binding.btnPerbaruiKontak,
+            binding.btnLogoutWalas
+        )
     }
 
     override fun onResume() {
@@ -180,21 +189,21 @@ class WalasSetelanFragment : Fragment() {
      */
     private fun setupActionButtons() {
         // Tombol Ubah Sandi Guru
-        binding.btnUbahSandi.setOnClickListener {
+        binding.btnUbahSandi.applyBounceEffect {
             showDialogUbahSandi()
         }
 
         // Tombol Perbarui Kontak Guru
-        binding.btnPerbaruiKontak.setOnClickListener {
+        binding.btnPerbaruiKontak.applyBounceEffect {
             showDialogPerbaruiKontak()
         }
 
         // Tombol Ping Server & Sinkronisasi
-        binding.btnPingServer.setOnClickListener {
+        binding.btnPingServer.applyBounceEffect {
             pingServerDanSinkron()
         }
 
-        binding.btnSinkronisasiData.setOnClickListener {
+        binding.btnSinkronisasiData.applyBounceEffect {
             pingServerDanSinkron()
         }
     }
@@ -455,7 +464,7 @@ class WalasSetelanFragment : Fragment() {
      * - Navigasi ke LoginActivity dengan bendera FLAG_ACTIVITY_NEW_TASK or FLAG_ACTIVITY_CLEAR_TASK
      */
     private fun setupLogoutButton() {
-        binding.btnLogoutWalas.setOnClickListener {
+        binding.btnLogoutWalas.applyBounceEffect {
             MaterialAlertDialogBuilder(requireContext())
                 .setTitle("Konfirmasi Keluar")
                 .setMessage("Apakah Bapak/Ibu yakin ingin keluar dari Portal Wali Kelas SMKN 8 Jakarta?")

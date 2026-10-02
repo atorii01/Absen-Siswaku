@@ -150,6 +150,10 @@ class MainActivity : AppCompatActivity() {
 
     private fun loadFragment(fragment: Fragment) {
         supportFragmentManager.beginTransaction()
+            .setCustomAnimations(
+                R.anim.fragment_fade_enter,
+                R.anim.fragment_fade_exit
+            )
             .replace(R.id.fragmentContainer, fragment)
             .commit()
     }

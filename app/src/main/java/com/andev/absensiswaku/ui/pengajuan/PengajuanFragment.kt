@@ -21,6 +21,8 @@ import com.andev.absensiswaku.R
 import com.andev.absensiswaku.data.network.SupabaseClient
 import com.andev.absensiswaku.data.pref.SessionManager
 import com.andev.absensiswaku.databinding.FragmentPengajuanBinding
+import com.andev.absensiswaku.util.MotionUtils
+import com.andev.absensiswaku.util.applyBounceEffect
 import com.andev.absensiswaku.ui.presensi.PresensiFragment
 import com.andev.absensiswaku.ui.riwayat.RiwayatFragment
 import com.google.android.material.datepicker.CalendarConstraints
@@ -147,6 +149,14 @@ class PengajuanFragment : Fragment() {
         setupFileUpload()
         setupActionButtons()
         updateDateDisplays()
+
+        MotionUtils.animateStaggeredEntrance(
+            binding.cardHeaderFormulir,
+            binding.cardJenisKetidakhadiran,
+            binding.cardPeriodeWaktu,
+            binding.cardUploadBukti,
+            binding.btnKirimPengajuan
+        )
     }
 
     private fun setupHeaderData() {
@@ -163,15 +173,15 @@ class PengajuanFragment : Fragment() {
     }
 
     private fun setupJenisIzinSelection() {
-        binding.cardOptionSakit.setOnClickListener {
+        binding.cardOptionSakit.applyBounceEffect {
             selectJenisIzin("Sakit")
         }
 
-        binding.cardOptionIzin.setOnClickListener {
+        binding.cardOptionIzin.applyBounceEffect {
             selectJenisIzin("Izin")
         }
 
-        binding.cardOptionDispensasi.setOnClickListener {
+        binding.cardOptionDispensasi.applyBounceEffect {
             selectJenisIzin("Dispensasi")
         }
     }
@@ -322,13 +332,13 @@ class PengajuanFragment : Fragment() {
     }
 
     private fun setupFileUpload() {
-        binding.cardUploadBukti.setOnClickListener {
+        binding.cardUploadBukti.applyBounceEffect {
             filePickerLauncher.launch(
                 arrayOf("image/jpeg", "image/png", "application/pdf")
             )
         }
 
-        binding.btnDeleteFile.setOnClickListener {
+        binding.btnDeleteFile.applyBounceEffect {
             selectedFileUri = null
             attachedFileName = ""
             binding.layoutPreviewUploaded.visibility = View.GONE
@@ -338,11 +348,11 @@ class PengajuanFragment : Fragment() {
     }
 
     private fun setupActionButtons() {
-        binding.btnKirimPengajuan.setOnClickListener {
+        binding.btnKirimPengajuan.applyBounceEffect {
             submitPengajuanForm()
         }
 
-        binding.btnBatal.setOnClickListener {
+        binding.btnBatal.applyBounceEffect {
             (activity as? MainActivity)?.loadFragmentFromOutside(PresensiFragment())
         }
     }

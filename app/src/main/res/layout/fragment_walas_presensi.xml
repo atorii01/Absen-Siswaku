@@ -13,8 +13,10 @@
         android:scrollbars="none">
 
             <LinearLayout
+                android:id="@+id/llWalasPresensiContent"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:animateLayoutChanges="true"
                 android:clipToPadding="false"
                 android:orientation="vertical"
                 android:paddingTop="12dp"
@@ -182,6 +184,7 @@
 
                 <!-- ================= 2b. 4 KOTAK METRIK STATISTIK HARI INI ================= -->
                 <LinearLayout
+                    android:id="@+id/layoutMetrikStatistik"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginHorizontal="16dp"
@@ -408,6 +411,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginHorizontal="16dp"
                     android:layout_marginTop="12dp"
+                    android:layoutAnimation="@anim/layout_animation_cascading"
                     android:nestedScrollingEnabled="false"
                     tools:itemCount="3"
                     tools:listitem="@layout/item_verifikasi_izin" />
@@ -493,6 +497,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginHorizontal="16dp"
                     android:layout_marginTop="12dp"
+                    android:layoutAnimation="@anim/layout_animation_cascading"
                     android:nestedScrollingEnabled="false"
                     tools:itemCount="4"
                     tools:listitem="@layout/item_siswa_hadir_walas" />

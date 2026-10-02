@@ -29,6 +29,8 @@ import com.andev.absensiswaku.data.network.RiwayatModel
 import com.andev.absensiswaku.data.network.SupabaseClient
 import com.andev.absensiswaku.data.pref.SessionManager
 import com.andev.absensiswaku.databinding.FragmentRiwayatBinding
+import com.andev.absensiswaku.util.MotionUtils
+import com.andev.absensiswaku.util.applyBounceEffect
 import com.google.android.material.snackbar.Snackbar
 import retrofit2.Call
 import retrofit2.Callback
@@ -78,6 +80,13 @@ class RiwayatFragment : Fragment() {
         setupDynamicMonthChips()
         setupRecyclerView()
         setupExportPdfButton()
+
+        MotionUtils.animateStaggeredEntrance(
+            binding.llRiwayatTitleRow,
+            binding.scrollMonthSelector,
+            binding.cardStatistikKehadiran,
+            binding.cardExportLaporan
+        )
     }
 
     override fun onResume() {
@@ -133,9 +142,9 @@ class RiwayatFragment : Fragment() {
             binding.tvChipMonth3.text = month3Name
         }
 
-        binding.chipMonth1.setOnClickListener { switchMonthSelection(1) }
-        binding.chipMonth2.setOnClickListener { switchMonthSelection(2) }
-        binding.chipMonth3.setOnClickListener { switchMonthSelection(3) }
+        binding.chipMonth1.applyBounceEffect { switchMonthSelection(1) }
+        binding.chipMonth2.applyBounceEffect { switchMonthSelection(2) }
+        binding.chipMonth3.applyBounceEffect { switchMonthSelection(3) }
     }
 
     private fun switchMonthSelection(monthIndex: Int) {
@@ -402,22 +411,23 @@ class RiwayatFragment : Fragment() {
             binding.rvRiwayatPresensi.visibility = View.VISIBLE
             binding.tvCountRecordHeader.text = "${filteredList.size} Catatan Terbaru"
             riwayatAdapter.updateData(filteredList)
+            binding.rvRiwayatPresensi.scheduleLayoutAnimation()
         }
     }
 
     private fun setupExportPdfButton() {
-        binding.btnExportPdf.setOnClickListener {
+        binding.btnExportPdf.applyBounceEffect {
             val currentFilteredList = getCurrentFilteredList()
 
             if (currentFilteredList.isEmpty()) {
                 Toast.makeText(requireContext(), "Tidak ada data riwayat presensi untuk diekspor.", Toast.LENGTH_LONG).show()
-                return@setOnClickListener
+                return@applyBounceEffect
             }
 
             generateAndSavePdf(currentFilteredList)
         }
 
-        binding.btnInfoRiwayat.setOnClickListener {
+        binding.btnInfoRiwayat.applyBounceEffect {
             Toast.makeText(requireContext(), "Semua rekapan presensi diverifikasi oleh Sistem AI & Wali Kelas SMKN 8 Jakarta.", Toast.LENGTH_LONG).show()
         }
     }

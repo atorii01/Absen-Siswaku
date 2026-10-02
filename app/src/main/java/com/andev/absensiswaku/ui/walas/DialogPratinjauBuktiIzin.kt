@@ -21,6 +21,7 @@ import androidx.fragment.app.DialogFragment
 import com.andev.absensiswaku.R
 import com.andev.absensiswaku.data.network.PengajuanIzinResponse
 import com.andev.absensiswaku.databinding.LayoutDialogPratinjauBinding
+import com.andev.absensiswaku.util.applyBounceEffect
 import java.io.File
 import java.net.URL
 import kotlin.concurrent.thread
@@ -200,7 +201,7 @@ class DialogPratinjauBuktiIzin : DialogFragment() {
                 binding.layoutDokumenPlaceholder.visibility = View.VISIBLE
                 binding.btnBukaDokumen.visibility = View.VISIBLE
 
-                binding.btnBukaDokumen.setOnClickListener {
+                binding.btnBukaDokumen.applyBounceEffect {
                     try {
                         val targetUri: Uri = if (url.startsWith("data:")) {
                             val cleanBase64 = url.substringAfter("base64,")
@@ -238,8 +239,8 @@ class DialogPratinjauBuktiIzin : DialogFragment() {
             binding.tvKeterangan.text = "\"$quote\""
 
             // 5. Tombol Tutup Dialog
-            binding.btnTutup.setOnClickListener { dialog.dismiss() }
-            binding.btnCloseHeader.setOnClickListener { dialog.dismiss() }
+            binding.btnTutup.applyBounceEffect { dialog.dismiss() }
+            binding.btnCloseHeader.applyBounceEffect { dialog.dismiss() }
         }
     }
 }

@@ -28,6 +28,8 @@ import com.andev.absensiswaku.data.network.SupabaseClient
 import com.andev.absensiswaku.data.pref.SessionManager
 import com.andev.absensiswaku.databinding.FragmentWalasPresensiBinding
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.andev.absensiswaku.util.MotionUtils
+import com.andev.absensiswaku.util.applyBounceEffect
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -87,6 +89,12 @@ class WalasPresensiFragment : Fragment() {
         setupRecyclerViews()
         setupClickListeners()
         loadDataFromSupabase()
+
+        MotionUtils.animateStaggeredEntrance(
+            binding.tvGreetingWalas,
+            binding.layoutMetrikStatistik,
+            binding.btnFinalisasiRekap
+        )
     }
 
     override fun onResume() {
@@ -151,12 +159,12 @@ class WalasPresensiFragment : Fragment() {
     }
 
     private fun setupClickListeners() {
-        binding.imgAvatarWalas.setOnClickListener {
+        binding.imgAvatarWalas.applyBounceEffect {
             Toast.makeText(requireContext(), "Memperbarui data presensi...", Toast.LENGTH_SHORT).show()
             loadDataFromSupabase()
         }
 
-        binding.btnFinalisasiRekap.setOnClickListener {
+        binding.btnFinalisasiRekap.applyBounceEffect {
             handleFinalisasiRekap()
         }
     }
@@ -297,6 +305,7 @@ class WalasPresensiFragment : Fragment() {
             binding.rvAntreanIzin.visibility = View.VISIBLE
             binding.layoutEmptyAntrean.visibility = View.GONE
             antreanAdapter.updateData(antreanList)
+            binding.rvAntreanIzin.scheduleLayoutAnimation()
         }
     }
 
@@ -314,6 +323,7 @@ class WalasPresensiFragment : Fragment() {
             binding.rvSiswaHadir.visibility = View.VISIBLE
             binding.layoutEmptyHadir.visibility = View.GONE
             siswaHadirAdapter.updateData(hadirList)
+            binding.rvSiswaHadir.scheduleLayoutAnimation()
         }
     }
 

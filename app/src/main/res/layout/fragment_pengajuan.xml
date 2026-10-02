@@ -13,8 +13,10 @@
         android:scrollbars="none">
 
         <LinearLayout
+            android:id="@+id/llPengajuanContent"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:animateLayoutChanges="true"
             android:clipToPadding="false"
             android:orientation="vertical"
             android:paddingTop="12dp"
@@ -104,6 +106,7 @@
 
             <!-- ================= CARD HEADER FORMULIR ================= -->
             <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardHeaderFormulir"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="16dp"
@@ -210,6 +213,7 @@
 
             <!-- ================= BAGIAN 1: JENIS KETIDAKHADIRAN ================= -->
             <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardJenisKetidakhadiran"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="16dp"
@@ -399,6 +403,7 @@
 
             <!-- ================= BAGIAN 2: PERIODE WAKTU ================= -->
             <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardPeriodeWaktu"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="16dp"

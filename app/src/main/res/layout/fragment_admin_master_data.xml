@@ -12,6 +12,7 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:animateLayoutChanges="true"
         android:orientation="vertical"
         android:paddingBottom="36dp">
 
@@ -984,6 +985,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
+                android:layoutAnimation="@anim/layout_animation_cascading"
                 android:nestedScrollingEnabled="false"
                 tools:itemCount="4"
                 tools:listitem="@layout/item_siswa_admin" />
@@ -1080,6 +1082,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
+                android:layoutAnimation="@anim/layout_animation_cascading"
                 android:nestedScrollingEnabled="false"
                 tools:itemCount="3"
                 tools:listitem="@layout/item_rombel_kelola" />

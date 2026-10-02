@@ -12,6 +12,7 @@
         android:id="@+id/mainLogin"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:animateLayoutChanges="true"
         android:paddingHorizontal="20dp"
         android:paddingVertical="24dp">
 

@@ -14,6 +14,7 @@ import com.andev.absensiswaku.data.network.SupabaseClient
 import com.andev.absensiswaku.data.network.TambahRombelRequest
 import com.andev.absensiswaku.data.network.UserResponse
 import com.andev.absensiswaku.databinding.DialogTambahRombelBinding
+import com.andev.absensiswaku.util.applyBounceEffect
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -158,29 +159,29 @@ class DialogTambahRombel(
     }
 
     private fun setupListeners() {
-        binding.btnCloseDialogRombel.setOnClickListener {
+        binding.btnCloseDialogRombel.applyBounceEffect {
             dismiss()
         }
 
-        binding.btnBatalRombel.setOnClickListener {
+        binding.btnBatalRombel.applyBounceEffect {
             dismiss()
         }
 
-        binding.btnSimpanRombel.setOnClickListener {
+        binding.btnSimpanRombel.applyBounceEffect {
             val namaKelas = binding.etNamaKelasBaru.text?.toString()?.trim().orEmpty()
             val jurusanRaw = binding.actvJurusan.text?.toString()?.trim().orEmpty()
             val kapasitasStr = binding.etKapasitasKelas.text?.toString()?.trim().orEmpty()
 
             if (namaKelas.isEmpty()) {
                 binding.tilNamaKelas.error = "Nama kelas wajib diisi"
-                return@setOnClickListener
+                return@applyBounceEffect
             } else {
                 binding.tilNamaKelas.error = null
             }
 
             if (jurusanRaw.isEmpty()) {
                 binding.tilJurusan.error = "Pilih program keahlian / jurusan"
-                return@setOnClickListener
+                return@applyBounceEffect
             } else {
                 binding.tilJurusan.error = null
             }

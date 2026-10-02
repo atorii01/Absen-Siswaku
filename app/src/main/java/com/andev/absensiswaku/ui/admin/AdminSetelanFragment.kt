@@ -29,6 +29,8 @@ import com.andev.absensiswaku.data.network.KonfigurasiSistemResponse
 import com.andev.absensiswaku.data.network.SupabaseClient
 import com.andev.absensiswaku.data.pref.SessionManager
 import com.andev.absensiswaku.databinding.FragmentAdminSetelanBinding
+import com.andev.absensiswaku.util.MotionUtils
+import com.andev.absensiswaku.util.applyBounceEffect
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.slider.Slider
 import com.google.android.material.snackbar.Snackbar
@@ -77,6 +79,15 @@ class AdminSetelanFragment : Fragment() {
 
         sessionManager = SessionManager(requireContext())
 
+        MotionUtils.animateStaggeredEntrance(
+            binding.cardProfileAdmin,
+            binding.tvKoordinatSekolah.parent.parent.parent.parent.parent as View,
+            binding.btnUbahJadwalKhusus.parent.parent as View,
+            binding.btnSyncDapodik.parent.parent as View,
+            binding.btnBackupDatabase.parent.parent as View,
+            binding.btnKeluarAkunAdmin
+        )
+
         setupAdminProfile()
         setupProtectionSwitches()
         setupSliderRadius()
@@ -106,7 +117,7 @@ class AdminSetelanFragment : Fragment() {
         binding.tvSublabelAdmin.text = roleUser
         binding.tvNipAdmin.text = nipUser
 
-        binding.btnKelolaAkun.setOnClickListener {
+        binding.btnKelolaAkun.applyBounceEffect {
             showKelolaAkunDialog(namaUser, roleUser, nipUser)
         }
     }
@@ -183,32 +194,32 @@ class AdminSetelanFragment : Fragment() {
      */
     private fun setupInteractiveButtons() {
         // Kalibrasi Ulang Lokasi
-        binding.btnKalibrasiUlang.setOnClickListener {
+        binding.btnKalibrasiUlang.applyBounceEffect {
             showKalibrasiUlangDialog()
         }
 
         // Ubah Jadwal Khusus (Jumat / Ramadhan)
-        binding.btnUbahJadwalKhusus.setOnClickListener {
+        binding.btnUbahJadwalKhusus.applyBounceEffect {
             showUbahJadwalKhususDialog()
         }
 
         // Sinkronisasi Dapodik
-        binding.btnSyncDapodik.setOnClickListener {
+        binding.btnSyncDapodik.applyBounceEffect {
             handleSinkronisasiDapodik()
         }
 
         // Cadangkan Database Presensi
-        binding.btnBackupDatabase.setOnClickListener {
+        binding.btnBackupDatabase.applyBounceEffect {
             handleBackupDatabase()
         }
 
         // Log Aktivitas CRUD Admin
-        binding.btnLogAktivitas.setOnClickListener {
+        binding.btnLogAktivitas.applyBounceEffect {
             showLogAktivitasDialog()
         }
 
         // Keluar Akun Admin
-        binding.btnKeluarAkunAdmin.setOnClickListener {
+        binding.btnKeluarAkunAdmin.applyBounceEffect {
             showLogoutConfirmationDialog()
         }
     }

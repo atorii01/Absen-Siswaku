@@ -12,6 +12,7 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:animateLayoutChanges="true"
         android:orientation="vertical"
         android:paddingBottom="36dp">
 
@@ -100,6 +101,7 @@
 
         <!-- Profile Card Mini -->
         <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardProfilGuruRekap"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="16dp"
@@ -726,6 +728,7 @@
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="16dp"
             android:layout_marginTop="8dp"
+            android:layoutAnimation="@anim/layout_animation_cascading"
             android:nestedScrollingEnabled="false"
             tools:itemCount="5"
             tools:listitem="@layout/item_siswa_realtime" />
@@ -785,6 +788,7 @@
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="16dp"
             android:layout_marginTop="10dp"
+            android:layoutAnimation="@anim/layout_animation_cascading"
             android:nestedScrollingEnabled="false"
             tools:itemCount="4"
             tools:listitem="@layout/item_riwayat_kelas" />

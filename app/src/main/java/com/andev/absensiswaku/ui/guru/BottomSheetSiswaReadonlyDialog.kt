@@ -13,6 +13,7 @@ import com.andev.absensiswaku.data.network.RombelMapelResponse
 import com.andev.absensiswaku.data.network.SiswaMiniResponse
 import com.andev.absensiswaku.data.network.SupabaseClient
 import com.andev.absensiswaku.databinding.LayoutBottomSheetSiswaReadonlyBinding
+import com.andev.absensiswaku.util.applyBounceEffect
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import retrofit2.Call
 import retrofit2.Callback
@@ -83,7 +84,7 @@ class BottomSheetSiswaReadonlyDialog : BottomSheetDialogFragment() {
         // Summary Banner
         binding.tvSummaryDialog.text = "● ${rombel.hadirCount} Hadir  •  ${rombel.izinCount} Izin/Sakit  •  ${rombel.alpaCount} Alpa (Total $kuota Siswa)"
 
-        binding.btnCloseDialog.setOnClickListener {
+        binding.btnCloseDialog.applyBounceEffect {
             dismiss()
         }
     }
@@ -103,13 +104,14 @@ class BottomSheetSiswaReadonlyDialog : BottomSheetDialogFragment() {
                 val query = s?.toString().orEmpty().trim()
                 binding.btnClearSearchSiswa.visibility = if (query.isNotEmpty()) View.VISIBLE else View.GONE
                 studentAdapter.filter(query)
+                binding.rvSiswaDialog.scheduleLayoutAnimation()
                 binding.tvEmptySiswaDialog.visibility =
                     if (studentAdapter.itemCount == 0) View.VISIBLE else View.GONE
             }
             override fun afterTextChanged(s: Editable?) {}
         })
 
-        binding.btnClearSearchSiswa.setOnClickListener {
+        binding.btnClearSearchSiswa.applyBounceEffect {
             binding.etSearchSiswaDialog.text?.clear()
         }
     }
@@ -129,6 +131,7 @@ class BottomSheetSiswaReadonlyDialog : BottomSheetDialogFragment() {
 
                     val mappedItems = mapStudentsToAttendance(siswaList)
                     studentAdapter.updateData(mappedItems)
+                    binding.rvSiswaDialog.scheduleLayoutAnimation()
 
                     binding.tvEmptySiswaDialog.visibility =
                         if (mappedItems.isEmpty()) View.VISIBLE else View.GONE

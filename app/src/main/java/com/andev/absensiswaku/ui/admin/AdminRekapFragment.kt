@@ -17,6 +17,8 @@ import com.andev.absensiswaku.data.network.RombelMapelResponse
 import com.andev.absensiswaku.data.network.SiswaExportResponse
 import com.andev.absensiswaku.data.network.SupabaseClient
 import com.andev.absensiswaku.databinding.FragmentAdminRekapBinding
+import com.andev.absensiswaku.util.MotionUtils
+import com.andev.absensiswaku.util.applyBounceEffect
 import com.google.android.material.snackbar.Snackbar
 import retrofit2.Call
 import retrofit2.Callback
@@ -58,6 +60,14 @@ class AdminRekapFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        MotionUtils.animateStaggeredEntrance(
+            binding.cardPeriodHariIni.parent.parent.parent as View,
+            binding.btnEksporXlsx.parent.parent as View,
+            binding.btnEksporPdf.parent.parent as View,
+            binding.btnEksporCsv.parent.parent as View,
+            binding.rvRiwayatUnduhan
+        )
+
         setupPeriodToggles()
         setupDropdownRombel()
         setupCheckboxFilter()
@@ -70,22 +80,22 @@ class AdminRekapFragment : Fragment() {
         val today = SimpleDateFormat("dd MMM yyyy", Locale.forLanguageTag("id-ID")).format(Date())
         binding.tvSubPeriodHariIni.text = today
 
-        binding.cardPeriodHariIni.setOnClickListener {
+        binding.cardPeriodHariIni.applyBounceEffect {
             selectedPeriod = PeriodType.HARI_INI
             updatePeriodSelection()
         }
 
-        binding.cardPeriodMingguan.setOnClickListener {
+        binding.cardPeriodMingguan.applyBounceEffect {
             selectedPeriod = PeriodType.MINGGUAN
             updatePeriodSelection()
         }
 
-        binding.cardPeriodBulanan.setOnClickListener {
+        binding.cardPeriodBulanan.applyBounceEffect {
             selectedPeriod = PeriodType.BULANAN
             updatePeriodSelection()
         }
 
-        binding.cardPeriodSemester.setOnClickListener {
+        binding.cardPeriodSemester.applyBounceEffect {
             selectedPeriod = PeriodType.SEMESTER
             updatePeriodSelection()
         }
@@ -171,7 +181,7 @@ class AdminRekapFragment : Fragment() {
 
     private fun setupCheckboxFilter() {
         var allChecked = true
-        binding.tvPilihSemuaFilter.setOnClickListener {
+        binding.tvPilihSemuaFilter.applyBounceEffect {
             allChecked = !allChecked
             binding.cbHadirOtomatis.isChecked = allChecked
             binding.cbIzinVerif.isChecked = allChecked
@@ -246,18 +256,19 @@ class AdminRekapFragment : Fragment() {
             )
         )
         riwayatAdapter.submitList(historyDownloads)
+        binding.rvRiwayatUnduhan.scheduleLayoutAnimation()
     }
 
     private fun setupExportButtons() {
-        binding.btnEksporXlsx.setOnClickListener {
+        binding.btnEksporXlsx.applyBounceEffect {
             performExport("XLSX")
         }
 
-        binding.btnEksporPdf.setOnClickListener {
+        binding.btnEksporPdf.applyBounceEffect {
             performExport("PDF")
         }
 
-        binding.btnEksporCsv.setOnClickListener {
+        binding.btnEksporCsv.applyBounceEffect {
             performExport("CSV")
         }
     }
@@ -523,6 +534,7 @@ class AdminRekapFragment : Fragment() {
                 uriString = uri.toString()
             )
             riwayatAdapter.addFirst(newHistory)
+            binding.rvRiwayatUnduhan.scheduleLayoutAnimation()
 
             Snackbar.make(
                 binding.root,

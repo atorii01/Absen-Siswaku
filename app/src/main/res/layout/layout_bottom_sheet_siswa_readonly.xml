@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:animateLayoutChanges="true"
     android:background="@drawable/bg_bottom_sheet"
     android:orientation="vertical"
     android:paddingBottom="24dp">
@@ -183,6 +184,7 @@
         android:layout_height="0dp"
         android:layout_marginTop="10dp"
         android:layout_weight="1"
+        android:layoutAnimation="@anim/layout_animation_cascading"
         android:clipToPadding="false"
         android:overScrollMode="never"
         android:paddingBottom="16dp"

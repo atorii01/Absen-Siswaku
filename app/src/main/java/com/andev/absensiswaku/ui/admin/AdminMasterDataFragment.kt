@@ -24,6 +24,8 @@ import com.andev.absensiswaku.data.network.SiswaAdminResponse
 import com.andev.absensiswaku.data.network.SupabaseClient
 import com.andev.absensiswaku.databinding.FragmentAdminMasterDataBinding
 import com.andev.absensiswaku.util.ExcelImportHelper
+import com.andev.absensiswaku.util.MotionUtils
+import com.andev.absensiswaku.util.applyBounceEffect
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import okhttp3.ResponseBody
 import retrofit2.Call
@@ -64,6 +66,14 @@ class AdminMasterDataFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        MotionUtils.animateStaggeredEntrance(
+            binding.btnTabSiswa.parent as View,
+            binding.tvMetricTotalSiswaMaster.parent.parent.parent as View,
+            binding.btnToggleTambahSiswa,
+            binding.btnImporExcel,
+            binding.rvDaftarSiswa
+        )
+
         setupSegmentedSwitcher()
         setupRecyclerViews()
         setupFormTambahSiswa()
@@ -73,11 +83,11 @@ class AdminMasterDataFragment : Fragment() {
     }
 
     private fun setupSegmentedSwitcher() {
-        binding.btnTabSiswa.setOnClickListener {
+        binding.btnTabSiswa.applyBounceEffect {
             switchTab(isSiswaTab = true)
         }
 
-        binding.btnTabRombel.setOnClickListener {
+        binding.btnTabRombel.applyBounceEffect {
             switchTab(isSiswaTab = false)
         }
     }
@@ -142,7 +152,7 @@ class AdminMasterDataFragment : Fragment() {
             isNestedScrollingEnabled = false
         }
 
-        binding.btnBuatKelas.setOnClickListener {
+        binding.btnBuatKelas.applyBounceEffect {
             val dialog = DialogTambahRombel {
                 // Refresh list rombel dan angka metrik rombel di dashboard admin
                 loadDataRombel()
@@ -153,7 +163,7 @@ class AdminMasterDataFragment : Fragment() {
     }
 
     private fun setupFormTambahSiswa() {
-        binding.btnToggleTambahSiswa.setOnClickListener {
+        binding.btnToggleTambahSiswa.applyBounceEffect {
             if (binding.cardFormTambahSiswa.visibility == View.VISIBLE && editingSiswaId == null) {
                 binding.cardFormTambahSiswa.visibility = View.GONE
             } else {
@@ -164,28 +174,28 @@ class AdminMasterDataFragment : Fragment() {
             }
         }
 
-        binding.btnTutupForm.setOnClickListener {
+        binding.btnTutupForm.applyBounceEffect {
             binding.cardFormTambahSiswa.visibility = View.GONE
             resetForm()
         }
 
-        binding.btnResetForm.setOnClickListener {
+        binding.btnResetForm.applyBounceEffect {
             resetForm()
         }
 
-        binding.btnGenderL.setOnClickListener {
+        binding.btnGenderL.applyBounceEffect {
             setGenderSelection("L")
         }
 
-        binding.btnGenderP.setOnClickListener {
+        binding.btnGenderP.applyBounceEffect {
             setGenderSelection("P")
         }
 
-        binding.btnUploadUlangWajah.setOnClickListener {
+        binding.btnUploadUlangWajah.applyBounceEffect {
             Toast.makeText(requireContext(), "Sensor Kamera AI Liveness siap memindai biometrik wajah", Toast.LENGTH_SHORT).show()
         }
 
-        binding.btnSimpanSiswa.setOnClickListener {
+        binding.btnSimpanSiswa.applyBounceEffect {
             saveSiswaData()
         }
     }
@@ -369,7 +379,7 @@ class AdminMasterDataFragment : Fragment() {
     }
 
     private fun setupImportExcelButton() {
-        binding.btnImporExcel.setOnClickListener {
+        binding.btnImporExcel.applyBounceEffect {
             val options = arrayOf(
                 "📥 Unduh Template Format Excel/CSV",
                 "📂 Pilih Berkas & Unggah Data Siswa"
@@ -574,6 +584,7 @@ class AdminMasterDataFragment : Fragment() {
                     val list = response.body() ?: emptyList()
                     allSiswaList = list
                     siswaAdapter.submitList(list)
+                    binding.rvDaftarSiswa.scheduleLayoutAnimation()
                     binding.tvCountSiswa.text = "Daftar Siswa Terverifikasi (${list.size} Ditampilkan)"
                     binding.rvDaftarSiswa.visibility = if (list.isNotEmpty()) View.VISIBLE else View.GONE
                     binding.layoutEmptyState.visibility = if (list.isNotEmpty()) View.GONE else View.VISIBLE
@@ -602,6 +613,7 @@ class AdminMasterDataFragment : Fragment() {
         // Update counts per class for RombelKelolaAdapter
         val countMap = allSiswaList.groupingBy { it.idKelas }.eachCount()
         rombelAdapter.submitData(allRombelList, countMap)
+        binding.rvDaftarRombel.scheduleLayoutAnimation()
 
         applyFilter(binding.etSearchSiswaMaster.text?.toString().orEmpty())
     }
@@ -613,7 +625,7 @@ class AdminMasterDataFragment : Fragment() {
             container.removeViewAt(1)
         }
 
-        binding.chipSemuaSiswa.setOnClickListener {
+        binding.chipSemuaSiswa.applyBounceEffect {
             selectedFilterKelasId = null
             updateChipStyles(binding.chipSemuaSiswa)
             applyFilter(binding.etSearchSiswaMaster.text?.toString().orEmpty())
@@ -640,7 +652,7 @@ class AdminMasterDataFragment : Fragment() {
                 }
                 layoutParams = params
 
-                setOnClickListener {
+                applyBounceEffect {
                     selectedFilterKelasId = rombel.id
                     updateChipStyles(this)
                     applyFilter(binding.etSearchSiswaMaster.text?.toString().orEmpty())
@@ -667,6 +679,7 @@ class AdminMasterDataFragment : Fragment() {
 
     private fun applyFilter(query: String) {
         siswaAdapter.filter(query, selectedFilterKelasId)
+        binding.rvDaftarSiswa.scheduleLayoutAnimation()
 
         val countShown = siswaAdapter.itemCount
         binding.tvCountSiswa.text = "Daftar Siswa Terverifikasi ($countShown Ditampilkan)"

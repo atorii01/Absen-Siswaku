@@ -29,6 +29,8 @@ import com.andev.absensiswaku.data.network.SiswaMiniResponse
 import com.andev.absensiswaku.data.network.SupabaseClient
 import com.andev.absensiswaku.data.pref.SessionManager
 import com.andev.absensiswaku.databinding.FragmentGuruRekapBinding
+import com.andev.absensiswaku.util.MotionUtils
+import com.andev.absensiswaku.util.applyBounceEffect
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import retrofit2.Call
@@ -103,6 +105,12 @@ class GuruRekapFragment : Fragment() {
 
         // Pemuatan data awal untuk XII RPL (ID 9)
         loadDataKelas(selectedRombelId, isRefreshing = false)
+
+        MotionUtils.animateStaggeredEntrance(
+            binding.cardProfilGuruRekap,
+            binding.scrollChipsKelas,
+            binding.btnUnduhRekap
+        )
     }
 
     override fun onDestroyView() {
@@ -168,8 +176,8 @@ class GuruRekapFragment : Fragment() {
         )
 
         chipMappings.forEach { (chipView, rombelId, namaKelas) ->
-            chipView.setOnClickListener {
-                if (selectedRombelId == rombelId) return@setOnClickListener
+            chipView.applyBounceEffect {
+                if (selectedRombelId == rombelId) return@applyBounceEffect
 
                 selectedRombelId = rombelId
                 updateChipsVisual(chipMappings, chipView, namaKelas)
@@ -203,11 +211,11 @@ class GuruRekapFragment : Fragment() {
     }
 
     private fun setupActionButtons() {
-        binding.btnUnduhRekap.setOnClickListener {
+        binding.btnUnduhRekap.applyBounceEffect {
             showPilihanUnduhDialog()
         }
 
-        binding.btnSyncRekap.setOnClickListener {
+        binding.btnSyncRekap.applyBounceEffect {
             binding.ivRefreshIcon.animate()
                 .rotationBy(360f)
                 .setDuration(600)
@@ -929,6 +937,7 @@ class GuruRekapFragment : Fragment() {
         // Update List Siswa Realtime
         binding.tvCountSiswaRealtime.text = "$totalKapasitas Siswa"
         siswaAdapter.updateData(studentItems)
+        binding.rvSiswaRealtime.scheduleLayoutAnimation()
 
         binding.tvEmptySiswaRealtime.visibility =
             if (studentItems.isEmpty()) View.VISIBLE else View.GONE
@@ -1010,5 +1019,6 @@ class GuruRekapFragment : Fragment() {
         }
 
         riwayatAdapter.updateData(riwayatList)
+        binding.rvRiwayatKelas.scheduleLayoutAnimation()
     }
 }

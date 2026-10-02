@@ -12,6 +12,7 @@ import com.andev.absensiswaku.data.network.RombelMapelResponse
 import com.andev.absensiswaku.data.network.SiswaMiniResponse
 import com.andev.absensiswaku.data.network.SupabaseClient
 import com.andev.absensiswaku.databinding.LayoutBottomSheetAuditBinding
+import com.andev.absensiswaku.util.applyBounceEffect
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import retrofit2.Call
 import retrofit2.Callback
@@ -72,7 +73,7 @@ class BottomSheetAuditPresensiDialog : BottomSheetDialogFragment() {
         binding.tvAuditDialogTitle.text = "Audit Biometrik & Geofence - $namaKelas"
         binding.tvAuditDialogSubtitle.text = "Radius Gerbang SMKN 8 Jakarta (50m) • Lokasi -6.275520, 106.837890"
 
-        binding.btnCloseAuditDialog.setOnClickListener {
+        binding.btnCloseAuditDialog.applyBounceEffect {
             dismiss()
         }
     }
@@ -91,6 +92,7 @@ class BottomSheetAuditPresensiDialog : BottomSheetDialogFragment() {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                 auditAdapter.filter(s?.toString().orEmpty())
+                binding.rvSiswaAudit.scheduleLayoutAnimation()
             }
             override fun afterTextChanged(s: Editable?) {}
         })
@@ -152,6 +154,7 @@ class BottomSheetAuditPresensiDialog : BottomSheetDialogFragment() {
                                 binding.layoutEmptyAudit.visibility = View.GONE
                                 binding.rvSiswaAudit.visibility = View.VISIBLE
                                 auditAdapter.submitList(auditItems)
+                                binding.rvSiswaAudit.scheduleLayoutAnimation()
                             }
                         }
 
@@ -188,6 +191,7 @@ class BottomSheetAuditPresensiDialog : BottomSheetDialogFragment() {
             binding.rvSiswaAudit.visibility = View.VISIBLE
             binding.tvAuditSummaryBanner.text = "● 0 Siswa Terverifikasi AI & GPS • 0 Mock Location"
             auditAdapter.submitList(items)
+            binding.rvSiswaAudit.scheduleLayoutAnimation()
         }
     }
 

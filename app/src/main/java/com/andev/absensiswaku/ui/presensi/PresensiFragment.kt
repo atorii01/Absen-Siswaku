@@ -32,6 +32,8 @@ import com.andev.absensiswaku.R
 import com.andev.absensiswaku.data.network.SupabaseClient
 import com.andev.absensiswaku.data.pref.SessionManager
 import com.andev.absensiswaku.databinding.FragmentPresensiBinding
+import com.andev.absensiswaku.util.MotionUtils
+import com.andev.absensiswaku.util.applyBounceEffect
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
@@ -153,6 +155,14 @@ class PresensiFragment : Fragment() {
         startLiveClock()
         updateFaceWarningBadge(FaceWarningBadgeState.NOT_DETECTED)
         checkAndRequestPermissions()
+
+        MotionUtils.animateStaggeredEntrance(
+            binding.cardStatusTanggal,
+            binding.cardCameraContainer,
+            binding.cardGpsStatus,
+            binding.cardVerifiedInfo,
+            binding.btnSubmitPresensi
+        )
     }
 
     override fun onResume() {
@@ -700,8 +710,8 @@ class PresensiFragment : Fragment() {
     }
 
     private fun setupCameraControls() {
-        binding.btnFlashlight.setOnClickListener {
-            val ctx = context ?: return@setOnClickListener
+        binding.btnFlashlight.applyBounceEffect {
+            val ctx = context ?: return@applyBounceEffect
             if (camera?.cameraInfo?.hasFlashUnit() == true) {
                 isTorchOn = !isTorchOn
                 camera?.cameraControl?.enableTorch(isTorchOn)
@@ -714,7 +724,7 @@ class PresensiFragment : Fragment() {
             }
         }
 
-        binding.btnSwitchCamera.setOnClickListener {
+        binding.btnSwitchCamera.applyBounceEffect {
             cameraSelector = if (cameraSelector == CameraSelector.DEFAULT_FRONT_CAMERA) {
                 CameraSelector.DEFAULT_BACK_CAMERA
             } else {
@@ -723,8 +733,8 @@ class PresensiFragment : Fragment() {
             startCamera()
         }
 
-        binding.btnShutter.setOnClickListener {
-            val ctx = context ?: return@setOnClickListener
+        binding.btnShutter.applyBounceEffect {
+            val ctx = context ?: return@applyBounceEffect
             if (isFaceDetected && isFaceInsideCircle) {
                 val scoreStr = String.format(Locale.US, "%.1f", lastBiometricScore)
                 Toast.makeText(ctx, "Wajah Terdeteksi! Skor AI Match: $scoreStr%", Toast.LENGTH_SHORT).show()
@@ -737,27 +747,27 @@ class PresensiFragment : Fragment() {
     }
 
     private fun setupSubmitButton() {
-        binding.btnSubmitPresensi.setOnClickListener {
-            val ctx = context ?: return@setOnClickListener
+        binding.btnSubmitPresensi.applyBounceEffect {
+            val ctx = context ?: return@applyBounceEffect
 
             if (isAlreadyPresensi) {
                 Toast.makeText(ctx, "Anda sudah melakukan presensi masuk untuk hari ini. Presensi dibuka kembali besok pagi.", Toast.LENGTH_LONG).show()
-                return@setOnClickListener
+                return@applyBounceEffect
             }
 
             if (isMockLocationDetected) {
                 Toast.makeText(ctx, "Presensi ditolak: Terdeteksi penggunaan Fake GPS / Lokasi Tiruan!", Toast.LENGTH_LONG).show()
-                return@setOnClickListener
+                return@applyBounceEffect
             }
 
             if (!isFaceDetected) {
                 Toast.makeText(ctx, "Presensi ditolak: Wajah wajib terdeteksi kamera!", Toast.LENGTH_LONG).show()
-                return@setOnClickListener
+                return@applyBounceEffect
             }
 
             if (!isFaceInsideCircle) {
                 Toast.makeText(ctx, "Presensi ditolak: Posisikan wajah Anda tepat di dalam lingkaran panduan hijau!", Toast.LENGTH_LONG).show()
-                return@setOnClickListener
+                return@applyBounceEffect
             }
 
             val calendar = Calendar.getInstance(TimeZone.getTimeZone("Asia/Jakarta"))

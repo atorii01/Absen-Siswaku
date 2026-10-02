@@ -23,6 +23,8 @@ import com.andev.absensiswaku.data.network.SupabaseClient
 import com.andev.absensiswaku.data.pref.SessionManager
 import com.andev.absensiswaku.databinding.FragmentWalasSiswaBinding
 import com.andev.absensiswaku.util.ExcelImportHelper
+import com.andev.absensiswaku.util.MotionUtils
+import com.andev.absensiswaku.util.applyBounceEffect
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.andev.absensiswaku.ui.admin.DialogTambahRombel
 import okhttp3.ResponseBody
@@ -77,6 +79,13 @@ class WalasSiswaFragment : Fragment() {
         setupRecyclerView()
         setupSearchAndFilterChips()
         loadDataSiswaFromSupabase()
+
+        MotionUtils.animateStaggeredEntrance(
+            binding.tvSubteksHeader,
+            binding.layoutMetrikSiswa,
+            binding.btnTabKelolaSiswa,
+            binding.btnTambahSiswaBaru
+        )
     }
 
     override fun onResume() {
@@ -129,10 +138,10 @@ class WalasSiswaFragment : Fragment() {
     private fun setupSwitcherTab() {
         setTabActive(isSiswaActive = true)
 
-        binding.btnTabKelolaSiswa.setOnClickListener {
+        binding.btnTabKelolaSiswa.applyBounceEffect {
             setTabActive(isSiswaActive = true)
         }
-        binding.btnTabKelolaRombel.setOnClickListener {
+        binding.btnTabKelolaRombel.applyBounceEffect {
             setTabActive(isSiswaActive = false)
         }
     }
@@ -165,12 +174,12 @@ class WalasSiswaFragment : Fragment() {
 
     private fun setupActionButtons() {
         // Tombol Tambah Siswa Baru (Buka / tutup cardFormEntri)
-        binding.btnTambahSiswaBaru.setOnClickListener {
+        binding.btnTambahSiswaBaru.applyBounceEffect {
             toggleFormEntri(true)
         }
 
         // Tombol Impor Excel
-        binding.btnImporExcel.setOnClickListener {
+        binding.btnImporExcel.applyBounceEffect {
             val options = arrayOf(
                 "📥 Unduh Template Format Excel/CSV",
                 "📂 Pilih Berkas & Unggah Data Siswa"
@@ -192,7 +201,7 @@ class WalasSiswaFragment : Fragment() {
         }
 
         // Tombol Buat Kelas
-        binding.btnBuatKelas.setOnClickListener {
+        binding.btnBuatKelas.applyBounceEffect {
             val dialog = DialogTambahRombel {
                 loadDataSiswaFromSupabase()
             }
@@ -200,7 +209,7 @@ class WalasSiswaFragment : Fragment() {
         }
 
         // Ikon Gerigi Setelan Rombel Binaan Walas
-        binding.btnSettingRombelWalas.setOnClickListener {
+        binding.btnSettingRombelWalas.applyBounceEffect {
             showRombelSettingDialog()
         }
     }
@@ -338,15 +347,15 @@ class WalasSiswaFragment : Fragment() {
     }
 
     private fun setupFormEntri() {
-        binding.btnCollapseForm.setOnClickListener {
+        binding.btnCollapseForm.applyBounceEffect {
             toggleFormEntri(false)
         }
 
-        binding.btnResetForm.setOnClickListener {
+        binding.btnResetForm.applyBounceEffect {
             resetFormEntri()
         }
 
-        binding.btnUnggahUlangWajah.setOnClickListener {
+        binding.btnUnggahUlangWajah.applyBounceEffect {
             Toast.makeText(
                 requireContext(),
                 "Kamera verifikasi biometrik wajah siswa disiapkan.",
@@ -354,7 +363,7 @@ class WalasSiswaFragment : Fragment() {
             ).show()
         }
 
-        binding.btnSimpanSiswa.setOnClickListener {
+        binding.btnSimpanSiswa.applyBounceEffect {
             simpanDataSiswaKeSupabase()
         }
     }
@@ -413,17 +422,17 @@ class WalasSiswaFragment : Fragment() {
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
         })
 
-        binding.chipFilterSemua.setOnClickListener {
+        binding.chipFilterSemua.applyBounceEffect {
             setChipFilterSelected(0)
             siswaAdapter.filterByGender("ALL")
         }
 
-        binding.chipFilterLaki.setOnClickListener {
+        binding.chipFilterLaki.applyBounceEffect {
             setChipFilterSelected(1)
             siswaAdapter.filterByGender("L")
         }
 
-        binding.chipFilterPerempuan.setOnClickListener {
+        binding.chipFilterPerempuan.applyBounceEffect {
             setChipFilterSelected(2)
             siswaAdapter.filterByGender("P")
         }
@@ -471,6 +480,7 @@ class WalasSiswaFragment : Fragment() {
 
                     // 1. Update adapter RecyclerView
                     siswaAdapter.submitList(listSiswa)
+                    binding.rvDaftarSiswa.scheduleLayoutAnimation()
 
                     // 2. Hitung statistik laki-laki dan perempuan dinamis
                     val countL = listSiswa.count {
@@ -506,6 +516,7 @@ class WalasSiswaFragment : Fragment() {
 
                     val listSiswa = createInitialFallbackStudents()
                     siswaAdapter.submitList(listSiswa)
+                    binding.rvDaftarSiswa.scheduleLayoutAnimation()
 
                     val countL = listSiswa.count {
                         val jk = it.jenisKelamin?.uppercase().orEmpty()

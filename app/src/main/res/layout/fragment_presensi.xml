@@ -13,8 +13,10 @@
         android:scrollbars="none">
 
         <LinearLayout
+            android:id="@+id/llPresensiContent"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:animateLayoutChanges="true"
             android:clipToPadding="false"
             android:orientation="vertical"
             android:paddingHorizontal="16dp"
@@ -104,6 +106,7 @@
 
             <!-- Baris Status & Tanggal Hari Ini -->
             <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardStatusTanggal"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="14dp"
@@ -228,6 +231,7 @@
 
             <!-- ================= 2b. FRAME KAMERA & DETEKSI AI ================= -->
             <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardCameraContainer"
                 android:layout_width="match_parent"
                 android:layout_height="380dp"
                 android:layout_marginTop="14dp"
@@ -402,6 +406,7 @@
 
             <!-- ================= 2c. KARTU STATUS WAKTU & GEOFENCING GPS ================= -->
             <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardGpsStatus"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="14dp"
@@ -607,6 +612,7 @@
 
             <!-- ================= 2d. KARTU PRESENSI TERVERIFIKASI OTOMATIS ================= -->
             <LinearLayout
+                android:id="@+id/cardVerifiedInfo"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="14dp"

@@ -18,6 +18,9 @@ import com.andev.absensiswaku.data.network.SupabaseClient
 import com.andev.absensiswaku.data.network.UserResponse
 import com.andev.absensiswaku.data.pref.SessionManager
 import com.andev.absensiswaku.databinding.ActivityLoginBinding
+import com.andev.absensiswaku.util.MotionUtils
+import com.andev.absensiswaku.util.applyBounceEffect
+import android.transition.TransitionManager
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -68,22 +71,35 @@ class LoginActivity : AppCompatActivity() {
         setupRoleSwitcher()
         loadSavedCredentials() // Prefill data tersimpan jika remember me aktif
         setupClickListeners()
+
+        // Fluid Micro-Interactions: Waterfall Staggered Entrance
+        MotionUtils.animateStaggeredEntrance(
+            binding.flHeaderIcon,
+            binding.tvAppTitle,
+            binding.tvSubtitle,
+            binding.containerRoleToggle,
+            binding.cardFormContainer,
+            binding.btnLogin,
+            binding.btnGoogleAuth
+        )
     }
 
     // ======================================================================
     // 2. LOGIKA KOTLIN: ANTI-GLITCH TAB SWITCHER
     // ======================================================================
     private fun setupRoleSwitcher() {
-        binding.cardTabSiswa.setOnClickListener {
+        binding.cardTabSiswa.applyBounceEffect {
             applyTabSelection(isSiswa = true)
         }
 
-        binding.cardTabGuru.setOnClickListener {
+        binding.cardTabGuru.applyBounceEffect {
             applyTabSelection(isSiswa = false)
         }
     }
 
     private fun applyTabSelection(isSiswa: Boolean) {
+        TransitionManager.beginDelayedTransition(binding.cardFormContainer)
+
         if (isSiswa) {
             selectedRoleTab = "SISWA"
 
@@ -192,47 +208,11 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun setupClickListeners() {
-        binding.btnLogin.setOnClickListener {
-            clearErrors()
-
-            if (selectedRoleTab == "SISWA") {
-                val nisn = binding.etNisnSiswa.text.toString().trim()
-                val pin = binding.etPinSiswa.text.toString().trim()
-
-                var isValid = true
-                if (nisn.isEmpty()) {
-                    binding.layoutNisnSiswa.error = "NISN Siswa wajib diisi"
-                    isValid = false
-                }
-                if (pin.isEmpty()) {
-                    binding.layoutPinSiswa.error = "PIN Presensi wajib diisi"
-                    isValid = false
-                }
-
-                if (isValid) {
-                    performSiswaLogin(nisn, pin)
-                }
-            } else {
-                val nip = binding.etNipGuru.text.toString().trim()
-                val password = binding.etPasswordGuru.text.toString().trim()
-
-                var isValid = true
-                if (nip.isEmpty()) {
-                    binding.layoutNipGuru.error = "NIP atau Username Guru wajib diisi"
-                    isValid = false
-                }
-                if (password.isEmpty()) {
-                    binding.layoutPasswordGuru.error = "Password wajib diisi"
-                    isValid = false
-                }
-
-                if (isValid) {
-                    performGuruLogin(nip, password)
-                }
-            }
+        binding.btnLogin.applyBounceEffect {
+            prosesLogin()
         }
 
-        binding.btnGoogleAuth.setOnClickListener {
+        binding.btnGoogleAuth.applyBounceEffect {
             Toast.makeText(
                 this,
                 "Login Akun Belajar.id akan segera hadir",
@@ -240,12 +220,52 @@ class LoginActivity : AppCompatActivity() {
             ).show()
         }
 
-        binding.llFooterHelp.setOnClickListener {
+        binding.llFooterHelp.applyBounceEffect {
             Toast.makeText(
                 this,
                 "Layanan Bantuan SMKN 8 Jakarta: hubungi Admin Presensi di sekolah",
                 Toast.LENGTH_LONG
             ).show()
+        }
+    }
+
+    private fun prosesLogin() {
+        clearErrors()
+
+        if (selectedRoleTab == "SISWA") {
+            val nisn = binding.etNisnSiswa.text.toString().trim()
+            val pin = binding.etPinSiswa.text.toString().trim()
+
+            var isValid = true
+            if (nisn.isEmpty()) {
+                binding.layoutNisnSiswa.error = "NISN Siswa wajib diisi"
+                isValid = false
+            }
+            if (pin.isEmpty()) {
+                binding.layoutPinSiswa.error = "PIN Presensi wajib diisi"
+                isValid = false
+            }
+
+            if (isValid) {
+                performSiswaLogin(nisn, pin)
+            }
+        } else {
+            val nip = binding.etNipGuru.text.toString().trim()
+            val password = binding.etPasswordGuru.text.toString().trim()
+
+            var isValid = true
+            if (nip.isEmpty()) {
+                binding.layoutNipGuru.error = "NIP atau Username Guru wajib diisi"
+                isValid = false
+            }
+            if (password.isEmpty()) {
+                binding.layoutPasswordGuru.error = "Password wajib diisi"
+                isValid = false
+            }
+
+            if (isValid) {
+                performGuruLogin(nip, password)
+            }
         }
     }
 
