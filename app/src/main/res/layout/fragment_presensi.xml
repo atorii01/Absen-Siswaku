@@ -252,8 +252,8 @@
                     <!-- Biometric Face Oval & Focus Brackets Overlay View -->
                     <com.andev.absensiswaku.ui.custom.BiometricOverlayView
                         android:id="@+id/biometricOverlay"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent" />
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
 
                     <!-- Top Overlay Chips -->
                     <LinearLayout
@@ -307,8 +307,8 @@
                             app:strokeWidth="1dp">
 
                             <LinearLayout
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
+                                android:layout_width="152dp"
+                                android:layout_height="match_parent"
                                 android:gravity="center_vertical"
                                 android:orientation="horizontal"
                                 android:paddingHorizontal="12dp"
@@ -334,7 +334,7 @@
                                     android:shadowDx="1"
                                     android:shadowDy="1"
                                     android:shadowRadius="2"
-                                    android:text="Wajah Di Luar Lingkaran"
+                                    android:text="Tidak Terdeteksi"
                                     android:textColor="@color/white"
                                     android:textSize="12sp"
                                     android:textStyle="bold" />
