@@ -371,14 +371,14 @@
                             android:layout_height="1dp"
                             android:layout_weight="1" />
 
-                        <!-- Tengah: Shutter Jepret Kamera -->
+                        <!-- Tengah: Tombol Shutter / Ambil Foto -->
                         <ImageButton
                             android:id="@+id/btnShutter"
-                            android:layout_width="64dp"
-                            android:layout_height="64dp"
+                            android:layout_width="56dp"
+                            android:layout_height="56dp"
                             android:background="@drawable/bg_shutter_btn"
-                            android:contentDescription="Jepret Wajah"
-                            android:padding="16dp"
+                            android:contentDescription="Tombol Shutter"
+                            android:padding="12dp"
                             android:src="@drawable/ic_shutter"
                             app:tint="@color/white" />
 
