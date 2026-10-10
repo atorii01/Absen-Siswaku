@@ -9,7 +9,7 @@ import java.util.concurrent.TimeUnit
 
 object SupabaseClient {
 
-    const val BASE_URL = "https://dxqrthdweyxynqjvlpvl.supabase.co/rest/v1/"
+    const val BASE_URL = "KEPO"
     private const val ANON_KEY =
         "Kepo"
 
