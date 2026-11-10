@@ -95,12 +95,29 @@
         </LinearLayout>
     </LinearLayout>
 
-    <!-- 3 Tombol Aksi di Kanan: Edit, Mutasi, Hapus -->
+    <!-- 4 Tombol Aksi di Kanan: Chat WA Ortu, Edit, Mutasi, Hapus -->
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:gravity="center_vertical"
         android:orientation="horizontal">
+
+        <!-- Tombol 0: Chat WhatsApp Ortu (Ikon WA Hijau) -->
+        <FrameLayout
+            android:id="@+id/btnChatOrtu"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true">
+
+            <ImageView
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:layout_gravity="center"
+                android:contentDescription="Hubungi Orang Tua via WhatsApp"
+                android:src="@drawable/ic_whatsapp" />
+        </FrameLayout>
 
         <!-- Tombol 1: Edit Data Siswa (Pensil Biru) -->
         <FrameLayout

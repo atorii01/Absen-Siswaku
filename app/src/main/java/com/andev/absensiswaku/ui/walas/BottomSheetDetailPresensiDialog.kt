@@ -103,7 +103,14 @@ class BottomSheetDetailPresensiDialog : BottomSheetDialogFragment() {
 
     private fun setupRecyclerView() {
         adapter = DetailSiswaPresensiAdapter { item ->
-            // Klik item siswa jika diperlukan info lebih lanjut
+            com.andev.absensiswaku.util.WhatsAppHelper.tampilkanDialogHubungiOrtu(
+                context = requireContext(),
+                namaSiswa = item.namaLengkap,
+                namaKelas = namaKelas,
+                statusKehadiran = item.status,
+                keteranganWaktu = item.subteks,
+                noWaOrtu = item.noWaOrtu
+            )
         }
         binding.rvDetailSiswaPresensi.apply {
             layoutManager = LinearLayoutManager(requireContext())
@@ -341,7 +348,8 @@ class BottomSheetDetailPresensiDialog : BottomSheetDialogFragment() {
                             status = "TERLAMBAT",
                             badgeLabel = "Terlambat",
                             badgeBgResId = R.drawable.bg_badge_terlambat,
-                            badgeTextColor = Color.parseColor("#B45309")
+                            badgeTextColor = Color.parseColor("#B45309"),
+                            noWaOrtu = siswa.displayNoWa
                         )
                     } else if (statusDb.equals("Izin", true) || statusDb.equals("Sakit", true)) {
                         countIzin++
@@ -357,7 +365,8 @@ class BottomSheetDetailPresensiDialog : BottomSheetDialogFragment() {
                             status = "IZIN",
                             badgeLabel = jenis,
                             badgeBgResId = R.drawable.bg_badge_izin,
-                            badgeTextColor = Color.parseColor("#1D4ED8")
+                            badgeTextColor = Color.parseColor("#1D4ED8"),
+                            noWaOrtu = siswa.displayNoWa
                         )
                     } else {
                         // Default Hadir / TEPAT_WAKTU
@@ -372,7 +381,8 @@ class BottomSheetDetailPresensiDialog : BottomSheetDialogFragment() {
                             status = "HADIR",
                             badgeLabel = "Hadir",
                             badgeBgResId = R.drawable.bg_badge_hadir,
-                            badgeTextColor = Color.parseColor("#15803D")
+                            badgeTextColor = Color.parseColor("#15803D"),
+                            noWaOrtu = siswa.displayNoWa
                         )
                     }
                 }
@@ -392,7 +402,8 @@ class BottomSheetDetailPresensiDialog : BottomSheetDialogFragment() {
                         status = "IZIN",
                         badgeLabel = jenis,
                         badgeBgResId = R.drawable.bg_badge_izin,
-                        badgeTextColor = Color.parseColor("#1D4ED8")
+                        badgeTextColor = Color.parseColor("#1D4ED8"),
+                        noWaOrtu = siswa.displayNoWa
                     )
                 }
 
@@ -409,7 +420,8 @@ class BottomSheetDetailPresensiDialog : BottomSheetDialogFragment() {
                         status = "ALPA",
                         badgeLabel = "Alpa",
                         badgeBgResId = R.drawable.bg_badge_alpa,
-                        badgeTextColor = Color.parseColor("#DC2626")
+                        badgeTextColor = Color.parseColor("#DC2626"),
+                        noWaOrtu = siswa.displayNoWa
                     )
                 }
             }

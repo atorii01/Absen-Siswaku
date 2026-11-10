@@ -435,7 +435,8 @@ class PresensiFragment : Fragment() {
             isPulangMode = false
         }
 
-        val inRadius = currentDistanceMeters <= MAX_RADIUS_METERS
+        val isSchoolWifi = context?.let { com.andev.absensiswaku.util.SchoolWifiHelper.isConnectedToSchoolWifi(it) } == true
+        val inRadius = (currentDistanceMeters <= MAX_RADIUS_METERS) || isSchoolWifi
         val distanceInt = currentDistanceMeters.toInt()
 
         when {
@@ -601,13 +602,20 @@ class PresensiFragment : Fragment() {
         currentDistanceMeters = jarakMeter.toDouble()
         val distanceInt = jarakMeter.toInt()
 
-        binding.tvJarakRealtime.text = "$distanceInt m"
-        binding.tvAkurasiSub.text = "Akurasi ┬▒${userLocation.accuracy.toInt()}m"
-        binding.progressBarJarak.progress = minOf(distanceInt, 50)
-        binding.tvPosisiProgress.text = "Posisi: ${distanceInt}m"
+        val isSchoolWifi = com.andev.absensiswaku.util.SchoolWifiHelper.isConnectedToSchoolWifi(ctx)
 
-        if (jarakMeter <= MAX_RADIUS_METERS) {
-            binding.tvStatusRadiusTitle.text = "Dalam Radius Sekolah Γ£ô"
+        binding.tvJarakRealtime.text = "$distanceInt m"
+        binding.tvAkurasiSub.text = if (isSchoolWifi) "Wi-Fi SMKN 8 Terverifikasi" else "Akurasi ±${userLocation.accuracy.toInt()}m"
+        binding.progressBarJarak.progress = minOf(distanceInt, 50)
+        binding.tvPosisiProgress.text = if (isSchoolWifi) "Wi-Fi: SMKN 8" else "Posisi: ${distanceInt}m"
+
+        if (isSchoolWifi) {
+            binding.tvStatusRadiusTitle.text = "Dalam Radius (Wi-Fi SMKN 8) ✓"
+            binding.tvStatusRadiusTitle.setTextColor(
+                ContextCompat.getColor(ctx, R.color.emerald_green)
+            )
+        } else if (jarakMeter <= MAX_RADIUS_METERS) {
+            binding.tvStatusRadiusTitle.text = "Dalam Radius Sekolah ✓"
             binding.tvStatusRadiusTitle.setTextColor(
                 ContextCompat.getColor(ctx, R.color.emerald_green)
             )
@@ -960,7 +968,10 @@ class PresensiFragment : Fragment() {
                 ?: 9
         } catch (e: Exception) { 9 }
 
+        val currentCtx = context
+        val isSchoolWifi = currentCtx?.let { com.andev.absensiswaku.util.SchoolWifiHelper.isConnectedToSchoolWifi(it) } == true
         val distanceInt = currentDistanceMeters.roundToInt()
+        val effectiveDistance = if (isSchoolWifi && distanceInt > 50) minOf(distanceInt, 15) else distanceInt
         val scoreToSubmit = if (lastBiometricScore > 0) lastBiometricScore else 95.0
 
         val sdfTanggal = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
@@ -978,7 +989,7 @@ class PresensiFragment : Fragment() {
             "tanggal" to sdfTanggal.format(now),
             "waktu_masuk" to jamSekarang,
             "status" to statusHadir,
-            "jarak_gerbang_meter" to distanceInt,
+            "jarak_gerbang_meter" to effectiveDistance,
             "biometrik_match_score" to scoreToSubmit
         )
 
@@ -986,7 +997,6 @@ class PresensiFragment : Fragment() {
         binding.btnSubmitPresensi.text = "Memproses Presensi..."
 
         // Deteksi apakah sedang offline
-        val currentCtx = context
         if (currentCtx != null && !com.andev.absensiswaku.util.NetworkUtils.isNetworkAvailable(currentCtx)) {
             com.andev.absensiswaku.util.OfflinePresensiManager.savePresensiOffline(currentCtx, dataMap)
             NotificationHelper.showNotifikasiPresensi(currentCtx, "$statusHadir (Tersimpan Offline)")

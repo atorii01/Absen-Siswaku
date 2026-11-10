@@ -17,11 +17,16 @@ data class SiswaMiniResponse(
     val nik: String? = null,
     @SerializedName("jenis_kelamin")
     val jenisKelamin: String? = null,
+    @SerializedName("no_wa_orang_tua")
+    val noWaOrangTua: String? = null,
     @SerializedName("no_whatsapp_wali")
     val noWhatsappWali: String? = null,
     @SerializedName("status_aktif")
     val statusAktif: Boolean? = true
 ) {
+    val displayNoWa: String?
+        get() = noWaOrangTua?.takeIf { it.isNotBlank() }
+            ?: noWhatsappWali?.takeIf { it.isNotBlank() }
     val initialLetters: String
         get() {
             val name = namaLengkap?.trim().orEmpty()

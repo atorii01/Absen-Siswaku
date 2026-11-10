@@ -14,7 +14,8 @@ class SiswaKelolaAdapter(
     private val defaultNamaKelas: String = "XII RPL",
     private val onEditClick: (SiswaKelolaResponse) -> Unit,
     private val onMutasiClick: (SiswaKelolaResponse) -> Unit,
-    private val onHapusClick: (SiswaKelolaResponse) -> Unit
+    private val onHapusClick: (SiswaKelolaResponse) -> Unit,
+    private val onChatOrtuClick: ((SiswaKelolaResponse) -> Unit)? = null
 ) : RecyclerView.Adapter<SiswaKelolaAdapter.SiswaViewHolder>() {
 
     private var fullList: List<SiswaKelolaResponse> = emptyList()
@@ -76,7 +77,22 @@ class SiswaKelolaAdapter(
                 ?: defaultNamaKelas
             tvBadgeRombelSiswa.text = kelasText
 
-            // 4. Tombol Aksi: Edit, Mutasi Rombel, Hapus Siswa
+            // 4. Tombol Aksi: Chat WA Ortu, Edit, Mutasi Rombel, Hapus Siswa
+            btnChatOrtu.setOnClickListener {
+                if (onChatOrtuClick != null) {
+                    onChatOrtuClick.invoke(item)
+                } else {
+                    com.andev.absensiswaku.util.WhatsAppHelper.tampilkanDialogHubungiOrtu(
+                        context = context,
+                        namaSiswa = item.namaLengkap ?: "Siswa",
+                        namaKelas = kelasText,
+                        statusKehadiran = if (item.statusAktif != false) "Aktif" else "Nonaktif",
+                        keteranganWaktu = "Data Pokok Siswa",
+                        noWaOrtu = item.displayNoWa
+                    )
+                }
+            }
+
             btnEditSiswa.setOnClickListener {
                 onEditClick(item)
             }

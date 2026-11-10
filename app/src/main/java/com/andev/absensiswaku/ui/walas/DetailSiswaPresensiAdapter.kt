@@ -18,7 +18,8 @@ data class SiswaDetailPresensiItem(
     val status: String = "HADIR", // "HADIR", "TERLAMBAT", "IZIN", "SAKIT", "ALPA"
     val badgeLabel: String = "Hadir",
     val badgeBgResId: Int = R.drawable.bg_badge_hadir,
-    val badgeTextColor: Int = Color.parseColor("#15803D")
+    val badgeTextColor: Int = Color.parseColor("#15803D"),
+    val noWaOrtu: String? = null
 )
 
 class DetailSiswaPresensiAdapter(
