@@ -57,6 +57,12 @@ class AdminPresensiFragment : Fragment() {
         setupRecyclerView()
         setupFilterChips()
         setupBroadcastButton()
+
+        binding.swipeRefreshAdminPresensi.setColorSchemeResources(R.color.primary_teal)
+        binding.swipeRefreshAdminPresensi.setOnRefreshListener {
+            loadDataFromSupabase()
+        }
+
         loadDataFromSupabase()
 
         MotionUtils.animateStaggeredEntrance(
@@ -230,6 +236,7 @@ class AdminPresensiFragment : Fragment() {
                 override fun onFailure(call: Call<List<RombelMapelResponse>>, t: Throwable) {
                     if (!isAdded || _binding == null) return
                     binding.progressBarAdmin.visibility = View.GONE
+                    binding.swipeRefreshAdminPresensi.isRefreshing = false
                     Toast.makeText(requireContext(), "Gagal memuat rombel: ${t.localizedMessage}", Toast.LENGTH_SHORT).show()
                 }
             })
@@ -266,6 +273,7 @@ class AdminPresensiFragment : Fragment() {
                 ) {
                     if (!isAdded || _binding == null) return
                     binding.progressBarAdmin.visibility = View.GONE
+                    binding.swipeRefreshAdminPresensi.isRefreshing = false
                     izinDisetujuiList = response.body().orEmpty()
                     calculateAccumulation(todayDate)
                 }
@@ -273,6 +281,7 @@ class AdminPresensiFragment : Fragment() {
                 override fun onFailure(call: Call<List<PengajuanIzinResponse>>, t: Throwable) {
                     if (!isAdded || _binding == null) return
                     binding.progressBarAdmin.visibility = View.GONE
+                    binding.swipeRefreshAdminPresensi.isRefreshing = false
                     izinDisetujuiList = emptyList()
                     calculateAccumulation(todayDate)
                 }

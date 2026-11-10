@@ -168,6 +168,15 @@ class PresensiFragment : Fragment() {
         updateFaceWarningBadge(FaceWarningBadgeState.NOT_DETECTED)
         checkAndRequestPermissions()
 
+        binding.swipeRefreshPresensi.setColorSchemeResources(R.color.primary_teal)
+        binding.swipeRefreshPresensi.setOnRefreshListener {
+            checkDailyPresensiStatus()
+            startLocationUpdates()
+            view?.postDelayed({
+                _binding?.swipeRefreshPresensi?.isRefreshing = false
+            }, 1200)
+        }
+
         MotionUtils.animateStaggeredEntrance(
             binding.cardStatusTanggal,
             binding.cardCameraContainer,
@@ -221,6 +230,7 @@ class PresensiFragment : Fragment() {
                 response: Response<List<Map<String, Any>>>
             ) {
                 if (!isAdded || _binding == null) return
+                binding.swipeRefreshPresensi.isRefreshing = false
 
                 if (response.isSuccessful && !response.body().isNullOrEmpty()) {
                     val record = response.body()!![0]
@@ -232,32 +242,27 @@ class PresensiFragment : Fragment() {
                     todayWaktuPulang = if (hasPulang) pulangVal else null
 
                     isAlreadyPresensi = true
-                    isAlreadyPulang = hasPulang
+                    isAlreadyPulang = true
 
-                    if (hasPulang) {
-                        binding.tvBadgeStatusPresensi.apply {
-                            text = "PRESENSI LENGKAP ($statusMsg & PULANG)"
-                            setBackgroundResource(R.drawable.bg_badge_pill_blue)
-                            val ctx = context ?: return@apply
-                            setTextColor(ContextCompat.getColor(ctx, R.color.primary_teal))
-                        }
+                    binding.tvBadgeStatusPresensi.apply {
+                        text = "SUDAH PRESENSI ($statusMsg)"
+                        setBackgroundResource(R.drawable.bg_badge_pill_verified_teal)
+                        val ctx = context ?: return@apply
+                        setTextColor(ContextCompat.getColor(ctx, R.color.primary_teal))
+                    }
 
-                        binding.btnSubmitPresensi.apply {
-                            isEnabled = false
-                            text = "✓ Presensi Hari Ini Selesai"
-                            val ctx = context ?: return@apply
-                            setBackgroundColor(ContextCompat.getColor(ctx, R.color.btn_disabled_bg))
-                        }
-                    } else {
-                        val calendar = Calendar.getInstance(TimeZone.getTimeZone("Asia/Jakarta"))
-                        val hour = calendar.get(Calendar.HOUR_OF_DAY)
-                        val minute = calendar.get(Calendar.MINUTE)
-                        evaluatePresensiState(hour * 60 + minute)
+                    binding.btnSubmitPresensi.apply {
+                        isEnabled = false
+                        text = "✓ Presensi Hari Ini Selesai"
+                        val ctx = context ?: return@apply
+                        setBackgroundColor(ContextCompat.getColor(ctx, R.color.btn_disabled_bg))
                     }
                 }
             }
 
             override fun onFailure(call: Call<List<Map<String, Any>>>, t: Throwable) {
+                if (!isAdded || _binding == null) return
+                binding.swipeRefreshPresensi.isRefreshing = false
                 // Biarkan status normal jika offline / koneksi gagal
             }
         })
@@ -381,7 +386,7 @@ class PresensiFragment : Fragment() {
     private fun evaluatePresensiState(currentMinuteOfDay: Int) {
         if (!isAdded || _binding == null) return
 
-        if (isAlreadyPulang) {
+        if (isAlreadyPresensi || isAlreadyPulang) {
             binding.btnSubmitPresensi.apply {
                 isEnabled = false
                 text = "✓ Presensi Hari Ini Selesai"
@@ -389,42 +394,15 @@ class PresensiFragment : Fragment() {
                 setBackgroundColor(ContextCompat.getColor(ctx, R.color.btn_disabled_bg))
             }
             binding.tvBadgeStatusPresensi.apply {
-                text = "PRESENSI HARI INI LENGKAP"
-                setBackgroundResource(R.drawable.bg_badge_pill_blue)
+                text = "PRESENSI HARI INI SELESAI"
+                setBackgroundResource(R.drawable.bg_badge_pill_verified_teal)
                 val ctx = context ?: return@apply
                 setTextColor(ContextCompat.getColor(ctx, R.color.primary_teal))
             }
             return
         }
 
-        if (isAlreadyPresensi) {
-            if (currentMinuteOfDay < JAM_PULANG_MINUTES) {
-                isPulangMode = false
-                binding.btnSubmitPresensi.apply {
-                    isEnabled = false
-                    text = "Presensi Pulang Dibuka 15:00 WIB"
-                    val ctx = context ?: return@apply
-                    setBackgroundColor(ContextCompat.getColor(ctx, R.color.btn_disabled_bg))
-                }
-                binding.tvBadgeStatusPresensi.apply {
-                    text = "SUDAH PRESENSI DATANG"
-                    setBackgroundResource(R.drawable.bg_badge_pill_blue)
-                    val ctx = context ?: return@apply
-                    setTextColor(ContextCompat.getColor(ctx, R.color.primary_teal))
-                }
-                return
-            } else {
-                isPulangMode = true
-                binding.tvBadgeStatusPresensi.apply {
-                    text = "PRESENSI PULANG DIBUKA"
-                    setBackgroundResource(R.drawable.bg_badge_pill_blue)
-                    val ctx = context ?: return@apply
-                    setTextColor(ContextCompat.getColor(ctx, R.color.primary_teal))
-                }
-            }
-        } else {
-            isPulangMode = false
-        }
+        isPulangMode = false
 
         val isSchoolWifi = context?.let { com.andev.absensiswaku.util.SchoolWifiHelper.isConnectedToSchoolWifi(it) } == true
         val inRadius = (currentDistanceMeters <= MAX_RADIUS_METERS) || isSchoolWifi
@@ -893,13 +871,8 @@ class PresensiFragment : Fragment() {
         binding.btnSubmitPresensi.applyBounceEffect {
             val ctx = context ?: return@applyBounceEffect
 
-            if (isAlreadyPulang) {
-                Toast.makeText(ctx, "Presensi hari ini sudah lengkap (Masuk & Pulang).", Toast.LENGTH_LONG).show()
-                return@applyBounceEffect
-            }
-
-            if (isAlreadyPresensi && !isPulangMode) {
-                Toast.makeText(ctx, "Presensi masuk sudah tercatat. Presensi pulang dibuka pukul 15:00 WIB.", Toast.LENGTH_LONG).show()
+            if (isAlreadyPresensi || isAlreadyPulang) {
+                Toast.makeText(ctx, "Presensi hari ini sudah selesai tercatat.", Toast.LENGTH_LONG).show()
                 return@applyBounceEffect
             }
 
@@ -1065,13 +1038,13 @@ class PresensiFragment : Fragment() {
 
         binding.tvBadgeStatusPresensi.apply {
             text = if (isOffline) "SUDAH PRESENSI ($statusMsg - OFFLINE)" else "SUDAH PRESENSI ($statusMsg)"
-            setBackgroundResource(R.drawable.bg_badge_pill_blue)
+            setBackgroundResource(R.drawable.bg_badge_pill_verified_teal)
             setTextColor(ContextCompat.getColor(ctx, R.color.primary_teal))
         }
 
         binding.btnSubmitPresensi.apply {
             isEnabled = false
-            text = if (isOffline) "✓ Presensi Tersimpan Offline" else "✓ Anda Sudah Presensi Masuk"
+            text = "✓ Presensi Hari Ini Selesai"
             setBackgroundColor(ContextCompat.getColor(ctx, R.color.btn_disabled_bg))
         }
 
@@ -1079,7 +1052,7 @@ class PresensiFragment : Fragment() {
         val dialogMessage = if (isOffline) {
             "Data presensi Anda ($statusMsg) telah diverifikasi liveness biometrik & GPS, lalu disimpan secara aman di memori lokal.\n\nSistem SMKN 8 Jakarta akan otomatis mengunggah data ini ke cloud saat terhubung ke internet.\n\nJarak: ${currentDistanceMeters.roundToInt()}m | AI Match: $scoreStr%"
         } else {
-            "Data presensi masuk Anda ($statusMsg) telah tercatat di sistem SMKN 8 Jakarta.\n\nJarak: ${currentDistanceMeters.roundToInt()}m | AI Match: $scoreStr%"
+            "Data presensi masuk Anda ($statusMsg) telah berhasil dicatat di sistem SMKN 8 Jakarta.\n\nPresensi hari ini selesai. Selamat belajar!\n\nJarak: ${currentDistanceMeters.roundToInt()}m | AI Match: $scoreStr%"
         }
 
         MaterialAlertDialogBuilder(ctx)

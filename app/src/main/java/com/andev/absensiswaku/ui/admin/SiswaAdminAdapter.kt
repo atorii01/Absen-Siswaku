@@ -7,6 +7,7 @@ import com.andev.absensiswaku.R
 import com.andev.absensiswaku.data.network.SiswaAdminResponse
 import com.andev.absensiswaku.databinding.ItemSiswaAdminBinding
 import java.util.Locale
+import kotlin.math.ceil
 
 class SiswaAdminAdapter(
     private val onEditClick: (SiswaAdminResponse) -> Unit,
@@ -15,7 +16,16 @@ class SiswaAdminAdapter(
 ) : RecyclerView.Adapter<SiswaAdminAdapter.SiswaViewHolder>() {
 
     private val allItems = mutableListOf<SiswaAdminResponse>()
+    private val filteredItems = mutableListOf<SiswaAdminResponse>()
     private val displayedItems = mutableListOf<SiswaAdminResponse>()
+
+    var currentPage: Int = 1
+        private set
+    var totalPages: Int = 1
+        private set
+    val pageSize: Int = 20
+
+    var onPageChangedListener: ((page: Int, totalPages: Int, totalFiltered: Int, startItem: Int, endItem: Int) -> Unit)? = null
 
     private val avatarDrawables = listOf(
         R.drawable.bg_avatar_circle_mint,
@@ -27,14 +37,12 @@ class SiswaAdminAdapter(
     fun submitList(list: List<SiswaAdminResponse>) {
         allItems.clear()
         allItems.addAll(list)
-        displayedItems.clear()
-        displayedItems.addAll(list)
-        notifyDataSetChanged()
+        filter("", null, targetPage = 1)
     }
 
-    fun filter(query: String, filterKelasId: Int? = null) {
+    fun filter(query: String, filterKelasId: Int? = null, targetPage: Int = 1) {
         val q = query.trim().lowercase(Locale.getDefault())
-        displayedItems.clear()
+        filteredItems.clear()
 
         val baseList = if (filterKelasId != null && filterKelasId > 0) {
             allItems.filter { it.idKelas == filterKelasId }
@@ -43,17 +51,57 @@ class SiswaAdminAdapter(
         }
 
         if (q.isEmpty()) {
-            displayedItems.addAll(baseList)
+            filteredItems.addAll(baseList)
         } else {
-            displayedItems.addAll(baseList.filter {
+            filteredItems.addAll(baseList.filter {
                 val nama = it.namaLengkap.lowercase(Locale.getDefault())
                 val nisn = it.nisn.lowercase(Locale.getDefault())
                 val rombel = it.rombelKelas?.namaKelas?.lowercase(Locale.getDefault()).orEmpty()
                 nama.contains(q) || nisn.contains(q) || rombel.contains(q)
             })
         }
-        notifyDataSetChanged()
+
+        totalPages = if (filteredItems.isEmpty()) 1 else ceil(filteredItems.size / pageSize.toDouble()).toInt().coerceAtLeast(1)
+        goToPage(targetPage)
     }
+
+    fun goToPage(page: Int) {
+        currentPage = page.coerceIn(1, totalPages)
+        displayedItems.clear()
+
+        if (filteredItems.isNotEmpty()) {
+            val startIndex = (currentPage - 1) * pageSize
+            val endIndex = (startIndex + pageSize).coerceAtMost(filteredItems.size)
+            if (startIndex < filteredItems.size) {
+                displayedItems.addAll(filteredItems.subList(startIndex, endIndex))
+            }
+            val startDisplay = if (displayedItems.isEmpty()) 0 else startIndex + 1
+            val endDisplay = endIndex
+            notifyDataSetChanged()
+            onPageChangedListener?.invoke(currentPage, totalPages, filteredItems.size, startDisplay, endDisplay)
+        } else {
+            notifyDataSetChanged()
+            onPageChangedListener?.invoke(1, 1, 0, 0, 0)
+        }
+    }
+
+    fun nextPage(): Boolean {
+        if (currentPage < totalPages) {
+            goToPage(currentPage + 1)
+            return true
+        }
+        return false
+    }
+
+    fun prevPage(): Boolean {
+        if (currentPage > 1) {
+            goToPage(currentPage - 1)
+            return true
+        }
+        return false
+    }
+
+    fun getTotalFilteredCount(): Int = filteredItems.size
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SiswaViewHolder {
         val binding = ItemSiswaAdminBinding.inflate(

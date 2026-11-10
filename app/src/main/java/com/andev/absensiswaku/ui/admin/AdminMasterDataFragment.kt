@@ -79,6 +79,12 @@ class AdminMasterDataFragment : Fragment() {
         setupFormTambahSiswa()
         setupSearchAndFilter()
         setupImportExcelButton()
+
+        binding.swipeRefreshMasterData.setColorSchemeResources(R.color.primary_teal)
+        binding.swipeRefreshMasterData.setOnRefreshListener {
+            loadDataFromSupabase()
+        }
+
         loadDataFromSupabase()
     }
 
@@ -146,6 +152,38 @@ class AdminMasterDataFragment : Fragment() {
                 confirmDeleteSiswa(siswa)
             }
         )
+
+        siswaAdapter.onPageChangedListener = { page, totalPages, totalFiltered, startItem, endItem ->
+            if (_binding != null) {
+                if (totalFiltered == 0) {
+                    binding.cardPaginationSiswa.visibility = View.GONE
+                } else {
+                    binding.cardPaginationSiswa.visibility = View.VISIBLE
+                    binding.tvPaginationHalaman.text = "Halaman $page dari $totalPages"
+                    binding.tvPaginationSiswaCount.text = "Siswa $startItem - $endItem dari $totalFiltered"
+
+                    binding.btnPrevPageSiswa.isEnabled = page > 1
+                    binding.btnPrevPageSiswa.alpha = if (page > 1) 1.0f else 0.4f
+
+                    binding.btnNextPageSiswa.isEnabled = page < totalPages
+                    binding.btnNextPageSiswa.alpha = if (page < totalPages) 1.0f else 0.4f
+                }
+            }
+        }
+
+        binding.btnPrevPageSiswa.setOnClickListener {
+            if (siswaAdapter.prevPage()) {
+                binding.rvDaftarSiswa.scheduleLayoutAnimation()
+                binding.nestedScrollAdminMasterData.smoothScrollTo(0, binding.rvDaftarSiswa.top - 120)
+            }
+        }
+
+        binding.btnNextPageSiswa.setOnClickListener {
+            if (siswaAdapter.nextPage()) {
+                binding.rvDaftarSiswa.scheduleLayoutAnimation()
+                binding.nestedScrollAdminMasterData.smoothScrollTo(0, binding.rvDaftarSiswa.top - 120)
+            }
+        }
 
         binding.rvDaftarSiswa.apply {
             layoutManager = LinearLayoutManager(requireContext())
@@ -592,18 +630,17 @@ class AdminMasterDataFragment : Fragment() {
                     response: Response<List<SiswaAdminResponse>>
                 ) {
                     if (!isAdded || _binding == null) return
+                    binding.swipeRefreshMasterData.isRefreshing = false
                     val list = response.body() ?: emptyList()
                     allSiswaList = list
                     siswaAdapter.submitList(list)
                     binding.rvDaftarSiswa.scheduleLayoutAnimation()
-                    binding.tvCountSiswa.text = "Daftar Siswa Terverifikasi (${list.size} Ditampilkan)"
-                    binding.rvDaftarSiswa.visibility = if (list.isNotEmpty()) View.VISIBLE else View.GONE
-                    binding.layoutEmptyState.visibility = if (list.isNotEmpty()) View.GONE else View.VISIBLE
                     updateUiMetrics()
                 }
 
                 override fun onFailure(call: Call<List<SiswaAdminResponse>>, t: Throwable) {
                     if (!isAdded || _binding == null) return
+                    binding.swipeRefreshMasterData.isRefreshing = false
                     updateUiMetrics()
                 }
             })
@@ -689,18 +726,20 @@ class AdminMasterDataFragment : Fragment() {
     }
 
     private fun applyFilter(query: String) {
-        siswaAdapter.filter(query, selectedFilterKelasId)
+        siswaAdapter.filter(query, selectedFilterKelasId, targetPage = 1)
         binding.rvDaftarSiswa.scheduleLayoutAnimation()
 
-        val countShown = siswaAdapter.itemCount
-        binding.tvCountSiswa.text = "Daftar Siswa Terverifikasi ($countShown Ditampilkan)"
+        val totalFiltered = siswaAdapter.getTotalFilteredCount()
+        binding.tvCountSiswa.text = "Daftar Siswa Terverifikasi ($totalFiltered Siswa)"
 
-        if (countShown == 0) {
+        if (totalFiltered == 0) {
             binding.layoutEmptyState.visibility = View.VISIBLE
             binding.rvDaftarSiswa.visibility = View.GONE
+            binding.cardPaginationSiswa.visibility = View.GONE
         } else {
             binding.layoutEmptyState.visibility = View.GONE
             binding.rvDaftarSiswa.visibility = View.VISIBLE
+            binding.cardPaginationSiswa.visibility = View.VISIBLE
         }
     }
 

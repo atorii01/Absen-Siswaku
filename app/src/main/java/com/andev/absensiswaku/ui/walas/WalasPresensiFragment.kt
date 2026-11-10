@@ -89,6 +89,12 @@ class WalasPresensiFragment : Fragment() {
         setupHeaderAndDate()
         setupRecyclerViews()
         setupClickListeners()
+
+        binding.swipeRefreshWalasPresensi.setColorSchemeResources(R.color.primary_teal)
+        binding.swipeRefreshWalasPresensi.setOnRefreshListener {
+            loadDataFromSupabase()
+        }
+
         loadDataFromSupabase()
 
         MotionUtils.animateStaggeredEntrance(
@@ -300,6 +306,7 @@ class WalasPresensiFragment : Fragment() {
 
                 renderHadirUI()
                 updateSummaryMetrics()
+                binding.swipeRefreshWalasPresensi.isRefreshing = false
             }
 
             override fun onFailure(call: Call<List<RiwayatModel>>, t: Throwable) {
@@ -307,6 +314,7 @@ class WalasPresensiFragment : Fragment() {
                 hadirList.clear()
                 renderHadirUI()
                 updateSummaryMetrics()
+                binding.swipeRefreshWalasPresensi.isRefreshing = false
             }
         })
     }

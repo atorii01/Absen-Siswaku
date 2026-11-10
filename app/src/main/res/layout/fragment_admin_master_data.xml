@@ -1,13 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.swiperefreshlayout.widget.SwipeRefreshLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/nestedScrollAdminMasterData"
+    android:id="@+id/swipeRefreshMasterData"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@color/screen_bg"
-    android:fillViewport="true"
-    android:overScrollMode="never">
+    android:layout_height="match_parent">
+
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/nestedScrollAdminMasterData"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/screen_bg"
+        android:fillViewport="true"
+        android:overScrollMode="never">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -990,6 +995,91 @@
                 tools:itemCount="4"
                 tools:listitem="@layout/item_siswa_admin" />
 
+            <!-- ================= PAGINASI SISWA ================= -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardPaginationSiswa"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="8dp"
+                app:cardBackgroundColor="@color/card_bg"
+                app:cardCornerRadius="14dp"
+                app:cardElevation="0dp"
+                app:strokeColor="@color/card_stroke"
+                app:strokeWidth="1dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingHorizontal="14dp"
+                    android:paddingVertical="12dp">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnPrevPageSiswa"
+                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="40dp"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp"
+                        android:paddingHorizontal="12dp"
+                        android:text="&lt; Prev"
+                        android:textColor="@color/primary_teal"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        app:cornerRadius="10dp"
+                        app:strokeColor="@color/primary_teal"
+                        app:strokeWidth="1dp" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/tvPaginationHalaman"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Halaman 1 dari 18"
+                            android:textColor="@color/text_primary"
+                            android:textSize="12.5sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tvPaginationSiswaCount"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="Siswa 1 - 20 dari 357"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="11sp" />
+
+                    </LinearLayout>
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnNextPageSiswa"
+                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="40dp"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp"
+                        android:paddingHorizontal="12dp"
+                        android:text="Next &gt;"
+                        android:textColor="@color/primary_teal"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        app:cornerRadius="10dp"
+                        app:strokeColor="@color/primary_teal"
+                        app:strokeWidth="1dp" />
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
             <!-- Empty State Siswa -->
             <LinearLayout
                 android:id="@+id/layoutEmptyState"
@@ -1092,3 +1182,5 @@
     </LinearLayout>
 
 </androidx.core.widget.NestedScrollView>
+
+</androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
