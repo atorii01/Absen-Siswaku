@@ -22,6 +22,7 @@ import com.andev.absensiswaku.data.network.SupabaseClient
 import com.andev.absensiswaku.data.pref.SessionManager
 import com.andev.absensiswaku.databinding.FragmentPengajuanBinding
 import com.andev.absensiswaku.util.MotionUtils
+import com.andev.absensiswaku.util.NotificationHelper
 import com.andev.absensiswaku.util.applyBounceEffect
 import com.andev.absensiswaku.ui.presensi.PresensiFragment
 import com.andev.absensiswaku.ui.riwayat.RiwayatFragment
@@ -487,6 +488,7 @@ class PengajuanFragment : Fragment() {
 
                 if (response.isSuccessful || response.code() == 201 || response.code() == 200) {
                     Toast.makeText(requireContext(), "✓ Pengajuan izin berhasil dikirim!", Toast.LENGTH_SHORT).show()
+                    NotificationHelper.showNotifikasiPengajuan(requireContext(), formattedJenisIzin)
 
                     binding.etKeterangan.text?.clear()
                     selectedFileUri = null

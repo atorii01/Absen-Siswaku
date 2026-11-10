@@ -33,6 +33,7 @@ import com.andev.absensiswaku.data.network.SupabaseClient
 import com.andev.absensiswaku.data.pref.SessionManager
 import com.andev.absensiswaku.databinding.FragmentPresensiBinding
 import com.andev.absensiswaku.util.MotionUtils
+import com.andev.absensiswaku.util.NotificationHelper
 import com.andev.absensiswaku.util.applyBounceEffect
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
@@ -886,6 +887,7 @@ class PresensiFragment : Fragment() {
 
                 if (response.isSuccessful) {
                     Toast.makeText(requireContext(), "Presensi Berhasil Tercatat!", Toast.LENGTH_SHORT).show()
+                    NotificationHelper.showNotifikasiPresensi(requireContext(), statusHadir)
                     handleSuccessPresensi(statusHadir)
                 } else if (response.code() == 409 || (response.errorBody()?.string()?.contains("duplicate", true) == true)) {
                     isAlreadyPresensi = true
