@@ -86,6 +86,8 @@ class PresensiFragment : Fragment() {
     private var isFaceDetected: Boolean = false
     private var isFaceInsideCircle: Boolean = false
     private var lastBiometricScore: Double = 0.0
+    private var hasEyesClosed: Boolean = false
+    private var isLivenessVerified: Boolean = false
 
     private var isAlreadyPresensi: Boolean = false
     private var liveClockJob: Job? = null

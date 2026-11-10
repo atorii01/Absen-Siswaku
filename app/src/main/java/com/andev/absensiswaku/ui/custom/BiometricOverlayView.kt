@@ -17,6 +17,15 @@ class BiometricOverlayView @JvmOverloads constructor(
     defStyleAttr: Int = 0
 ) : View(context, attrs, defStyleAttr) {
 
+    enum class OverlayState {
+        IDLE,
+        OUTSIDE,
+        MATCHED,
+        ERROR
+    }
+
+    private var currentState: OverlayState = OverlayState.IDLE
+
     private val maskPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = Color.parseColor("#40000000") // 25% dark overlay
         style = Paint.Style.FILL
@@ -27,13 +36,13 @@ class BiometricOverlayView @JvmOverloads constructor(
     }
 
     private val ovalGuidePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.parseColor("#34D399")
+        color = Color.parseColor("#94A3B8") // Slate idle
         style = Paint.Style.STROKE
         strokeWidth = 3f * context.resources.displayMetrics.density
     }
 
     private val cornerBracketPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.parseColor("#34D399")
+        color = Color.parseColor("#94A3B8")
         style = Paint.Style.STROKE
         strokeWidth = 5f * context.resources.displayMetrics.density
         strokeCap = Paint.Cap.ROUND
@@ -41,6 +50,22 @@ class BiometricOverlayView @JvmOverloads constructor(
 
     private val faceRect = RectF()
     private val cornerPath = Path()
+
+    fun setOverlayState(state: OverlayState) {
+        if (currentState == state) return
+        currentState = state
+
+        val targetColor = when (state) {
+            OverlayState.IDLE -> Color.parseColor("#94A3B8")
+            OverlayState.OUTSIDE -> Color.parseColor("#F59E0B")
+            OverlayState.MATCHED -> Color.parseColor("#10B981")
+            OverlayState.ERROR -> Color.parseColor("#EF4444")
+        }
+
+        ovalGuidePaint.color = targetColor
+        cornerBracketPaint.color = targetColor
+        invalidate()
+    }
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
