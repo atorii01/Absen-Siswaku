@@ -38,6 +38,7 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import java.net.URL
+import java.util.Calendar
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -103,6 +104,17 @@ class WalasPresensiFragment : Fragment() {
         loadDataFromSupabase()
     }
 
+    private fun getGreetingText(): String {
+        val cal = Calendar.getInstance()
+        val hour = cal.get(Calendar.HOUR_OF_DAY)
+        return when (hour) {
+            in 4..10 -> "Selamat Pagi"
+            in 11..14 -> "Selamat Siang"
+            in 15..18 -> "Selamat Sore"
+            else -> "Selamat Malam"
+        }
+    }
+
     private fun loadSessionData() {
         val pref = requireContext().getSharedPreferences(PREF_SESSION_NAME, Context.MODE_PRIVATE)
         namaWalas = pref.getString("NAMA_WALAS", "Wali Kelas") ?: "Wali Kelas"
@@ -110,7 +122,8 @@ class WalasPresensiFragment : Fragment() {
         namaKelas = pref.getString("NAMA_KELAS", "XII RPL") ?: "XII RPL"
 
         // Terapkan ke Header UI secara dinamis
-        binding.tvGreetingWalas.text = "Selamat Pagi, $namaWalas"
+        val greeting = getGreetingText()
+        binding.tvGreetingWalas.text = "$greeting, $namaWalas"
         binding.tvSubHeaderKelas.text = "Wali Kelas $namaKelas • Rekap Masuk Otomatis"
     }
 

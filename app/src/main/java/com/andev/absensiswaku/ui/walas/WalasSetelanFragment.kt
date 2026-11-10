@@ -488,8 +488,11 @@ class WalasSetelanFragment : Fragment() {
                         val alamat = config.alamat ?: "Jl. Raya Pejaten Pasar Minggu"
                         binding.tvTitikAcuan.text = "Titik Acuan: $alamat ($lat, $lng)"
                         binding.tvRadiusAman.text = "≤ ${config.radiusMeter ?: 50} Meter"
-                        binding.tvJamMasuk.text = "${config.jamMasukMulai ?: "05:30"} - ${config.jamMasukSelesai ?: "06:40"}"
-                        binding.tvJamPulang.text = "${config.jamPulang ?: "15:00"} WIB"
+                        val mulaiStr = (config.jamMasukMulai ?: "05:30").take(5)
+                        val selesaiStr = (config.jamMasukSelesai ?: "06:40").take(5)
+                        val pulangStr = (config.jamPulang ?: "15:00").take(5)
+                        binding.tvJamMasuk.text = "$mulaiStr - $selesaiStr WIB"
+                        binding.tvJamPulang.text = "$pulangStr WIB"
                     }
                 }
 
