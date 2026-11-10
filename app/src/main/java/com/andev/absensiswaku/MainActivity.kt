@@ -1,13 +1,18 @@
 package com.andev.absensiswaku
 
+import android.Manifest
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
@@ -18,6 +23,7 @@ import com.andev.absensiswaku.ui.presensi.PresensiFragment
 import com.andev.absensiswaku.ui.riwayat.RiwayatFragment
 import com.andev.absensiswaku.ui.setelan.SetelanFragment
 import com.andev.absensiswaku.ui.walas.WalasPresensiFragment
+import com.andev.absensiswaku.util.NotificationHelper
 
 class MainActivity : AppCompatActivity() {
 
@@ -66,6 +72,13 @@ class MainActivity : AppCompatActivity() {
         enableEdgeToEdge()
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        NotificationHelper.createNotificationChannels(this)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.POST_NOTIFICATIONS), 101)
+            }
+        }
 
         ViewCompat.setOnApplyWindowInsetsListener(binding.main) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
