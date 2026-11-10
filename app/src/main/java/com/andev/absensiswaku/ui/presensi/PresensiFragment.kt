@@ -301,10 +301,10 @@ class PresensiFragment : Fragment() {
 
     private fun isMockLocation(location: Location): Boolean {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            location.isMock
+            location.isMock || location.accuracy <= 0.001f || (location.latitude == 0.0 && location.longitude == 0.0)
         } else {
             @Suppress("DEPRECATION")
-            location.isFromMockProvider
+            location.isFromMockProvider || location.accuracy <= 0.001f || (location.latitude == 0.0 && location.longitude == 0.0)
         }
     }
 
