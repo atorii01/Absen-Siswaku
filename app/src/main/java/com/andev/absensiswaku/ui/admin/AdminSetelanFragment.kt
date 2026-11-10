@@ -4,6 +4,8 @@ import android.app.Dialog
 import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.net.Uri
@@ -17,12 +19,16 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.Window
+import android.widget.EditText
+import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
+import com.andev.absensiswaku.BuildConfig
 import com.andev.absensiswaku.LoginActivity
 import com.andev.absensiswaku.R
 import com.andev.absensiswaku.data.network.KonfigurasiSistemResponse
@@ -31,9 +37,13 @@ import com.andev.absensiswaku.data.pref.SessionManager
 import com.andev.absensiswaku.databinding.FragmentAdminSetelanBinding
 import com.andev.absensiswaku.util.MotionUtils
 import com.andev.absensiswaku.util.applyBounceEffect
+import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.google.android.material.button.MaterialButton
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.slider.Slider
 import com.google.android.material.snackbar.Snackbar
+import com.google.android.material.textfield.TextInputEditText
+import com.google.android.material.textfield.TextInputLayout
 import okhttp3.ResponseBody
 import org.json.JSONArray
 import org.json.JSONObject
@@ -41,6 +51,7 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import java.io.File
+import java.io.FileOutputStream
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -55,6 +66,31 @@ class AdminSetelanFragment : Fragment() {
     private var pendingRadiusRunnable: Runnable? = null
 
     private var currentConfig: KonfigurasiSistemResponse? = null
+
+    private val takePictureLauncher = registerForActivityResult(
+        ActivityResultContracts.TakePicturePreview()
+    ) { bitmap ->
+        if (bitmap != null) {
+            saveAndApplyProfilePhoto(bitmap)
+        }
+    }
+
+    private val galleryLauncher = registerForActivityResult(
+        ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let {
+            try {
+                val inputStream = requireContext().contentResolver.openInputStream(it)
+                val bitmap = BitmapFactory.decodeStream(inputStream)
+                inputStream?.close()
+                if (bitmap != null) {
+                    saveAndApplyProfilePhoto(bitmap)
+                }
+            } catch (e: Exception) {
+                Toast.makeText(requireContext(), "Gagal memproses foto dari galeri", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
 
     companion object {
         private const val PREF_SESSION = "PREF_SMKN8_SESSION"
@@ -116,10 +152,81 @@ class AdminSetelanFragment : Fragment() {
         binding.tvNamaAdmin.text = namaUser
         binding.tvSublabelAdmin.text = roleUser
         binding.tvNipAdmin.text = nipUser
+        binding.tvVersiAplikasiAdmin.text = "SMKN 8 JAKARTA • PRESENSI ENGINE v${BuildConfig.VERSION_NAME}"
+
+        loadAdminProfilePhoto()
+
+        binding.imgProfileAdminAvatar.applyBounceEffect {
+            showPilihFotoAdminDialog()
+        }
+        binding.imgTopAvatarAdminSetelan.applyBounceEffect {
+            showPilihFotoAdminDialog()
+        }
 
         binding.btnKelolaAkun.applyBounceEffect {
             showKelolaAkunDialog(namaUser, roleUser, nipUser)
         }
+    }
+
+    private fun saveAndApplyProfilePhoto(bitmap: Bitmap) {
+        val ctx = context ?: return
+        try {
+            val file = File(ctx.filesDir, "avatar_admin.jpg")
+            val outputStream = FileOutputStream(file)
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 90, outputStream)
+            outputStream.flush()
+            outputStream.close()
+
+            binding.imgProfileAdminAvatar.setImageBitmap(bitmap)
+            binding.imgTopAvatarAdminSetelan.setImageBitmap(bitmap)
+            Toast.makeText(ctx, "✓ Foto profil Super Admin berhasil diperbarui!", Toast.LENGTH_SHORT).show()
+        } catch (e: Exception) {
+            Toast.makeText(ctx, "Gagal menyimpan foto: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun loadAdminProfilePhoto() {
+        val ctx = context ?: return
+        val photoFile = File(ctx.filesDir, "avatar_admin.jpg")
+        if (photoFile.exists()) {
+            val bitmap = BitmapFactory.decodeFile(photoFile.absolutePath)
+            if (bitmap != null) {
+                binding.imgProfileAdminAvatar.setImageBitmap(bitmap)
+                binding.imgTopAvatarAdminSetelan.setImageBitmap(bitmap)
+                return
+            }
+        }
+        binding.imgProfileAdminAvatar.setImageResource(R.drawable.ic_avatar)
+        binding.imgTopAvatarAdminSetelan.setImageResource(R.drawable.ic_avatar)
+    }
+
+    private fun showPilihFotoAdminDialog() {
+        val ctx = context ?: return
+        val photoFile = File(ctx.filesDir, "avatar_admin.jpg")
+        val hasCustomPhoto = photoFile.exists()
+
+        val options = if (hasCustomPhoto) {
+            arrayOf("📸 Ambil Foto Baru (Kamera)", "🖼️ Pilih dari Galeri", "🗑️ Hapus Foto Profil (Avatar Default)")
+        } else {
+            arrayOf("📸 Ambil Foto Baru (Kamera)", "🖼️ Pilih dari Galeri")
+        }
+
+        MaterialAlertDialogBuilder(ctx)
+            .setTitle("Ubah Foto Profil Administrator")
+            .setItems(options) { _, which ->
+                when (which) {
+                    0 -> takePictureLauncher.launch(null)
+                    1 -> galleryLauncher.launch("image/*")
+                    2 -> {
+                        if (photoFile.exists()) photoFile.delete()
+                        binding.imgProfileAdminAvatar.setImageResource(R.drawable.ic_avatar)
+                        binding.imgTopAvatarAdminSetelan.setImageResource(R.drawable.ic_avatar)
+                        Toast.makeText(ctx, "Foto profil dikembalikan ke avatar default.", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+            .setNegativeButton("Batal", null)
+            .show()
     }
 
     /**
@@ -552,12 +659,189 @@ class AdminSetelanFragment : Fragment() {
      * Dialog Kelola Akun Administrator
      */
     private fun showKelolaAkunDialog(nama: String, role: String, nip: String) {
+        val options = arrayOf(
+            "🔐 Ubah Kata Sandi Administrator",
+            "📞 Perbarui Nomor Kontak Darurat",
+            "📸 Ubah Foto Profil Administrator",
+            "🛡️ Informasi Hak Akses & Status Token"
+        )
+
         MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Informasi Akun Administrator")
-            .setMessage("Nama: $nama\nPeran: $role\n$nip\nHak Akses: Full Access (CRUD Master Data, Server Sync, Security Audit)\nStatus Token: Aktif & Terenkripsi AES-256")
-            .setIcon(R.drawable.ic_shield_check)
-            .setPositiveButton("Tutup", null)
+            .setTitle("Kelola Akun Administrator")
+            .setItems(options) { _, which ->
+                when (which) {
+                    0 -> showUbahKataSandiAdminDialog()
+                    1 -> showDialogPerbaruiKontakAdmin()
+                    2 -> showPilihFotoAdminDialog()
+                    3 -> {
+                        MaterialAlertDialogBuilder(requireContext())
+                            .setTitle("Informasi Akun Administrator")
+                            .setMessage("Nama: $nama\nPeran: $role\n$nip\nHak Akses: Full Access (CRUD Master Data, Server Sync, Security Audit)\nStatus Token: Aktif & Terenkripsi AES-256")
+                            .setIcon(R.drawable.ic_shield_check)
+                            .setPositiveButton("Tutup", null)
+                            .show()
+                    }
+                }
+            }
+            .setNegativeButton("Tutup", null)
             .show()
+    }
+
+    /**
+     * Dialog Ubah Kata Sandi Super Admin via Supabase users
+     */
+    private fun showUbahKataSandiAdminDialog() {
+        val ctx = context ?: return
+        val bottomSheetDialog = BottomSheetDialog(ctx)
+        val dialogBinding = com.andev.absensiswaku.databinding.DialogUbahKataSandiGuruBinding.inflate(layoutInflater)
+        bottomSheetDialog.setContentView(dialogBinding.root)
+
+        dialogBinding.btnCloseDialog.setOnClickListener { bottomSheetDialog.dismiss() }
+
+        dialogBinding.btnSimpanSandi.setOnClickListener {
+            val lama = dialogBinding.etSandiLama.text.toString().trim()
+            val baru = dialogBinding.etSandiBaru.text.toString().trim()
+            val konfirmasi = dialogBinding.etKonfirmasiSandi.text.toString().trim()
+
+            dialogBinding.tilSandiLama.error = null
+            dialogBinding.tilSandiBaru.error = null
+            dialogBinding.tilKonfirmasiSandi.error = null
+
+            if (lama.isEmpty()) {
+                dialogBinding.tilSandiLama.error = "Masukkan kata sandi saat ini"
+                return@setOnClickListener
+            }
+            if (baru.isEmpty()) {
+                dialogBinding.tilSandiBaru.error = "Masukkan kata sandi baru"
+                return@setOnClickListener
+            }
+            if (baru.length < 6) {
+                dialogBinding.tilSandiBaru.error = "Kata sandi minimal 6 karakter"
+                return@setOnClickListener
+            }
+            if (baru != konfirmasi) {
+                dialogBinding.tilKonfirmasiSandi.error = "Konfirmasi kata sandi tidak cocok"
+                return@setOnClickListener
+            }
+
+            dialogBinding.btnSimpanSandi.isEnabled = false
+            dialogBinding.btnSimpanSandi.text = "Memverifikasi..."
+
+            SupabaseClient.instance.getUserByUsername(usernameFilter = "eq.admin")
+                .enqueue(object : Callback<List<Map<String, Any>>> {
+                    override fun onResponse(
+                        call: Call<List<Map<String, Any>>>,
+                        response: Response<List<Map<String, Any>>>
+                    ) {
+                        val userRecord = response.body()?.firstOrNull()
+                        val currentPassInCloud = userRecord?.get("password_hash")?.toString() ?: "admin123"
+
+                        if (lama != currentPassInCloud) {
+                            dialogBinding.btnSimpanSandi.isEnabled = true
+                            dialogBinding.btnSimpanSandi.text = "Simpan Kata Sandi"
+                            dialogBinding.tilSandiLama.error = "Kata sandi saat ini salah"
+                            return
+                        }
+
+                        dialogBinding.btnSimpanSandi.text = "Menyimpan ke Cloud..."
+
+                        SupabaseClient.instance.updateUser(
+                            usernameFilter = "eq.admin",
+                            payload = mapOf("password_hash" to baru)
+                        ).enqueue(object : Callback<ResponseBody> {
+                            override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
+                                if (response.isSuccessful) {
+                                    bottomSheetDialog.dismiss()
+                                    Toast.makeText(ctx, "✓ Kata sandi Administrator berhasil diperbarui di cloud!", Toast.LENGTH_LONG).show()
+                                } else {
+                                    dialogBinding.btnSimpanSandi.isEnabled = true
+                                    dialogBinding.btnSimpanSandi.text = "Simpan Kata Sandi"
+                                    Toast.makeText(ctx, "Gagal memperbarui sandi: HTTP ${response.code()}", Toast.LENGTH_SHORT).show()
+                                }
+                            }
+
+                            override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                                dialogBinding.btnSimpanSandi.isEnabled = true
+                                dialogBinding.btnSimpanSandi.text = "Simpan Kata Sandi"
+                                Toast.makeText(ctx, "Gagal terhubung ke cloud: ${t.localizedMessage}", Toast.LENGTH_SHORT).show()
+                            }
+                        })
+                    }
+
+                    override fun onFailure(call: Call<List<Map<String, Any>>>, t: Throwable) {
+                        dialogBinding.btnSimpanSandi.isEnabled = true
+                        dialogBinding.btnSimpanSandi.text = "Simpan Kata Sandi"
+                        Toast.makeText(ctx, "Koneksi verifikasi gagal: ${t.localizedMessage}", Toast.LENGTH_SHORT).show()
+                    }
+                })
+        }
+
+        bottomSheetDialog.show()
+    }
+
+    /**
+     * Dialog Perbarui Nomor Telepon / Kontak Admin via Supabase users
+     */
+    private fun showDialogPerbaruiKontakAdmin() {
+        val ctx = context ?: return
+        val pref = ctx.getSharedPreferences(PREF_SESSION, Context.MODE_PRIVATE)
+        val savedNoHp = pref.getString("NO_HP_ADMIN", "0812-3456-7890") ?: "0812-3456-7890"
+
+        val paddingHorizontal = (24 * resources.displayMetrics.density).toInt()
+        val paddingVertical = (12 * resources.displayMetrics.density).toInt()
+
+        val container = LinearLayout(ctx).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(paddingHorizontal, paddingVertical, paddingHorizontal, paddingVertical)
+        }
+
+        val etKontak = EditText(ctx).apply {
+            hint = "Nomor Telepon Administrator"
+            inputType = android.text.InputType.TYPE_CLASS_PHONE
+            setText(savedNoHp)
+        }
+        container.addView(etKontak)
+
+        val alertDialog = MaterialAlertDialogBuilder(ctx)
+            .setTitle("Perbarui Kontak Administrator")
+            .setMessage("Nomor ini digunakan untuk saluran verifikasi dan notifikasi keamanan sistem.")
+            .setView(container)
+            .setPositiveButton("Simpan", null)
+            .setNegativeButton("Batal") { dialog, _ ->
+                dialog.dismiss()
+            }
+            .create()
+
+        alertDialog.show()
+
+        alertDialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+            val noHp = etKontak.text.toString().trim()
+            if (noHp.isEmpty() || noHp.length < 9) {
+                Toast.makeText(ctx, "Nomor kontak tidak valid (minimal 9 digit).", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            Toast.makeText(ctx, "Menyimpan ke cloud...", Toast.LENGTH_SHORT).show()
+
+            SupabaseClient.instance.updateUser(
+                usernameFilter = "eq.admin",
+                payload = mapOf("no_telepon" to noHp)
+            ).enqueue(object : Callback<ResponseBody> {
+                override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
+                    if (response.isSuccessful) {
+                        pref.edit().putString("NO_HP_ADMIN", noHp).apply()
+                        alertDialog.dismiss()
+                        Toast.makeText(ctx, "✓ Kontak Admin berhasil disimpan di cloud: $noHp", Toast.LENGTH_LONG).show()
+                    } else {
+                        Toast.makeText(ctx, "Gagal menyimpan kontak: HTTP ${response.code()}", Toast.LENGTH_SHORT).show()
+                    }
+                }
+
+                override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                    Toast.makeText(ctx, "Koneksi cloud gagal: ${t.localizedMessage}", Toast.LENGTH_SHORT).show()
+                }
+            })
+        }
     }
 
     /**

@@ -1271,10 +1271,11 @@
             android:orientation="vertical">
 
             <TextView
+                android:id="@+id/tvVersiAplikasiAdmin"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:letterSpacing="0.04"
-                android:text="SMKN 8 JAKARTA • PRESENSI ENGINE v3.4.2"
+                android:text="SMKN 8 JAKARTA • PRESENSI ENGINE v2.8.0"
                 android:textColor="@color/text_secondary"
                 android:textSize="11sp"
                 android:textStyle="bold" />

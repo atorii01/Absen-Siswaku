@@ -137,6 +137,7 @@ class SetelanFragment : Fragment() {
         binding.tvNamaSiswa.text = nama
         binding.tvNisnNik.text = "NISN: $nisn • NIK Terdaftar"
         binding.tvRombelWalas.text = "$namaKelas • Wali: $waliKelas"
+        binding.tvVersiAplikasiSiswa.text = "Sistem Presensi Siswa v${com.andev.absensiswaku.BuildConfig.VERSION_NAME} • SMKN 8 Jakarta"
 
         val siswaId = getStudentId()
 

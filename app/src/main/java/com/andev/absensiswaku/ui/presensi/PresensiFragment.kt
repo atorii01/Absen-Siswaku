@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.content.res.ColorStateList
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.location.Location
 import android.os.Build
@@ -28,6 +29,7 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import com.andev.absensiswaku.MainActivity
 import com.andev.absensiswaku.R
 import com.andev.absensiswaku.data.network.SupabaseClient
 import com.andev.absensiswaku.data.pref.SessionManager
@@ -42,12 +44,14 @@ import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.CancellationTokenSource
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.face.Face
 import com.google.mlkit.vision.face.FaceDetection
 import com.google.mlkit.vision.face.FaceDetector
 import com.google.mlkit.vision.face.FaceDetectorOptions
+import java.io.File
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -170,6 +174,7 @@ class PresensiFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
+        setupHeaderData()
         checkDailyPresensiStatus()
     }
 
@@ -274,6 +279,27 @@ class PresensiFragment : Fragment() {
         binding.tvNamaSiswa.text = nama
         binding.tvKelasNisnSub.text = "Kelas $namaKelas \u2022 NISN: $nisn"
         binding.tvBatasMasukJam.text = "06:40 WIB"
+
+        // Muat foto profil kustom siswa jika ada
+        val ctx = context ?: return
+        val siswaId = sessionManager.getUserId()
+        val photoFile = File(ctx.filesDir, "avatar_siswa_$siswaId.jpg")
+        if (photoFile.exists()) {
+            val bitmap = BitmapFactory.decodeFile(photoFile.absolutePath)
+            if (bitmap != null) {
+                binding.imgAvatar.setImageBitmap(bitmap)
+            } else {
+                binding.imgAvatar.setImageResource(R.drawable.ic_avatar)
+            }
+        } else {
+            binding.imgAvatar.setImageResource(R.drawable.ic_avatar)
+        }
+
+        binding.imgAvatar.applyBounceEffect {
+            (activity as? MainActivity)?.let { mainAct ->
+                mainAct.findViewById<BottomNavigationView>(R.id.bottomNavigation)?.selectedItemId = R.id.nav_setelan
+            }
+        }
     }
 
     private fun startLiveClock() {

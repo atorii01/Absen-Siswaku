@@ -2,6 +2,9 @@ package com.andev.absensiswaku.ui.walas
 
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -9,9 +12,11 @@ import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.fragment.app.Fragment
 import com.andev.absensiswaku.LoginActivity
+import com.andev.absensiswaku.R
 import com.andev.absensiswaku.data.network.KonfigurasiSistemResponse
 import com.andev.absensiswaku.data.network.RiwayatModel
 import com.andev.absensiswaku.data.network.SiswaKelolaResponse
@@ -27,6 +32,8 @@ import okhttp3.ResponseBody
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import java.io.File
+import java.io.FileOutputStream
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -42,6 +49,31 @@ class WalasSetelanFragment : Fragment() {
     private var namaKelas: String = "XII RPL"
     private var namaWalas: String = "Farauk Pratama, S.Kom."
     private var usernameWalas: String = "walas.rpl@smkn8.sch.id"
+
+    private val takePictureLauncher = registerForActivityResult(
+        ActivityResultContracts.TakePicturePreview()
+    ) { bitmap ->
+        if (bitmap != null) {
+            saveAndApplyProfilePhoto(bitmap)
+        }
+    }
+
+    private val galleryLauncher = registerForActivityResult(
+        ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let {
+            try {
+                val inputStream = requireContext().contentResolver.openInputStream(it)
+                val bitmap = BitmapFactory.decodeStream(inputStream)
+                inputStream?.close()
+                if (bitmap != null) {
+                    saveAndApplyProfilePhoto(bitmap)
+                }
+            } catch (e: Exception) {
+                Toast.makeText(requireContext(), "Gagal memproses foto dari galeri", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
 
     companion object {
         private const val PREF_SESSION_NAME = "PREF_SMKN8_SESSION"
@@ -136,6 +168,77 @@ class WalasSetelanFragment : Fragment() {
         binding.tvCountSiswaBinaan.text = "36"
         binding.tvRerataKehadiran.text = "98.2%"
         binding.tvHariEfektif.text = "180"
+        binding.tvVersiAplikasi.text = "SMKN 8 Attendance Engine v${com.andev.absensiswaku.BuildConfig.VERSION_NAME} (Build ${com.andev.absensiswaku.BuildConfig.VERSION_CODE})"
+
+        loadWalasProfilePhoto()
+
+        binding.imgFotoProfilGuru.applyBounceEffect {
+            showPilihFotoWalasDialog()
+        }
+        binding.imgTopAvatarWalas.applyBounceEffect {
+            showPilihFotoWalasDialog()
+        }
+    }
+
+    private fun saveAndApplyProfilePhoto(bitmap: Bitmap) {
+        val ctx = context ?: return
+        try {
+            val file = File(ctx.filesDir, "avatar_walas.jpg")
+            val outputStream = FileOutputStream(file)
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 90, outputStream)
+            outputStream.flush()
+            outputStream.close()
+
+            binding.imgFotoProfilGuru.setImageBitmap(bitmap)
+            binding.imgTopAvatarWalas.setImageBitmap(bitmap)
+            Toast.makeText(ctx, "✓ Foto profil Wali Kelas berhasil diperbarui!", Toast.LENGTH_SHORT).show()
+        } catch (e: Exception) {
+            Toast.makeText(ctx, "Gagal menyimpan foto: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun loadWalasProfilePhoto() {
+        val ctx = context ?: return
+        val photoFile = File(ctx.filesDir, "avatar_walas.jpg")
+        if (photoFile.exists()) {
+            val bitmap = BitmapFactory.decodeFile(photoFile.absolutePath)
+            if (bitmap != null) {
+                binding.imgFotoProfilGuru.setImageBitmap(bitmap)
+                binding.imgTopAvatarWalas.setImageBitmap(bitmap)
+                return
+            }
+        }
+        binding.imgFotoProfilGuru.setImageResource(R.drawable.ic_avatar)
+        binding.imgTopAvatarWalas.setImageResource(R.drawable.ic_avatar)
+    }
+
+    private fun showPilihFotoWalasDialog() {
+        val ctx = context ?: return
+        val photoFile = File(ctx.filesDir, "avatar_walas.jpg")
+        val hasCustomPhoto = photoFile.exists()
+
+        val options = if (hasCustomPhoto) {
+            arrayOf("📸 Ambil Foto Baru (Kamera)", "🖼️ Pilih dari Galeri", "🗑️ Hapus Foto Profil (Avatar Default)")
+        } else {
+            arrayOf("📸 Ambil Foto Baru (Kamera)", "🖼️ Pilih dari Galeri")
+        }
+
+        MaterialAlertDialogBuilder(ctx)
+            .setTitle("Ubah Foto Profil Wali Kelas")
+            .setItems(options) { _, which ->
+                when (which) {
+                    0 -> takePictureLauncher.launch(null)
+                    1 -> galleryLauncher.launch("image/*")
+                    2 -> {
+                        if (photoFile.exists()) photoFile.delete()
+                        binding.imgFotoProfilGuru.setImageResource(R.drawable.ic_avatar)
+                        binding.imgTopAvatarWalas.setImageResource(R.drawable.ic_avatar)
+                        Toast.makeText(ctx, "Foto profil dikembalikan ke avatar default.", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+            .setNegativeButton("Batal", null)
+            .show()
     }
 
     /**

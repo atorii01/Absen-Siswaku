@@ -2,6 +2,9 @@ package com.andev.absensiswaku.ui.guru
 
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.net.Uri
 import android.os.Bundle
 import android.text.InputType
 import android.view.LayoutInflater
@@ -10,9 +13,11 @@ import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.fragment.app.Fragment
 import com.andev.absensiswaku.LoginActivity
+import com.andev.absensiswaku.R
 import com.andev.absensiswaku.data.network.SupabaseClient
 import com.andev.absensiswaku.data.pref.SessionManager
 import com.andev.absensiswaku.databinding.DialogUbahKataSandiGuruBinding
@@ -25,6 +30,8 @@ import okhttp3.ResponseBody
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import java.io.File
+import java.io.FileOutputStream
 
 class GuruSetelanFragment : Fragment() {
 
@@ -36,6 +43,31 @@ class GuruSetelanFragment : Fragment() {
     private var namaMapel: String = "Guru Mapel"
     private var bidangMapel: String = "Mata Pelajaran Umum"
     private var idAkunGuru: String = "-"
+
+    private val takePictureLauncher = registerForActivityResult(
+        ActivityResultContracts.TakePicturePreview()
+    ) { bitmap ->
+        if (bitmap != null) {
+            saveAndApplyProfilePhoto(bitmap)
+        }
+    }
+
+    private val galleryLauncher = registerForActivityResult(
+        ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let {
+            try {
+                val inputStream = requireContext().contentResolver.openInputStream(it)
+                val bitmap = BitmapFactory.decodeStream(inputStream)
+                inputStream?.close()
+                if (bitmap != null) {
+                    saveAndApplyProfilePhoto(bitmap)
+                }
+            } catch (e: Exception) {
+                Toast.makeText(requireContext(), "Gagal memproses foto dari galeri", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
 
     companion object {
         private const val PREF_SESSION_NAME = "PREF_SMKN8_SESSION"
@@ -125,6 +157,77 @@ class GuruSetelanFragment : Fragment() {
         } else {
             "ID: $idAkunGuru"
         }
+        binding.tvVersiAplikasiGuru.text = "SMKN 8 Jakarta • Presensi Siswa v${com.andev.absensiswaku.BuildConfig.VERSION_NAME}"
+
+        loadGuruProfilePhoto()
+
+        binding.imgProfileAvatar.applyBounceEffect {
+            showPilihFotoGuruDialog()
+        }
+        binding.imgTopAvatar.applyBounceEffect {
+            showPilihFotoGuruDialog()
+        }
+    }
+
+    private fun saveAndApplyProfilePhoto(bitmap: Bitmap) {
+        val ctx = context ?: return
+        try {
+            val file = File(ctx.filesDir, "avatar_guru.jpg")
+            val outputStream = FileOutputStream(file)
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 90, outputStream)
+            outputStream.flush()
+            outputStream.close()
+
+            binding.imgProfileAvatar.setImageBitmap(bitmap)
+            binding.imgTopAvatar.setImageBitmap(bitmap)
+            Toast.makeText(ctx, "✓ Foto profil Guru Pengajar berhasil diperbarui!", Toast.LENGTH_SHORT).show()
+        } catch (e: Exception) {
+            Toast.makeText(ctx, "Gagal menyimpan foto: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun loadGuruProfilePhoto() {
+        val ctx = context ?: return
+        val photoFile = File(ctx.filesDir, "avatar_guru.jpg")
+        if (photoFile.exists()) {
+            val bitmap = BitmapFactory.decodeFile(photoFile.absolutePath)
+            if (bitmap != null) {
+                binding.imgProfileAvatar.setImageBitmap(bitmap)
+                binding.imgTopAvatar.setImageBitmap(bitmap)
+                return
+            }
+        }
+        binding.imgProfileAvatar.setImageResource(R.drawable.ic_avatar)
+        binding.imgTopAvatar.setImageResource(R.drawable.ic_avatar)
+    }
+
+    private fun showPilihFotoGuruDialog() {
+        val ctx = context ?: return
+        val photoFile = File(ctx.filesDir, "avatar_guru.jpg")
+        val hasCustomPhoto = photoFile.exists()
+
+        val options = if (hasCustomPhoto) {
+            arrayOf("📸 Ambil Foto Baru (Kamera)", "🖼️ Pilih dari Galeri", "🗑️ Hapus Foto Profil (Avatar Default)")
+        } else {
+            arrayOf("📸 Ambil Foto Baru (Kamera)", "🖼️ Pilih dari Galeri")
+        }
+
+        MaterialAlertDialogBuilder(ctx)
+            .setTitle("Ubah Foto Profil Guru Mapel")
+            .setItems(options) { _, which ->
+                when (which) {
+                    0 -> takePictureLauncher.launch(null)
+                    1 -> galleryLauncher.launch("image/*")
+                    2 -> {
+                        if (photoFile.exists()) photoFile.delete()
+                        binding.imgProfileAvatar.setImageResource(R.drawable.ic_avatar)
+                        binding.imgTopAvatar.setImageResource(R.drawable.ic_avatar)
+                        Toast.makeText(ctx, "Foto profil dikembalikan ke avatar default.", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+            .setNegativeButton("Batal", null)
+            .show()
     }
 
     /**

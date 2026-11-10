@@ -1151,9 +1151,10 @@
                 android:orientation="vertical">
 
                 <TextView
+                    android:id="@+id/tvVersiAplikasiSiswa"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Sistem Presensi Siswa v2.4.1 • SMKN 8 Jakarta"
+                    android:text="Sistem Presensi Siswa v2.8.0 • SMKN 8 Jakarta"
                     android:textColor="@color/text_secondary"
                     android:textSize="11sp"
                     android:textStyle="bold" />
