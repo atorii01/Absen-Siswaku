@@ -160,6 +160,11 @@ class PengajuanFragment : Fragment() {
         )
     }
 
+    override fun onResume() {
+        super.onResume()
+        setupHeaderData()
+    }
+
     private fun setupHeaderData() {
         if (!isAdded || _binding == null) return
 
@@ -171,6 +176,12 @@ class PengajuanFragment : Fragment() {
         binding.tvTopBarNisn.text = "NISN: $nisn"
         binding.tvProfilSubtext.text = "$nama • Kelas $namaKelas"
         binding.tvWalasNote.text = "Pengajuan akan langsung diteruskan ke $namaWalas. Status otomatis diperbarui di aplikasi dan dikirimkan via WhatsApp orang tua."
+
+        context?.let { ctx ->
+            val siswaId = sessionManager.getUserId()
+            val avatarFile = com.andev.absensiswaku.util.AvatarHelper.getAvatarFileForSiswa(siswaId)
+            com.andev.absensiswaku.util.AvatarHelper.loadAvatar(ctx, avatarFile, binding.imgAvatar)
+        }
     }
 
     private fun setupJenisIzinSelection() {

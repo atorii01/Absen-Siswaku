@@ -82,6 +82,17 @@ class AdminMasterDataFragment : Fragment() {
         loadDataFromSupabase()
     }
 
+    override fun onResume() {
+        super.onResume()
+        context?.let { ctx ->
+            com.andev.absensiswaku.util.AvatarHelper.loadAvatar(
+                ctx,
+                com.andev.absensiswaku.util.AvatarHelper.FILE_AVATAR_ADMIN,
+                binding.imgTopAvatarMasterData
+            )
+        }
+    }
+
     private fun setupSegmentedSwitcher() {
         binding.btnTabSiswa.applyBounceEffect {
             switchTab(isSiswaTab = true)

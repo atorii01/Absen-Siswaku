@@ -314,17 +314,8 @@ class PresensiFragment : Fragment() {
         // Muat foto profil kustom siswa jika ada
         val ctx = context ?: return
         val siswaId = sessionManager.getUserId()
-        val photoFile = File(ctx.filesDir, "avatar_siswa_$siswaId.jpg")
-        if (photoFile.exists()) {
-            val bitmap = BitmapFactory.decodeFile(photoFile.absolutePath)
-            if (bitmap != null) {
-                binding.imgAvatar.setImageBitmap(bitmap)
-            } else {
-                binding.imgAvatar.setImageResource(R.drawable.ic_avatar)
-            }
-        } else {
-            binding.imgAvatar.setImageResource(R.drawable.ic_avatar)
-        }
+        val avatarFile = com.andev.absensiswaku.util.AvatarHelper.getAvatarFileForSiswa(siswaId)
+        com.andev.absensiswaku.util.AvatarHelper.loadAvatar(ctx, avatarFile, binding.imgAvatar)
 
         binding.imgAvatar.applyBounceEffect {
             (activity as? MainActivity)?.let { mainAct ->

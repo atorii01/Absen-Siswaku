@@ -93,12 +93,14 @@
 
                     </LinearLayout>
 
-                    <ImageView
+                    <com.google.android.material.imageview.ShapeableImageView
                         android:id="@+id/imgAvatar"
                         android:layout_width="36dp"
                         android:layout_height="36dp"
                         android:contentDescription="Avatar Siswa"
-                        android:src="@drawable/ic_avatar" />
+                        android:scaleType="centerCrop"
+                        android:src="@drawable/ic_avatar"
+                        app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Full" />
 
                 </LinearLayout>
 

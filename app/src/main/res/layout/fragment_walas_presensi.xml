@@ -71,12 +71,14 @@
                     </LinearLayout>
 
                     <!-- Avatar Wali Kelas -->
-                    <ImageView
+                    <com.google.android.material.imageview.ShapeableImageView
                         android:id="@+id/imgAvatarWalas"
                         android:layout_width="40dp"
                         android:layout_height="40dp"
                         android:contentDescription="Avatar Wali Kelas"
-                        android:src="@drawable/ic_avatar" />
+                        android:scaleType="centerCrop"
+                        android:src="@drawable/ic_avatar"
+                        app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Full" />
                 </LinearLayout>
 
                 <!-- ================= BARIS TANGGAL & STATUS SINKRON ================= -->

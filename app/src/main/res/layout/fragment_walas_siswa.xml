@@ -71,12 +71,14 @@
                 </LinearLayout>
 
                 <!-- Avatar Wali Kelas -->
-                <ImageView
+                <com.google.android.material.imageview.ShapeableImageView
                     android:id="@+id/imgTopAvatarWalas"
                     android:layout_width="38dp"
                     android:layout_height="38dp"
                     android:contentDescription="Avatar Walas"
-                    android:src="@drawable/ic_avatar" />
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/ic_avatar"
+                    app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Full" />
             </LinearLayout>
 
             <!-- Pill Status Dapodik -->

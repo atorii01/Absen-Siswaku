@@ -79,6 +79,11 @@ open class WalasMainActivity : AppCompatActivity() {
 
         val isAdmin = userRole.equals("SUPER_ADMIN", true) || userRole.equals("ADMIN", true)
 
+        if (isAdmin) {
+            binding.bottomNavigation.menu.findItem(R.id.nav_walas_siswa)?.title = "Master Data"
+            binding.bottomNavigation.menu.findItem(R.id.nav_walas_laporan)?.title = "Rekap"
+        }
+
         if (savedInstanceState == null) {
             if (isAdmin) {
                 loadFragment(com.andev.absensiswaku.ui.admin.AdminPresensiFragment())
@@ -92,6 +97,11 @@ open class WalasMainActivity : AppCompatActivity() {
         val pref = getSharedPreferences("PREF_SMKN8_SESSION", Context.MODE_PRIVATE)
         val userRole = pref.getString("ROLE", "")?.takeIf { it.isNotEmpty() } ?: sessionManager.getRole()
         val isAdmin = userRole.equals("SUPER_ADMIN", true) || userRole.equals("ADMIN", true)
+
+        if (isAdmin) {
+            binding.bottomNavigation.menu.findItem(R.id.nav_walas_siswa)?.title = "Master Data"
+            binding.bottomNavigation.menu.findItem(R.id.nav_walas_laporan)?.title = "Rekap"
+        }
 
         binding.bottomNavigation.setOnItemSelectedListener { item ->
             if (binding.bottomNavigation.selectedItemId == item.itemId && supportFragmentManager.findFragmentById(R.id.fragmentContainer) != null) {

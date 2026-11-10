@@ -107,7 +107,7 @@
                         android:layout_height="38dp"
                         android:contentDescription="Avatar Top"
                         android:scaleType="centerCrop"
-                        app:shapeAppearanceOverlay="@style/CircleImageView"
+                        app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Full"
                         android:src="@drawable/ic_avatar" />
                 </LinearLayout>
             </LinearLayout>
@@ -145,7 +145,7 @@
                             android:layout_gravity="center"
                             android:contentDescription="Foto Siswa"
                             android:scaleType="centerCrop"
-                            app:shapeAppearanceOverlay="@style/CircleImageView"
+                            app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Full"
                             android:src="@drawable/ic_avatar" />
 
                         <!-- Badge Ikon Edit Foto -->

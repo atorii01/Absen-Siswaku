@@ -66,6 +66,17 @@ class AdminPresensiFragment : Fragment() {
         )
     }
 
+    override fun onResume() {
+        super.onResume()
+        context?.let { ctx ->
+            com.andev.absensiswaku.util.AvatarHelper.loadAvatar(
+                ctx,
+                com.andev.absensiswaku.util.AvatarHelper.FILE_AVATAR_ADMIN,
+                binding.imgTopAvatarAdmin
+            )
+        }
+    }
+
     private fun setupDateHeader() {
         val localeId = Locale.forLanguageTag("id-ID")
         val sdfHariTanggal = SimpleDateFormat("EEEE, dd MMM yyyy", localeId)

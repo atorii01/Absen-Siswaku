@@ -68,6 +68,17 @@ class GuruPresensiFragment : Fragment() {
         )
     }
 
+    override fun onResume() {
+        super.onResume()
+        context?.let { ctx ->
+            com.andev.absensiswaku.util.AvatarHelper.loadAvatar(
+                ctx,
+                com.andev.absensiswaku.util.AvatarHelper.FILE_AVATAR_GURU,
+                binding.imgAvatarGuru
+            )
+        }
+    }
+
     private fun setupHeaderAndDate() {
         val dateFormat = SimpleDateFormat("EEEE, dd MMM yyyy", Locale.forLanguageTag("id-ID"))
         binding.tvTanggalHariIni.text = dateFormat.format(Date())

@@ -26,6 +26,7 @@ import com.andev.absensiswaku.data.pref.SessionManager
 import com.andev.absensiswaku.databinding.DialogPerbaruiProfilSiswaBinding
 import com.andev.absensiswaku.databinding.DialogUbahKataSandiBinding
 import com.andev.absensiswaku.databinding.FragmentSetelanBinding
+import com.andev.absensiswaku.util.AvatarHelper
 import com.andev.absensiswaku.util.MotionUtils
 import com.andev.absensiswaku.util.NotificationHelper
 import com.andev.absensiswaku.util.applyBounceEffect
@@ -143,25 +144,9 @@ class SetelanFragment : Fragment() {
 
         // Muat foto profil tersimpan
         val ctx = context ?: return
-        val photoFile = File(ctx.filesDir, "avatar_siswa_$siswaId.jpg")
-        if (photoFile.exists()) {
-            try {
-                val bitmap = BitmapFactory.decodeFile(photoFile.absolutePath)
-                if (bitmap != null) {
-                    binding.imgFotoProfil.setImageBitmap(bitmap)
-                    binding.imgTopAvatar.setImageBitmap(bitmap)
-                } else {
-                    binding.imgFotoProfil.setImageResource(R.drawable.ic_avatar)
-                    binding.imgTopAvatar.setImageResource(R.drawable.ic_avatar)
-                }
-            } catch (e: Exception) {
-                binding.imgFotoProfil.setImageResource(R.drawable.ic_avatar)
-                binding.imgTopAvatar.setImageResource(R.drawable.ic_avatar)
-            }
-        } else {
-            binding.imgFotoProfil.setImageResource(R.drawable.ic_avatar)
-            binding.imgTopAvatar.setImageResource(R.drawable.ic_avatar)
-        }
+        val avatarFile = AvatarHelper.getAvatarFileForSiswa(siswaId)
+        AvatarHelper.loadAvatar(ctx, avatarFile, binding.imgFotoProfil)
+        AvatarHelper.loadAvatar(ctx, avatarFile, binding.imgTopAvatar)
 
         SupabaseClient.instance.getDetailSiswa("eq.$siswaId").enqueue(object : Callback<List<SiswaAdminResponse>> {
             override fun onResponse(call: Call<List<SiswaAdminResponse>>, response: Response<List<SiswaAdminResponse>>) {
@@ -181,19 +166,14 @@ class SetelanFragment : Fragment() {
     private fun saveAndApplyProfilePhoto(bitmap: Bitmap) {
         val ctx = context ?: return
         val siswaId = getStudentId()
-        try {
-            val file = File(ctx.filesDir, "avatar_siswa_$siswaId.jpg")
-            FileOutputStream(file).use { out ->
-                bitmap.compress(Bitmap.CompressFormat.JPEG, 90, out)
-            }
-            val pref = ctx.getSharedPreferences(PREF_SESSION_NAME, Context.MODE_PRIVATE)
-            pref.edit().putString("KEY_FOTO_PROFIL_$siswaId", file.absolutePath).apply()
-
-            binding.imgFotoProfil.setImageBitmap(bitmap)
-            binding.imgTopAvatar.setImageBitmap(bitmap)
+        val avatarFile = AvatarHelper.getAvatarFileForSiswa(siswaId)
+        val circular = AvatarHelper.saveAvatarPhoto(ctx, avatarFile, bitmap)
+        if (circular != null) {
+            binding.imgFotoProfil.setImageBitmap(circular)
+            binding.imgTopAvatar.setImageBitmap(circular)
             Toast.makeText(ctx, "✓ Foto profil siswa berhasil diperbarui!", Toast.LENGTH_SHORT).show()
-        } catch (e: Exception) {
-            Toast.makeText(ctx, "Gagal menyimpan foto: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
+        } else {
+            Toast.makeText(ctx, "Gagal menyimpan foto profil", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -203,34 +183,36 @@ class SetelanFragment : Fragment() {
     private fun showPilihFotoDialog() {
         val ctx = context ?: return
         val siswaId = getStudentId()
-        val photoFile = File(ctx.filesDir, "avatar_siswa_$siswaId.jpg")
-        val hasCustomPhoto = photoFile.exists()
+        val avatarFile = AvatarHelper.getAvatarFileForSiswa(siswaId)
+        val hasCustomPhoto = AvatarHelper.hasCustomAvatar(ctx, avatarFile)
 
-        val options = if (hasCustomPhoto) {
-            arrayOf("📸 Ambil Foto Baru (Kamera)", "🖼️ Pilih dari Galeri", "🗑️ Hapus Foto Profil (Avatar Default)")
-        } else {
-            arrayOf("📸 Ambil Foto Baru (Kamera)", "🖼️ Pilih dari Galeri")
+        val bottomSheet = BottomSheetDialog(ctx)
+        val sheetBinding = com.andev.absensiswaku.databinding.DialogBottomSheetPilihFotoBinding.inflate(layoutInflater)
+        bottomSheet.setContentView(sheetBinding.root)
+
+        AvatarHelper.loadAvatar(ctx, avatarFile, sheetBinding.imgPreviewAvatarSheet)
+        sheetBinding.cardHapusFoto.visibility = if (hasCustomPhoto) View.VISIBLE else View.GONE
+        sheetBinding.btnClosePilihFoto.setOnClickListener { bottomSheet.dismiss() }
+
+        sheetBinding.cardAmbilKamera.setOnClickListener {
+            bottomSheet.dismiss()
+            cameraLauncher.launch(null)
         }
 
-        MaterialAlertDialogBuilder(ctx)
-            .setTitle("Ubah Foto Profil Siswa")
-            .setItems(options) { dialog, which ->
-                dialog.dismiss()
-                when (which) {
-                    0 -> cameraLauncher.launch(null)
-                    1 -> galleryLauncher.launch("image/*")
-                    2 -> {
-                        if (photoFile.exists()) {
-                            photoFile.delete()
-                        }
-                        binding.imgFotoProfil.setImageResource(R.drawable.ic_avatar)
-                        binding.imgTopAvatar.setImageResource(R.drawable.ic_avatar)
-                        Toast.makeText(ctx, "Foto profil dikembalikan ke avatar default.", Toast.LENGTH_SHORT).show()
-                    }
-                }
-            }
-            .setNegativeButton("Batal") { dialog, _ -> dialog.dismiss() }
-            .show()
+        sheetBinding.cardPilihGaleri.setOnClickListener {
+            bottomSheet.dismiss()
+            galleryLauncher.launch("image/*")
+        }
+
+        sheetBinding.cardHapusFoto.setOnClickListener {
+            bottomSheet.dismiss()
+            AvatarHelper.deleteAvatarPhoto(ctx, avatarFile)
+            AvatarHelper.loadAvatar(ctx, avatarFile, binding.imgFotoProfil)
+            AvatarHelper.loadAvatar(ctx, avatarFile, binding.imgTopAvatar)
+            Toast.makeText(ctx, "Foto profil dikembalikan ke avatar default.", Toast.LENGTH_SHORT).show()
+        }
+
+        bottomSheet.show()
     }
 
     /**

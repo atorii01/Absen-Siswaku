@@ -113,6 +113,17 @@ class GuruRekapFragment : Fragment() {
         )
     }
 
+    override fun onResume() {
+        super.onResume()
+        context?.let { ctx ->
+            com.andev.absensiswaku.util.AvatarHelper.loadAvatar(
+                ctx,
+                com.andev.absensiswaku.util.AvatarHelper.FILE_AVATAR_GURU,
+                binding.imgAvatarGuru
+            )
+        }
+    }
+
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null

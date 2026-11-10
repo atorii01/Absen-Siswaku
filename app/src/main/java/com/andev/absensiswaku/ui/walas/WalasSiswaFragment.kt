@@ -92,6 +92,13 @@ class WalasSiswaFragment : Fragment() {
         super.onResume()
         loadSessionData()
         setupHeaderUI()
+        context?.let { ctx ->
+            com.andev.absensiswaku.util.AvatarHelper.loadAvatar(
+                ctx,
+                com.andev.absensiswaku.util.AvatarHelper.FILE_AVATAR_WALAS,
+                binding.imgTopAvatarWalas
+            )
+        }
     }
 
     /**

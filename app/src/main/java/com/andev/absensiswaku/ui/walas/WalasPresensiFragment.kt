@@ -102,6 +102,13 @@ class WalasPresensiFragment : Fragment() {
         super.onResume()
         loadSessionData()
         loadDataFromSupabase()
+        context?.let { ctx ->
+            com.andev.absensiswaku.util.AvatarHelper.loadAvatar(
+                ctx,
+                com.andev.absensiswaku.util.AvatarHelper.FILE_AVATAR_WALAS,
+                binding.imgAvatarWalas
+            )
+        }
     }
 
     private fun getGreetingText(): String {

@@ -75,12 +75,14 @@
                     android:layout_width="40dp"
                     android:layout_height="40dp">
 
-                    <ImageView
+                    <com.google.android.material.imageview.ShapeableImageView
                         android:id="@+id/imgTopAvatarWalas"
                         android:layout_width="40dp"
                         android:layout_height="40dp"
                         android:contentDescription="Avatar Walas"
-                        android:src="@drawable/ic_avatar" />
+                        android:scaleType="centerCrop"
+                        android:src="@drawable/ic_avatar"
+                        app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Full" />
 
                     <View
                         android:layout_width="10dp"
@@ -162,12 +164,14 @@
                         android:layout_width="56dp"
                         android:layout_height="56dp">
 
-                        <ImageView
+                        <com.google.android.material.imageview.ShapeableImageView
                             android:id="@+id/imgFotoProfilGuru"
                             android:layout_width="56dp"
                             android:layout_height="56dp"
                             android:contentDescription="Foto Profil Guru"
-                            android:src="@drawable/ic_avatar" />
+                            android:scaleType="centerCrop"
+                            android:src="@drawable/ic_avatar"
+                            app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Full" />
 
                         <View
                             android:layout_width="14dp"

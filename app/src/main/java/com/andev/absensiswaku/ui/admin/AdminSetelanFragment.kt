@@ -35,6 +35,7 @@ import com.andev.absensiswaku.data.network.KonfigurasiSistemResponse
 import com.andev.absensiswaku.data.network.SupabaseClient
 import com.andev.absensiswaku.data.pref.SessionManager
 import com.andev.absensiswaku.databinding.FragmentAdminSetelanBinding
+import com.andev.absensiswaku.util.AvatarHelper
 import com.andev.absensiswaku.util.MotionUtils
 import com.andev.absensiswaku.util.applyBounceEffect
 import com.google.android.material.bottomsheet.BottomSheetDialog
@@ -170,63 +171,52 @@ class AdminSetelanFragment : Fragment() {
 
     private fun saveAndApplyProfilePhoto(bitmap: Bitmap) {
         val ctx = context ?: return
-        try {
-            val file = File(ctx.filesDir, "avatar_admin.jpg")
-            val outputStream = FileOutputStream(file)
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 90, outputStream)
-            outputStream.flush()
-            outputStream.close()
-
-            binding.imgProfileAdminAvatar.setImageBitmap(bitmap)
-            binding.imgTopAvatarAdminSetelan.setImageBitmap(bitmap)
+        val circular = AvatarHelper.saveAvatarPhoto(ctx, AvatarHelper.FILE_AVATAR_ADMIN, bitmap)
+        if (circular != null) {
+            binding.imgProfileAdminAvatar.setImageBitmap(circular)
+            binding.imgTopAvatarAdminSetelan.setImageBitmap(circular)
             Toast.makeText(ctx, "✓ Foto profil Super Admin berhasil diperbarui!", Toast.LENGTH_SHORT).show()
-        } catch (e: Exception) {
-            Toast.makeText(ctx, "Gagal menyimpan foto: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
+        } else {
+            Toast.makeText(ctx, "Gagal menyimpan foto profil", Toast.LENGTH_SHORT).show()
         }
     }
 
     private fun loadAdminProfilePhoto() {
         val ctx = context ?: return
-        val photoFile = File(ctx.filesDir, "avatar_admin.jpg")
-        if (photoFile.exists()) {
-            val bitmap = BitmapFactory.decodeFile(photoFile.absolutePath)
-            if (bitmap != null) {
-                binding.imgProfileAdminAvatar.setImageBitmap(bitmap)
-                binding.imgTopAvatarAdminSetelan.setImageBitmap(bitmap)
-                return
-            }
-        }
-        binding.imgProfileAdminAvatar.setImageResource(R.drawable.ic_avatar)
-        binding.imgTopAvatarAdminSetelan.setImageResource(R.drawable.ic_avatar)
+        AvatarHelper.loadAvatar(ctx, AvatarHelper.FILE_AVATAR_ADMIN, binding.imgProfileAdminAvatar)
+        AvatarHelper.loadAvatar(ctx, AvatarHelper.FILE_AVATAR_ADMIN, binding.imgTopAvatarAdminSetelan)
     }
 
     private fun showPilihFotoAdminDialog() {
         val ctx = context ?: return
-        val photoFile = File(ctx.filesDir, "avatar_admin.jpg")
-        val hasCustomPhoto = photoFile.exists()
+        val bottomSheet = BottomSheetDialog(ctx)
+        val sheetBinding = com.andev.absensiswaku.databinding.DialogBottomSheetPilihFotoBinding.inflate(layoutInflater)
+        bottomSheet.setContentView(sheetBinding.root)
 
-        val options = if (hasCustomPhoto) {
-            arrayOf("📸 Ambil Foto Baru (Kamera)", "🖼️ Pilih dari Galeri", "🗑️ Hapus Foto Profil (Avatar Default)")
-        } else {
-            arrayOf("📸 Ambil Foto Baru (Kamera)", "🖼️ Pilih dari Galeri")
+        val hasCustomPhoto = AvatarHelper.hasCustomAvatar(ctx, AvatarHelper.FILE_AVATAR_ADMIN)
+        AvatarHelper.loadAvatar(ctx, AvatarHelper.FILE_AVATAR_ADMIN, sheetBinding.imgPreviewAvatarSheet)
+
+        sheetBinding.cardHapusFoto.visibility = if (hasCustomPhoto) View.VISIBLE else View.GONE
+        sheetBinding.btnClosePilihFoto.setOnClickListener { bottomSheet.dismiss() }
+
+        sheetBinding.cardAmbilKamera.setOnClickListener {
+            bottomSheet.dismiss()
+            takePictureLauncher.launch(null)
         }
 
-        MaterialAlertDialogBuilder(ctx)
-            .setTitle("Ubah Foto Profil Administrator")
-            .setItems(options) { _, which ->
-                when (which) {
-                    0 -> takePictureLauncher.launch(null)
-                    1 -> galleryLauncher.launch("image/*")
-                    2 -> {
-                        if (photoFile.exists()) photoFile.delete()
-                        binding.imgProfileAdminAvatar.setImageResource(R.drawable.ic_avatar)
-                        binding.imgTopAvatarAdminSetelan.setImageResource(R.drawable.ic_avatar)
-                        Toast.makeText(ctx, "Foto profil dikembalikan ke avatar default.", Toast.LENGTH_SHORT).show()
-                    }
-                }
-            }
-            .setNegativeButton("Batal", null)
-            .show()
+        sheetBinding.cardPilihGaleri.setOnClickListener {
+            bottomSheet.dismiss()
+            galleryLauncher.launch("image/*")
+        }
+
+        sheetBinding.cardHapusFoto.setOnClickListener {
+            bottomSheet.dismiss()
+            AvatarHelper.deleteAvatarPhoto(ctx, AvatarHelper.FILE_AVATAR_ADMIN)
+            loadAdminProfilePhoto()
+            Toast.makeText(ctx, "Foto profil dikembalikan ke avatar default.", Toast.LENGTH_SHORT).show()
+        }
+
+        bottomSheet.show()
     }
 
     /**
@@ -659,32 +649,43 @@ class AdminSetelanFragment : Fragment() {
      * Dialog Kelola Akun Administrator
      */
     private fun showKelolaAkunDialog(nama: String, role: String, nip: String) {
-        val options = arrayOf(
-            "🔐 Ubah Kata Sandi Administrator",
-            "📞 Perbarui Nomor Kontak Darurat",
-            "📸 Ubah Foto Profil Administrator",
-            "🛡️ Informasi Hak Akses & Status Token"
-        )
+        val ctx = context ?: return
+        val bottomSheet = BottomSheetDialog(ctx)
+        val sheetBinding = com.andev.absensiswaku.databinding.DialogBottomSheetKelolaAkunAdminBinding.inflate(layoutInflater)
+        bottomSheet.setContentView(sheetBinding.root)
 
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Kelola Akun Administrator")
-            .setItems(options) { _, which ->
-                when (which) {
-                    0 -> showUbahKataSandiAdminDialog()
-                    1 -> showDialogPerbaruiKontakAdmin()
-                    2 -> showPilihFotoAdminDialog()
-                    3 -> {
-                        MaterialAlertDialogBuilder(requireContext())
-                            .setTitle("Informasi Akun Administrator")
-                            .setMessage("Nama: $nama\nPeran: $role\n$nip\nHak Akses: Full Access (CRUD Master Data, Server Sync, Security Audit)\nStatus Token: Aktif & Terenkripsi AES-256")
-                            .setIcon(R.drawable.ic_shield_check)
-                            .setPositiveButton("Tutup", null)
-                            .show()
-                    }
-                }
-            }
-            .setNegativeButton("Tutup", null)
-            .show()
+        sheetBinding.tvSheetNamaAdmin.text = nama
+        sheetBinding.tvSheetNipAdmin.text = nip
+        AvatarHelper.loadAvatar(ctx, AvatarHelper.FILE_AVATAR_ADMIN, sheetBinding.imgSheetAvatarAdmin)
+
+        sheetBinding.btnCloseKelolaAkun.setOnClickListener { bottomSheet.dismiss() }
+
+        sheetBinding.cardUbahSandiAdmin.setOnClickListener {
+            bottomSheet.dismiss()
+            showUbahKataSandiAdminDialog()
+        }
+
+        sheetBinding.cardPerbaruiKontakAdmin.setOnClickListener {
+            bottomSheet.dismiss()
+            showDialogPerbaruiKontakAdmin()
+        }
+
+        sheetBinding.cardUbahFotoAdmin.setOnClickListener {
+            bottomSheet.dismiss()
+            showPilihFotoAdminDialog()
+        }
+
+        sheetBinding.cardInfoHakAksesAdmin.setOnClickListener {
+            bottomSheet.dismiss()
+            MaterialAlertDialogBuilder(ctx)
+                .setTitle("Hak Akses & Keamanan Sistem")
+                .setMessage("Nama: $nama\nPeran: $role\n$nip\n\nHak Akses: Full Access (CRUD Master Data, Server Sync, Security Audit)\n\nProtokol: Token Sesi Terenkripsi AES-256 • Integritas Dapodik SMKN 8 Jakarta Terverifikasi.")
+                .setIcon(R.drawable.ic_shield_check)
+                .setPositiveButton("Tutup", null)
+                .show()
+        }
+
+        bottomSheet.show()
     }
 
     /**

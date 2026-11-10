@@ -87,6 +87,13 @@ class WalasLaporanFragment : Fragment() {
     override fun onResume() {
         super.onResume()
         loadSessionData()
+        context?.let { ctx ->
+            com.andev.absensiswaku.util.AvatarHelper.loadAvatar(
+                ctx,
+                com.andev.absensiswaku.util.AvatarHelper.FILE_AVATAR_WALAS,
+                binding.imgAvatarWalas
+            )
+        }
     }
 
     private fun loadSessionData() {

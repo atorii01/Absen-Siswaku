@@ -93,12 +93,14 @@ class RiwayatFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
+        setupHeaderData()
         loadSemuaRiwayat()
     }
 
     override fun onHiddenChanged(hidden: Boolean) {
         super.onHiddenChanged(hidden)
         if (!hidden) {
+            setupHeaderData()
             loadSemuaRiwayat()
         }
     }
@@ -108,6 +110,12 @@ class RiwayatFragment : Fragment() {
 
         val nisn = sessionManager.getNisn().ifEmpty { "0068192341" }
         binding.tvTopBarNisn.text = "NISN: $nisn"
+
+        context?.let { ctx ->
+            val siswaId = sessionManager.getUserId()
+            val avatarFile = com.andev.absensiswaku.util.AvatarHelper.getAvatarFileForSiswa(siswaId)
+            com.andev.absensiswaku.util.AvatarHelper.loadAvatar(ctx, avatarFile, binding.imgAvatar)
+        }
     }
 
     private fun setupDynamicMonthChips() {

@@ -24,6 +24,7 @@ import com.andev.absensiswaku.data.network.SupabaseClient
 import com.andev.absensiswaku.data.pref.SessionManager
 import com.andev.absensiswaku.databinding.DialogUbahKataSandiGuruBinding
 import com.andev.absensiswaku.databinding.FragmentWalasSetelanBinding
+import com.andev.absensiswaku.util.AvatarHelper
 import com.andev.absensiswaku.util.MotionUtils
 import com.andev.absensiswaku.util.applyBounceEffect
 import com.google.android.material.bottomsheet.BottomSheetDialog
@@ -182,63 +183,52 @@ class WalasSetelanFragment : Fragment() {
 
     private fun saveAndApplyProfilePhoto(bitmap: Bitmap) {
         val ctx = context ?: return
-        try {
-            val file = File(ctx.filesDir, "avatar_walas.jpg")
-            val outputStream = FileOutputStream(file)
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 90, outputStream)
-            outputStream.flush()
-            outputStream.close()
-
-            binding.imgFotoProfilGuru.setImageBitmap(bitmap)
-            binding.imgTopAvatarWalas.setImageBitmap(bitmap)
+        val circular = AvatarHelper.saveAvatarPhoto(ctx, AvatarHelper.FILE_AVATAR_WALAS, bitmap)
+        if (circular != null) {
+            binding.imgFotoProfilGuru.setImageBitmap(circular)
+            binding.imgTopAvatarWalas.setImageBitmap(circular)
             Toast.makeText(ctx, "✓ Foto profil Wali Kelas berhasil diperbarui!", Toast.LENGTH_SHORT).show()
-        } catch (e: Exception) {
-            Toast.makeText(ctx, "Gagal menyimpan foto: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
+        } else {
+            Toast.makeText(ctx, "Gagal menyimpan foto profil", Toast.LENGTH_SHORT).show()
         }
     }
 
     private fun loadWalasProfilePhoto() {
         val ctx = context ?: return
-        val photoFile = File(ctx.filesDir, "avatar_walas.jpg")
-        if (photoFile.exists()) {
-            val bitmap = BitmapFactory.decodeFile(photoFile.absolutePath)
-            if (bitmap != null) {
-                binding.imgFotoProfilGuru.setImageBitmap(bitmap)
-                binding.imgTopAvatarWalas.setImageBitmap(bitmap)
-                return
-            }
-        }
-        binding.imgFotoProfilGuru.setImageResource(R.drawable.ic_avatar)
-        binding.imgTopAvatarWalas.setImageResource(R.drawable.ic_avatar)
+        AvatarHelper.loadAvatar(ctx, AvatarHelper.FILE_AVATAR_WALAS, binding.imgFotoProfilGuru)
+        AvatarHelper.loadAvatar(ctx, AvatarHelper.FILE_AVATAR_WALAS, binding.imgTopAvatarWalas)
     }
 
     private fun showPilihFotoWalasDialog() {
         val ctx = context ?: return
-        val photoFile = File(ctx.filesDir, "avatar_walas.jpg")
-        val hasCustomPhoto = photoFile.exists()
+        val bottomSheet = BottomSheetDialog(ctx)
+        val sheetBinding = com.andev.absensiswaku.databinding.DialogBottomSheetPilihFotoBinding.inflate(layoutInflater)
+        bottomSheet.setContentView(sheetBinding.root)
 
-        val options = if (hasCustomPhoto) {
-            arrayOf("📸 Ambil Foto Baru (Kamera)", "🖼️ Pilih dari Galeri", "🗑️ Hapus Foto Profil (Avatar Default)")
-        } else {
-            arrayOf("📸 Ambil Foto Baru (Kamera)", "🖼️ Pilih dari Galeri")
+        val hasCustomPhoto = AvatarHelper.hasCustomAvatar(ctx, AvatarHelper.FILE_AVATAR_WALAS)
+        AvatarHelper.loadAvatar(ctx, AvatarHelper.FILE_AVATAR_WALAS, sheetBinding.imgPreviewAvatarSheet)
+
+        sheetBinding.cardHapusFoto.visibility = if (hasCustomPhoto) View.VISIBLE else View.GONE
+        sheetBinding.btnClosePilihFoto.setOnClickListener { bottomSheet.dismiss() }
+
+        sheetBinding.cardAmbilKamera.setOnClickListener {
+            bottomSheet.dismiss()
+            takePictureLauncher.launch(null)
         }
 
-        MaterialAlertDialogBuilder(ctx)
-            .setTitle("Ubah Foto Profil Wali Kelas")
-            .setItems(options) { _, which ->
-                when (which) {
-                    0 -> takePictureLauncher.launch(null)
-                    1 -> galleryLauncher.launch("image/*")
-                    2 -> {
-                        if (photoFile.exists()) photoFile.delete()
-                        binding.imgFotoProfilGuru.setImageResource(R.drawable.ic_avatar)
-                        binding.imgTopAvatarWalas.setImageResource(R.drawable.ic_avatar)
-                        Toast.makeText(ctx, "Foto profil dikembalikan ke avatar default.", Toast.LENGTH_SHORT).show()
-                    }
-                }
-            }
-            .setNegativeButton("Batal", null)
-            .show()
+        sheetBinding.cardPilihGaleri.setOnClickListener {
+            bottomSheet.dismiss()
+            galleryLauncher.launch("image/*")
+        }
+
+        sheetBinding.cardHapusFoto.setOnClickListener {
+            bottomSheet.dismiss()
+            AvatarHelper.deleteAvatarPhoto(ctx, AvatarHelper.FILE_AVATAR_WALAS)
+            loadWalasProfilePhoto()
+            Toast.makeText(ctx, "Foto profil dikembalikan ke avatar default.", Toast.LENGTH_SHORT).show()
+        }
+
+        bottomSheet.show()
     }
 
     /**
