@@ -13,11 +13,18 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.fragment.app.Fragment
 import com.andev.absensiswaku.LoginActivity
+import com.andev.absensiswaku.data.network.SupabaseClient
 import com.andev.absensiswaku.data.pref.SessionManager
+import com.andev.absensiswaku.databinding.DialogUbahKataSandiBinding
 import com.andev.absensiswaku.databinding.FragmentGuruSetelanBinding
 import com.andev.absensiswaku.util.MotionUtils
 import com.andev.absensiswaku.util.applyBounceEffect
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import okhttp3.ResponseBody
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 class GuruSetelanFragment : Fragment() {
 
@@ -96,11 +103,12 @@ class GuruSetelanFragment : Fragment() {
             ?: sessionManager.getJurusan().takeIf { it.isNotBlank() && !it.equals("Semua Kelas", true) }
             ?: "Mata Pelajaran Umum"
 
-        idAkunGuru = pref.getString("ID_USER", null)?.takeIf { it.isNotBlank() }
+        idAkunGuru = pref.getString("USERNAME", null)?.takeIf { it.isNotBlank() }
+            ?: pref.getString("ID_USER", null)?.takeIf { it.isNotBlank() }
             ?: pref.getString("ID_WALAS", null)?.takeIf { it.isNotBlank() }
             ?: pref.getString("SAVED_GURU_USERNAME", null)?.takeIf { it.isNotBlank() }
             ?: sessionManager.getNisn().takeIf { it.isNotBlank() }
-            ?: "-"
+            ?: "mapel.mtk@smkn8.sch.id"
     }
 
     /**
@@ -182,59 +190,80 @@ class GuruSetelanFragment : Fragment() {
      */
     private fun showDialogUbahSandi() {
         val ctx = context ?: return
-        val paddingHorizontal = (24 * resources.displayMetrics.density).toInt()
-        val paddingVertical = (12 * resources.displayMetrics.density).toInt()
+        val dialog = BottomSheetDialog(ctx)
+        val dBinding = DialogUbahKataSandiBinding.inflate(layoutInflater)
+        dialog.setContentView(dBinding.root)
 
-        val container = LinearLayout(ctx).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(paddingHorizontal, paddingVertical, paddingHorizontal, paddingVertical)
+        dBinding.btnCloseDialog.setOnClickListener {
+            dialog.dismiss()
         }
 
-        val etSandiLama = EditText(ctx).apply {
-            hint = "Kata Sandi Lama"
-            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
-        }
+        dBinding.btnSimpanPin.setOnClickListener {
+            val lama = dBinding.etPinLama.text?.toString()?.trim().orEmpty()
+            val baru = dBinding.etPinBaru.text?.toString()?.trim().orEmpty()
+            val konfirmasi = dBinding.etKonfirmasiPin.text?.toString()?.trim().orEmpty()
 
-        val etSandiBaru = EditText(ctx).apply {
-            hint = "Kata Sandi Baru (min. 6 karakter)"
-            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
-        }
+            dBinding.tilPinLama.error = null
+            dBinding.tilPinBaru.error = null
+            dBinding.tilKonfirmasiPin.error = null
 
-        val etKonfirmasiSandi = EditText(ctx).apply {
-            hint = "Konfirmasi Kata Sandi Baru"
-            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
-        }
-
-        container.addView(etSandiLama)
-        container.addView(etSandiBaru)
-        container.addView(etKonfirmasiSandi)
-
-        MaterialAlertDialogBuilder(ctx)
-            .setTitle("Ubah Kata Sandi Akun Guru")
-            .setMessage("Masukkan kata sandi lama dan tentukan kata sandi baru untuk akses Portal Guru Mapel.")
-            .setView(container)
-            .setPositiveButton("Simpan") { _, _ ->
-                val lama = etSandiLama.text.toString().trim()
-                val baru = etSandiBaru.text.toString().trim()
-                val konfirmasi = etKonfirmasiSandi.text.toString().trim()
-
-                when {
-                    lama.isEmpty() -> {
-                        Toast.makeText(ctx, "Kata sandi lama wajib diisi.", Toast.LENGTH_SHORT).show()
-                    }
-                    baru.length < 6 -> {
-                        Toast.makeText(ctx, "Kata sandi baru minimal 6 karakter.", Toast.LENGTH_SHORT).show()
-                    }
-                    baru != konfirmasi -> {
-                        Toast.makeText(ctx, "Konfirmasi kata sandi tidak cocok.", Toast.LENGTH_SHORT).show()
-                    }
-                    else -> {
-                        Toast.makeText(ctx, "✓ Kata sandi akun Guru berhasil diperbarui.", Toast.LENGTH_SHORT).show()
-                    }
-                }
+            if (lama.isEmpty()) {
+                dBinding.tilPinLama.error = "Kata sandi saat ini wajib diisi"
+                return@setOnClickListener
             }
-            .setNegativeButton("Batal", null)
-            .show()
+            if (baru.length < 6) {
+                dBinding.tilPinBaru.error = "Kata sandi baru minimal 6 karakter"
+                return@setOnClickListener
+            }
+            if (baru != konfirmasi) {
+                dBinding.tilKonfirmasiPin.error = "Konfirmasi kata sandi tidak cocok"
+                return@setOnClickListener
+            }
+
+            Toast.makeText(ctx, "Memverifikasi kata sandi lama...", Toast.LENGTH_SHORT).show()
+
+            SupabaseClient.instance.getUserByUsername("eq.$idAkunGuru")
+                .enqueue(object : Callback<List<Map<String, Any>>> {
+                    override fun onResponse(
+                        call: Call<List<Map<String, Any>>>,
+                        response: Response<List<Map<String, Any>>>
+                    ) {
+                        val users = response.body()
+                        val currentUser = users?.firstOrNull()
+                        val currentPasswordHash = currentUser?.get("password_hash")?.toString() ?: ""
+
+                        if (currentPasswordHash.isNotEmpty() && currentPasswordHash != lama) {
+                            dBinding.tilPinLama.error = "Kata sandi saat ini salah"
+                            Toast.makeText(ctx, "Kata sandi saat ini salah! Mohon periksa kembali.", Toast.LENGTH_LONG).show()
+                            return
+                        }
+
+                        SupabaseClient.instance.updateUser(
+                            usernameFilter = "eq.$idAkunGuru",
+                            payload = mapOf("password_hash" to baru)
+                        ).enqueue(object : Callback<ResponseBody> {
+                            override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
+                                if (response.isSuccessful) {
+                                    dialog.dismiss()
+                                    Toast.makeText(ctx, "✓ Kata sandi akun $namaMapel berhasil diperbarui di cloud!", Toast.LENGTH_LONG).show()
+                                } else {
+                                    Toast.makeText(ctx, "Gagal memperbarui sandi: HTTP ${response.code()}", Toast.LENGTH_SHORT).show()
+                                }
+                            }
+
+                            override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                                Toast.makeText(ctx, "Gagal terhubung ke cloud: ${t.localizedMessage}", Toast.LENGTH_SHORT).show()
+                            }
+                        })
+                    }
+
+                    override fun onFailure(call: Call<List<Map<String, Any>>>, t: Throwable) {
+                        Toast.makeText(ctx, "Koneksi verifikasi gagal: ${t.localizedMessage}", Toast.LENGTH_SHORT).show()
+                    }
+                })
+        }
+
+        dialog.show()
     }
 
     /**
@@ -261,21 +290,45 @@ class GuruSetelanFragment : Fragment() {
 
         container.addView(etNomorHp)
 
-        MaterialAlertDialogBuilder(ctx)
+        val alertDialog = MaterialAlertDialogBuilder(ctx)
             .setTitle("Perbarui Kontak Guru")
             .setMessage("Pastikan nomor aktif untuk keperluan koordinasi darurat dan pembaruan sistem Dapodik.")
             .setView(container)
-            .setPositiveButton("Simpan") { _, _ ->
-                val baru = etNomorHp.text.toString().trim()
-                if (baru.isNotEmpty()) {
-                    pref.edit().putString(KEY_KONTAK_GURU, baru).apply()
-                    Toast.makeText(ctx, "✓ Nomor kontak pengajar berhasil disimpan.", Toast.LENGTH_SHORT).show()
-                } else {
-                    Toast.makeText(ctx, "Nomor kontak tidak boleh kosong.", Toast.LENGTH_SHORT).show()
-                }
+            .setPositiveButton("Simpan", null)
+            .setNegativeButton("Batal") { dialog, _ ->
+                dialog.dismiss()
             }
-            .setNegativeButton("Batal", null)
-            .show()
+            .create()
+
+        alertDialog.show()
+
+        alertDialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+            val baru = etNomorHp.text.toString().trim()
+            if (baru.length >= 9) {
+                Toast.makeText(ctx, "Menyimpan ke cloud...", Toast.LENGTH_SHORT).show()
+
+                SupabaseClient.instance.updateUser(
+                    usernameFilter = "eq.$idAkunGuru",
+                    payload = mapOf("no_telepon" to baru)
+                ).enqueue(object : Callback<ResponseBody> {
+                    override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
+                        if (response.isSuccessful) {
+                            pref.edit().putString(KEY_KONTAK_GURU, baru).apply()
+                            alertDialog.dismiss()
+                            Toast.makeText(ctx, "✓ Kontak WhatsApp $namaMapel berhasil disimpan di cloud: $baru", Toast.LENGTH_LONG).show()
+                        } else {
+                            Toast.makeText(ctx, "Gagal menyimpan kontak: HTTP ${response.code()}", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+
+                    override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                        Toast.makeText(ctx, "Koneksi cloud gagal: ${t.localizedMessage}", Toast.LENGTH_SHORT).show()
+                    }
+                })
+            } else {
+                Toast.makeText(ctx, "Nomor kontak tidak valid (minimal 9 digit).", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
     /**

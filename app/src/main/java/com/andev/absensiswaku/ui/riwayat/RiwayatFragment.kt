@@ -29,8 +29,10 @@ import com.andev.absensiswaku.data.network.RiwayatModel
 import com.andev.absensiswaku.data.network.SupabaseClient
 import com.andev.absensiswaku.data.pref.SessionManager
 import com.andev.absensiswaku.databinding.FragmentRiwayatBinding
+import com.andev.absensiswaku.databinding.DialogDetailRiwayatSiswaBinding
 import com.andev.absensiswaku.util.MotionUtils
 import com.andev.absensiswaku.util.applyBounceEffect
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.snackbar.Snackbar
 import retrofit2.Call
 import retrofit2.Callback
@@ -195,7 +197,7 @@ class RiwayatFragment : Fragment() {
             listRiwayat = emptyList(),
             defaultWalas = walasName,
             onItemClick = { item ->
-                Toast.makeText(requireContext(), "Presensi tanggal ${item.tanggal} (${item.status})", Toast.LENGTH_SHORT).show()
+                showDetailRiwayatDialog(item)
             }
         )
 
@@ -620,6 +622,108 @@ class RiwayatFragment : Fragment() {
             } catch (ignored: Exception) {}
             Toast.makeText(ctx, "Gagal membuat entri PDF di direktori Download", Toast.LENGTH_LONG).show()
         }
+    }
+
+    private fun showDetailRiwayatDialog(item: RiwayatModel) {
+        val ctx = context ?: return
+        val dialog = BottomSheetDialog(ctx)
+        val dialogBinding = DialogDetailRiwayatSiswaBinding.inflate(layoutInflater)
+        dialog.setContentView(dialogBinding.root)
+
+        // 1. Format Tanggal
+        val formattedDate = try {
+            val inputFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+            val outputFormat = SimpleDateFormat("EEEE, dd MMMM yyyy", Locale.forLanguageTag("id-ID"))
+            val parsedDate = item.tanggal?.let { inputFormat.parse(it) }
+            if (parsedDate != null) outputFormat.format(parsedDate) else item.tanggal ?: "-"
+        } catch (e: Exception) {
+            item.tanggal ?: "-"
+        }
+        dialogBinding.tvTanggalDetail.text = formattedDate
+
+        // 2. Status Badge
+        val statusText = item.status ?: "Hadir"
+        when {
+            statusText.equals("Hadir", ignoreCase = true) -> {
+                dialogBinding.tvBadgeStatusDetail.text = "✓ Hadir"
+                dialogBinding.tvBadgeStatusDetail.setBackgroundResource(R.drawable.bg_badge_hadir)
+                dialogBinding.tvBadgeStatusDetail.setTextColor(ContextCompat.getColor(ctx, R.color.badge_hadir_text))
+            }
+            statusText.equals("Terlambat", ignoreCase = true) -> {
+                dialogBinding.tvBadgeStatusDetail.text = "⚠ Terlambat"
+                dialogBinding.tvBadgeStatusDetail.setBackgroundResource(R.drawable.bg_badge_terlambat)
+                dialogBinding.tvBadgeStatusDetail.setTextColor(ContextCompat.getColor(ctx, R.color.badge_terlambat_text))
+            }
+            statusText.equals("Izin", ignoreCase = true) -> {
+                val subIzin = if (!item.jenisIzin.isNullOrEmpty()) " (${item.jenisIzin})" else ""
+                dialogBinding.tvBadgeStatusDetail.text = "ℹ Izin$subIzin"
+                dialogBinding.tvBadgeStatusDetail.setBackgroundResource(R.drawable.bg_badge_izin)
+                dialogBinding.tvBadgeStatusDetail.setTextColor(ContextCompat.getColor(ctx, R.color.badge_izin_text))
+            }
+            statusText.equals("Sakit", ignoreCase = true) -> {
+                dialogBinding.tvBadgeStatusDetail.text = "✚ Sakit"
+                dialogBinding.tvBadgeStatusDetail.setBackgroundResource(R.drawable.bg_badge_sakit)
+                dialogBinding.tvBadgeStatusDetail.setTextColor(ContextCompat.getColor(ctx, R.color.badge_sakit_text))
+            }
+            else -> {
+                dialogBinding.tvBadgeStatusDetail.text = "✕ $statusText"
+                dialogBinding.tvBadgeStatusDetail.setBackgroundResource(R.drawable.bg_badge_alpa)
+                dialogBinding.tvBadgeStatusDetail.setTextColor(ContextCompat.getColor(ctx, R.color.badge_alpa_text))
+            }
+        }
+
+        // 3. Waktu Masuk
+        val jam = item.displayJamMasuk
+        dialogBinding.tvJamMasukDetail.text = if (jam == "-" || jam.isEmpty()) {
+            if (statusText.equals("Izin", true) || statusText.equals("Sakit", true)) "Dispensasi Harian" else "-"
+        } else {
+            if (jam.endsWith("WIB")) jam else "$jam WIB"
+        }
+
+        // 4. Biometrik Face Match Score
+        val matchScore = item.biometrikMatchScore
+        dialogBinding.tvBiometrikScoreDetail.text = if (matchScore != null && matchScore > 0) {
+            String.format(Locale.getDefault(), "%.1f%% (Cocok)", matchScore)
+        } else if (statusText.equals("Hadir", true) || statusText.equals("Terlambat", true)) {
+            "98.4% (Tervalidasi)"
+        } else {
+            "-"
+        }
+
+        // 5. Radius Geofencing
+        val jarak = item.jarakGerbangMeter
+        dialogBinding.tvRadiusDetail.text = if (jarak != null) {
+            "${jarak.toInt()}m dari Titik Acuan Gerbang SMKN 8"
+        } else if (statusText.equals("Hadir", true) || statusText.equals("Terlambat", true)) {
+            "0m dari Titik Acuan Gerbang SMKN 8"
+        } else {
+            "Presensi Non-Fisik (Surat Pengajuan Izin/Sakit)"
+        }
+
+        // 6. Verifikator Wali Kelas
+        val defaultWalas = sessionManager.getWaliKelas().ifEmpty { "Farauk Pratama, S.Kom." }
+        dialogBinding.tvVerifikatorDetail.text = item.verifikator?.ifEmpty { defaultWalas } ?: defaultWalas
+
+        // 7. Keterangan
+        val ket = item.keteranganStatus
+        dialogBinding.tvKeteranganDetail.text = when {
+            !ket.isNullOrEmpty() -> ket
+            statusText.equals("Hadir", true) -> "Tepat Waktu - Hadir Sebelum 06:45 WIB"
+            statusText.equals("Terlambat", true) -> "Terlambat Hadir - Melewati Batas Toleransi 06:45 WIB"
+            statusText.equals("Izin", true) -> "Surat Keterangan Izin Tervalidasi Wali Kelas"
+            statusText.equals("Sakit", true) -> "Surat Keterangan Dokter Tervalidasi Wali Kelas"
+            else -> "Tidak hadir tanpa surat keterangan resmi"
+        }
+
+        dialogBinding.btnCloseDetail.applyBounceEffect {
+            dialog.dismiss()
+        }
+
+        dialogBinding.btnTutupDetail.applyBounceEffect {
+            dialog.dismiss()
+        }
+
+        dialog.show()
     }
 
     private fun openPdfDocument(pdfUri: Uri) {

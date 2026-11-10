@@ -251,4 +251,18 @@ interface SupabaseService {
         @Query("status_verifikasi") status: String = "eq.Disetujui",
         @Query("limit") limit: Int = 500
     ): Call<List<IzinRecordResponse>>
+
+    // ================= PENGGUNA (GURU & WALAS & ADMIN) =================
+    @GET("users")
+    fun getUserByUsername(
+        @Query("username") usernameFilter: String,
+        @Query("select") select: String = "*"
+    ): Call<List<Map<String, Any>>>
+
+    @Headers("Prefer: return=representation")
+    @PATCH("users")
+    fun updateUser(
+        @Query("username") usernameFilter: String,
+        @Body payload: Map<String, @JvmSuppressWildcards Any>
+    ): Call<ResponseBody>
 }
