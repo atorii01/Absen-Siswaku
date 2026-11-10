@@ -23,6 +23,7 @@ import com.andev.absensiswaku.databinding.DialogPerbaruiProfilSiswaBinding
 import com.andev.absensiswaku.databinding.DialogUbahKataSandiBinding
 import com.andev.absensiswaku.databinding.FragmentSetelanBinding
 import com.andev.absensiswaku.util.MotionUtils
+import com.andev.absensiswaku.util.NotificationHelper
 import com.andev.absensiswaku.util.applyBounceEffect
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -279,23 +280,45 @@ class SetelanFragment : Fragment() {
         // Switch 2: Alarm Masuk Pagi
         binding.switchAlarmPagi.setOnCheckedChangeListener { _, isChecked ->
             pref.edit().putBoolean(KEY_ALARM_PAGI, isChecked).apply()
-            val pesan = if (isChecked) {
-                "Alarm pengingat presensi pagi (06:00 WIB) diaktifkan"
+            if (isChecked) {
+                NotificationHelper.scheduleAlarmPagi(requireContext())
+                NotificationHelper.showPresensiAlarmNotification(requireContext(), isPreview = true)
+                Toast.makeText(
+                    requireContext(),
+                    "✓ Alarm presensi disetel (06:00 WIB) & Notifikasi diuji",
+                    Toast.LENGTH_SHORT
+                ).show()
             } else {
-                "Alarm pengingat presensi pagi dinonaktifkan"
+                NotificationHelper.cancelAlarmPagi(requireContext())
+                Toast.makeText(
+                    requireContext(),
+                    "Alarm pengingat presensi pagi dinonaktifkan",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
-            Toast.makeText(requireContext(), pesan, Toast.LENGTH_SHORT).show()
         }
 
         // Switch 3: Notifikasi Guru
         binding.switchNotifikasiGuru.setOnCheckedChangeListener { _, isChecked ->
             pref.edit().putBoolean(KEY_NOTIFIKASI_GURU, isChecked).apply()
-            val pesan = if (isChecked) {
-                "Notifikasi verifikasi absensi dari Guru diaktifkan"
+            if (isChecked) {
+                NotificationHelper.showNotifikasiGuru(
+                    requireContext(),
+                    "🔔 Notifikasi Guru SMKN 8 Aktif",
+                    "Pemberitahuan verifikasi kehadiran dan izin dari wali kelas telah aktif."
+                )
+                Toast.makeText(
+                    requireContext(),
+                    "✓ Notifikasi verifikasi absensi dari Guru diaktifkan",
+                    Toast.LENGTH_SHORT
+                ).show()
             } else {
-                "Notifikasi verifikasi absensi dari Guru dinonaktifkan"
+                Toast.makeText(
+                    requireContext(),
+                    "Notifikasi verifikasi absensi dari Guru dinonaktifkan",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
-            Toast.makeText(requireContext(), pesan, Toast.LENGTH_SHORT).show()
         }
 
         // Switch 4: Cache Foto Presensi
