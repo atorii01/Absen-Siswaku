@@ -1,4 +1,4 @@
-package com.andev.absensiswaku.ui.presensi
+﻿package com.andev.absensiswaku.ui.presensi
 
 import android.Manifest
 import android.annotation.SuppressLint
@@ -210,37 +210,13 @@ class PresensiFragment : Fragment() {
                         val ctx = context ?: return@apply
                         setTextColor(ContextCompat.getColor(ctx, R.color.primary_teal))
                     }
-            }
-            !isLivenessVerified -> {
-                binding.btnSubmitPresensi.apply {
-                    isEnabled = false
-                    text = "Kedipkan Mata (Verifikasi Biometrik Asli)"
-                    val ctx = context ?: return@apply
-                    setBackgroundColor(ContextCompat.getColor(ctx, R.color.btn_disabled_bg))
-                }
 
                     binding.btnSubmitPresensi.apply {
                         isEnabled = false
-                        text = "✓ Anda Sudah Presensi Hari Ini"
+                        text = "Γ£ô Anda Sudah Presensi Hari Ini"
                         val ctx = context ?: return@apply
                         setBackgroundColor(ContextCompat.getColor(ctx, R.color.btn_disabled_bg))
                     }
-            }
-            !isLivenessVerified -> {
-                binding.btnSubmitPresensi.apply {
-                    isEnabled = false
-                    text = "Kedipkan Mata (Verifikasi Biometrik Asli)"
-                    val ctx = context ?: return@apply
-                    setBackgroundColor(ContextCompat.getColor(ctx, R.color.btn_disabled_bg))
-                }
-                }
-            }
-            !isLivenessVerified -> {
-                binding.btnSubmitPresensi.apply {
-                    isEnabled = false
-                    text = "Kedipkan Mata (Verifikasi Biometrik Asli)"
-                    val ctx = context ?: return@apply
-                    setBackgroundColor(ContextCompat.getColor(ctx, R.color.btn_disabled_bg))
                 }
             }
 
@@ -295,7 +271,7 @@ class PresensiFragment : Fragment() {
         binding.tvTanggalHeader.text = dateFormatted
         binding.tvTopBarNisn.text = "NISN: $nisn"
         binding.tvNamaSiswa.text = nama
-        binding.tvKelasNisnSub.text = "Kelas $namaKelas • NISN: $nisn"
+        binding.tvKelasNisnSub.text = "Kelas $namaKelas ΓÇó NISN: $nisn"
         binding.tvBatasMasukJam.text = "06:40 WIB"
     }
 
@@ -359,7 +335,7 @@ class PresensiFragment : Fragment() {
         if (isAlreadyPresensi) {
             binding.btnSubmitPresensi.apply {
                 isEnabled = false
-                text = "✓ Anda Sudah Presensi Hari Ini"
+                text = "Γ£ô Anda Sudah Presensi Hari Ini"
                 val ctx = context ?: return@apply
                 setBackgroundColor(ContextCompat.getColor(ctx, R.color.btn_disabled_bg))
             }
@@ -384,26 +360,10 @@ class PresensiFragment : Fragment() {
                     setBackgroundColor(ContextCompat.getColor(ctx, R.color.btn_disabled_bg))
                 }
             }
-            !isLivenessVerified -> {
-                binding.btnSubmitPresensi.apply {
-                    isEnabled = false
-                    text = "Kedipkan Mata (Verifikasi Biometrik Asli)"
-                    val ctx = context ?: return@apply
-                    setBackgroundColor(ContextCompat.getColor(ctx, R.color.btn_disabled_bg))
-                }
-            }
             !isFaceDetected -> {
                 binding.btnSubmitPresensi.apply {
                     isEnabled = false
-                    text = "✕ Wajah Tidak Terdeteksi"
-                    val ctx = context ?: return@apply
-                    setBackgroundColor(ContextCompat.getColor(ctx, R.color.btn_disabled_bg))
-                }
-            }
-            !isLivenessVerified -> {
-                binding.btnSubmitPresensi.apply {
-                    isEnabled = false
-                    text = "Kedipkan Mata (Verifikasi Biometrik Asli)"
+                    text = "Γ£ò Wajah Tidak Terdeteksi"
                     val ctx = context ?: return@apply
                     setBackgroundColor(ContextCompat.getColor(ctx, R.color.btn_disabled_bg))
                 }
@@ -411,15 +371,7 @@ class PresensiFragment : Fragment() {
             !isFaceInsideCircle -> {
                 binding.btnSubmitPresensi.apply {
                     isEnabled = false
-                    text = "✕ Wajah Di Luar Radius Lingkaran Panduan"
-                    val ctx = context ?: return@apply
-                    setBackgroundColor(ContextCompat.getColor(ctx, R.color.btn_disabled_bg))
-                }
-            }
-            !isLivenessVerified -> {
-                binding.btnSubmitPresensi.apply {
-                    isEnabled = false
-                    text = "Kedipkan Mata (Verifikasi Biometrik Asli)"
+                    text = "Γ£ò Wajah Di Luar Radius Lingkaran Panduan"
                     val ctx = context ?: return@apply
                     setBackgroundColor(ContextCompat.getColor(ctx, R.color.btn_disabled_bg))
                 }
@@ -432,14 +384,6 @@ class PresensiFragment : Fragment() {
                     setBackgroundColor(ContextCompat.getColor(ctx, R.color.btn_disabled_bg))
                 }
             }
-            !isLivenessVerified -> {
-                binding.btnSubmitPresensi.apply {
-                    isEnabled = false
-                    text = "Kedipkan Mata (Verifikasi Biometrik Asli)"
-                    val ctx = context ?: return@apply
-                    setBackgroundColor(ContextCompat.getColor(ctx, R.color.btn_disabled_bg))
-                }
-            }
             currentMinuteOfDay < JAM_BUKA_MINUTES -> {
                 binding.btnSubmitPresensi.apply {
                     isEnabled = false
@@ -448,44 +392,20 @@ class PresensiFragment : Fragment() {
                     setBackgroundColor(ContextCompat.getColor(ctx, R.color.btn_disabled_bg))
                 }
             }
-            !isLivenessVerified -> {
-                binding.btnSubmitPresensi.apply {
-                    isEnabled = false
-                    text = "Kedipkan Mata (Verifikasi Biometrik Asli)"
-                    val ctx = context ?: return@apply
-                    setBackgroundColor(ContextCompat.getColor(ctx, R.color.btn_disabled_bg))
-                }
-            }
             currentMinuteOfDay <= JAM_BATAS_MINUTES -> {
                 binding.btnSubmitPresensi.apply {
                     isEnabled = true
-                    text = "✓ Presensi Sekarang (Tepat Waktu)"
+                    text = "Γ£ô Presensi Sekarang (Tepat Waktu)"
                     val ctx = context ?: return@apply
                     setBackgroundColor(ContextCompat.getColor(ctx, R.color.primary_teal))
-                }
-            }
-            !isLivenessVerified -> {
-                binding.btnSubmitPresensi.apply {
-                    isEnabled = false
-                    text = "Kedipkan Mata (Verifikasi Biometrik Asli)"
-                    val ctx = context ?: return@apply
-                    setBackgroundColor(ContextCompat.getColor(ctx, R.color.btn_disabled_bg))
                 }
             }
             else -> {
                 binding.btnSubmitPresensi.apply {
                     isEnabled = true
-                    text = "✓ Presensi Sekarang (Terlambat)"
+                    text = "Γ£ô Presensi Sekarang (Terlambat)"
                     val ctx = context ?: return@apply
                     setBackgroundColor(ContextCompat.getColor(ctx, R.color.btn_orange_late))
-                }
-            }
-            !isLivenessVerified -> {
-                binding.btnSubmitPresensi.apply {
-                    isEnabled = false
-                    text = "Kedipkan Mata (Verifikasi Biometrik Asli)"
-                    val ctx = context ?: return@apply
-                    setBackgroundColor(ContextCompat.getColor(ctx, R.color.btn_disabled_bg))
                 }
             }
         }
@@ -507,25 +427,9 @@ class PresensiFragment : Fragment() {
 
                 if (location != null) {
                     updateLocationUI(location)
-                }
-            }
-            !isLivenessVerified -> {
-                binding.btnSubmitPresensi.apply {
-                    isEnabled = false
-                    text = "Kedipkan Mata (Verifikasi Biometrik Asli)"
-                    val ctx = context ?: return@apply
-                    setBackgroundColor(ContextCompat.getColor(ctx, R.color.btn_disabled_bg))
                 } else {
                     binding.tvStatusRadiusTitle.text = "Mencari sinyal GPS..."
                     binding.btnSubmitPresensi.isEnabled = false
-                }
-            }
-            !isLivenessVerified -> {
-                binding.btnSubmitPresensi.apply {
-                    isEnabled = false
-                    text = "Kedipkan Mata (Verifikasi Biometrik Asli)"
-                    val ctx = context ?: return@apply
-                    setBackgroundColor(ContextCompat.getColor(ctx, R.color.btn_disabled_bg))
                 }
             }.addOnFailureListener {
                 if (!isAdded || _binding == null) return@addOnFailureListener
@@ -543,14 +447,6 @@ class PresensiFragment : Fragment() {
                     if (!isAdded || _binding == null) return
                     val location = locationResult.lastLocation ?: return
                     updateLocationUI(location)
-                }
-            }
-            !isLivenessVerified -> {
-                binding.btnSubmitPresensi.apply {
-                    isEnabled = false
-                    text = "Kedipkan Mata (Verifikasi Biometrik Asli)"
-                    val ctx = context ?: return@apply
-                    setBackgroundColor(ContextCompat.getColor(ctx, R.color.btn_disabled_bg))
                 }
             }
 
@@ -579,7 +475,7 @@ class PresensiFragment : Fragment() {
             binding.progressBarJarak.progress = 50
             binding.tvPosisiProgress.text = "Posisi: Fake GPS"
 
-            binding.tvStatusRadiusTitle.text = "✕ Ilegal / Fake GPS Terdeteksi"
+            binding.tvStatusRadiusTitle.text = "Γ£ò Ilegal / Fake GPS Terdeteksi"
             binding.tvStatusRadiusTitle.setTextColor(
                 ContextCompat.getColor(ctx, R.color.status_unread_text)
             )
@@ -603,12 +499,12 @@ class PresensiFragment : Fragment() {
         val distanceInt = jarakMeter.toInt()
 
         binding.tvJarakRealtime.text = "$distanceInt m"
-        binding.tvAkurasiSub.text = "Akurasi ±${userLocation.accuracy.toInt()}m"
+        binding.tvAkurasiSub.text = "Akurasi ┬▒${userLocation.accuracy.toInt()}m"
         binding.progressBarJarak.progress = minOf(distanceInt, 50)
         binding.tvPosisiProgress.text = "Posisi: ${distanceInt}m"
 
         if (jarakMeter <= MAX_RADIUS_METERS) {
-            binding.tvStatusRadiusTitle.text = "Dalam Radius Sekolah ✓"
+            binding.tvStatusRadiusTitle.text = "Dalam Radius Sekolah Γ£ô"
             binding.tvStatusRadiusTitle.setTextColor(
                 ContextCompat.getColor(ctx, R.color.emerald_green)
             )
@@ -636,14 +532,6 @@ class PresensiFragment : Fragment() {
                 val preview = Preview.Builder().build().also {
                     it.surfaceProvider = binding.cameraPreviewView.surfaceProvider
                 }
-            }
-            !isLivenessVerified -> {
-                binding.btnSubmitPresensi.apply {
-                    isEnabled = false
-                    text = "Kedipkan Mata (Verifikasi Biometrik Asli)"
-                    val ctx = context ?: return@apply
-                    setBackgroundColor(ContextCompat.getColor(ctx, R.color.btn_disabled_bg))
-                }
 
                 imageCapture = ImageCapture.Builder().build()
 
@@ -653,14 +541,6 @@ class PresensiFragment : Fragment() {
 
                 imageAnalysis.setAnalyzer(ContextCompat.getMainExecutor(requireContext())) { imageProxy ->
                     processImageFrameForFaceDetection(imageProxy)
-                }
-            }
-            !isLivenessVerified -> {
-                binding.btnSubmitPresensi.apply {
-                    isEnabled = false
-                    text = "Kedipkan Mata (Verifikasi Biometrik Asli)"
-                    val ctx = context ?: return@apply
-                    setBackgroundColor(ContextCompat.getColor(ctx, R.color.btn_disabled_bg))
                 }
 
                 cameraProvider?.unbindAll()
@@ -710,120 +590,19 @@ class PresensiFragment : Fragment() {
                     val scoreStr = String.format(Locale.US, "%.1f", lastBiometricScore)
 
                     if (isFaceInsideCircle) {
-                        binding.tvStatusKameraChip.text = "• Kamera Aktif • Wajah Terdeteksi"
-                        if (isLivenessVerified) {
-                            updateFaceWarningBadge(FaceWarningBadgeState.MATCHED, "$scoreStr% (Live ✓)")
-                        }
-            }
-            !isLivenessVerified -> {
-                binding.btnSubmitPresensi.apply {
-                    isEnabled = false
-                    text = "Kedipkan Mata (Verifikasi Biometrik Asli)"
-                    val ctx = context ?: return@apply
-                    setBackgroundColor(ContextCompat.getColor(ctx, R.color.btn_disabled_bg))
-                } else {
-                            val leftEye = face.leftEyeOpenProbability ?: -1f
-                            val rightEye = face.rightEyeOpenProbability ?: -1f
-                            if (leftEye in 0.0f..0.25f && rightEye in 0.0f..0.25f) {
-                                hasEyesClosed = true
-                            }
-            }
-            !isLivenessVerified -> {
-                binding.btnSubmitPresensi.apply {
-                    isEnabled = false
-                    text = "Kedipkan Mata (Verifikasi Biometrik Asli)"
-                    val ctx = context ?: return@apply
-                    setBackgroundColor(ContextCompat.getColor(ctx, R.color.btn_disabled_bg))
-                } else if (hasEyesClosed && leftEye > 0.60f && rightEye > 0.60f) {
-                                isLivenessVerified = true
-                                view?.performHapticFeedback(android.view.HapticFeedbackConstants.KEYBOARD_TAP)
-                            }
-            }
-            !isLivenessVerified -> {
-                binding.btnSubmitPresensi.apply {
-                    isEnabled = false
-                    text = "Kedipkan Mata (Verifikasi Biometrik Asli)"
-                    val ctx = context ?: return@apply
-                    setBackgroundColor(ContextCompat.getColor(ctx, R.color.btn_disabled_bg))
-                }
-
-                            if (isLivenessVerified) {
-                                updateFaceWarningBadge(FaceWarningBadgeState.MATCHED, "$scoreStr% (Live ✓)")
-                            }
-            }
-            !isLivenessVerified -> {
-                binding.btnSubmitPresensi.apply {
-                    isEnabled = false
-                    text = "Kedipkan Mata (Verifikasi Biometrik Asli)"
-                    val ctx = context ?: return@apply
-                    setBackgroundColor(ContextCompat.getColor(ctx, R.color.btn_disabled_bg))
-                } else {
-                                updateFaceWarningBadge(FaceWarningBadgeState.NEED_BLINK, scoreStr)
-                            }
-            }
-            !isLivenessVerified -> {
-                binding.btnSubmitPresensi.apply {
-                    isEnabled = false
-                    text = "Kedipkan Mata (Verifikasi Biometrik Asli)"
-                    val ctx = context ?: return@apply
-                    setBackgroundColor(ContextCompat.getColor(ctx, R.color.btn_disabled_bg))
-                }
-                        }
-            }
-            !isLivenessVerified -> {
-                binding.btnSubmitPresensi.apply {
-                    isEnabled = false
-                    text = "Kedipkan Mata (Verifikasi Biometrik Asli)"
-                    val ctx = context ?: return@apply
-                    setBackgroundColor(ContextCompat.getColor(ctx, R.color.btn_disabled_bg))
-                }
-                    }
-            }
-            !isLivenessVerified -> {
-                binding.btnSubmitPresensi.apply {
-                    isEnabled = false
-                    text = "Kedipkan Mata (Verifikasi Biometrik Asli)"
-                    val ctx = context ?: return@apply
-                    setBackgroundColor(ContextCompat.getColor(ctx, R.color.btn_disabled_bg))
-                } else {
-                        binding.tvStatusKameraChip.text = "• Kamera Aktif • Wajah Di Luar Radius"
-                        isLivenessVerified = false
-                        hasEyesClosed = false
+                        binding.tvStatusKameraChip.text = "ΓÇó Kamera Aktif ΓÇó Wajah Terdeteksi"
+                        updateFaceWarningBadge(FaceWarningBadgeState.MATCHED, scoreStr)
+                    } else {
+                        binding.tvStatusKameraChip.text = "ΓÇó Kamera Aktif ΓÇó Wajah Di Luar Radius"
                         updateFaceWarningBadge(FaceWarningBadgeState.OUTSIDE_CIRCLE)
                     }
-            }
-            !isLivenessVerified -> {
-                binding.btnSubmitPresensi.apply {
-                    isEnabled = false
-                    text = "Kedipkan Mata (Verifikasi Biometrik Asli)"
-                    val ctx = context ?: return@apply
-                    setBackgroundColor(ContextCompat.getColor(ctx, R.color.btn_disabled_bg))
-                }
-                }
-            }
-            !isLivenessVerified -> {
-                binding.btnSubmitPresensi.apply {
-                    isEnabled = false
-                    text = "Kedipkan Mata (Verifikasi Biometrik Asli)"
-                    val ctx = context ?: return@apply
-                    setBackgroundColor(ContextCompat.getColor(ctx, R.color.btn_disabled_bg))
                 } else {
                     isFaceDetected = false
                     isFaceInsideCircle = false
-                    isLivenessVerified = false
-                    hasEyesClosed = false
                     lastBiometricScore = 0.0
 
-                    binding.tvStatusKameraChip.text = "• Kamera Aktif • Wajah Tidak Terdeteksi"
+                    binding.tvStatusKameraChip.text = "ΓÇó Kamera Aktif ΓÇó Wajah Tidak Terdeteksi"
                     updateFaceWarningBadge(FaceWarningBadgeState.NOT_DETECTED)
-                }
-            }
-            !isLivenessVerified -> {
-                binding.btnSubmitPresensi.apply {
-                    isEnabled = false
-                    text = "Kedipkan Mata (Verifikasi Biometrik Asli)"
-                    val ctx = context ?: return@apply
-                    setBackgroundColor(ContextCompat.getColor(ctx, R.color.btn_disabled_bg))
                 }
 
                 val calendar = Calendar.getInstance(TimeZone.getTimeZone("Asia/Jakarta"))
@@ -856,30 +635,12 @@ class PresensiFragment : Fragment() {
                     lastBiometricScore = 95.0
                     updateFaceWarningBadge(FaceWarningBadgeState.MATCHED, "95.0")
                     Toast.makeText(ctx, "Wajah Terdeteksi dari foto!", Toast.LENGTH_SHORT).show()
-                }
-            }
-            !isLivenessVerified -> {
-                binding.btnSubmitPresensi.apply {
-                    isEnabled = false
-                    text = "Kedipkan Mata (Verifikasi Biometrik Asli)"
-                    val ctx = context ?: return@apply
-                    setBackgroundColor(ContextCompat.getColor(ctx, R.color.btn_disabled_bg))
                 } else {
                     isFaceDetected = false
                     isFaceInsideCircle = false
-                    isLivenessVerified = false
-                    hasEyesClosed = false
                     lastBiometricScore = 0.0
                     updateFaceWarningBadge(FaceWarningBadgeState.NOT_DETECTED)
                     Toast.makeText(ctx, "Wajah tidak terdeteksi dalam foto!", Toast.LENGTH_LONG).show()
-                }
-            }
-            !isLivenessVerified -> {
-                binding.btnSubmitPresensi.apply {
-                    isEnabled = false
-                    text = "Kedipkan Mata (Verifikasi Biometrik Asli)"
-                    val ctx = context ?: return@apply
-                    setBackgroundColor(ContextCompat.getColor(ctx, R.color.btn_disabled_bg))
                 }
             }
             .addOnFailureListener {
@@ -892,7 +653,6 @@ class PresensiFragment : Fragment() {
 
     private enum class FaceWarningBadgeState {
         MATCHED,
-        NEED_BLINK,
         OUTSIDE_CIRCLE,
         NOT_DETECTED
     }
@@ -907,7 +667,6 @@ class PresensiFragment : Fragment() {
 
         when (state) {
             FaceWarningBadgeState.MATCHED -> {
-                binding.biometricOverlay.setOverlayState(com.andev.absensiswaku.ui.custom.BiometricOverlayView.OverlayState.MATCHED)
                 // Status Berhasil / Wajah Terdeteksi & Presisi di Dalam Lingkaran
                 binding.cardBadgeWarningWajah.setCardBackgroundColor(
                     ContextCompat.getColor(ctx, R.color.camera_badge_success_bg)
@@ -919,24 +678,9 @@ class PresensiFragment : Fragment() {
                 binding.ivStatusWarningIcon.setImageResource(R.drawable.ic_check_circle)
                 binding.ivStatusWarningIcon.imageTintList =
                     ColorStateList.valueOf(ContextCompat.getColor(ctx, R.color.white))
-                binding.tvStatusWajah.text = if (scoreStr.contains("%")) "AI Match $scoreStr" else "AI Match $scoreStr%"
-            }
-            FaceWarningBadgeState.NEED_BLINK -> {
-                binding.biometricOverlay.setOverlayState(com.andev.absensiswaku.ui.custom.BiometricOverlayView.OverlayState.MATCHED)
-                binding.cardBadgeWarningWajah.setCardBackgroundColor(
-                    ContextCompat.getColor(ctx, R.color.camera_badge_alert_bg)
-                )
-                binding.cardBadgeWarningWajah.strokeColor =
-                    ContextCompat.getColor(ctx, R.color.camera_badge_alert_stroke)
-                binding.cardBadgeWarningWajah.strokeWidth =
-                    (1 * resources.displayMetrics.density).roundToInt()
-                binding.ivStatusWarningIcon.setImageResource(R.drawable.ic_check_circle)
-                binding.ivStatusWarningIcon.imageTintList =
-                    ColorStateList.valueOf(ContextCompat.getColor(ctx, R.color.camera_badge_alert_icon_yellow))
-                binding.tvStatusWajah.text = "Kedipkan Mata Anda"
+                binding.tvStatusWajah.text = "AI Match $scoreStr%"
             }
             FaceWarningBadgeState.OUTSIDE_CIRCLE -> {
-                binding.biometricOverlay.setOverlayState(com.andev.absensiswaku.ui.custom.BiometricOverlayView.OverlayState.OUTSIDE)
                 // Status Peringatan: Wajah terdeteksi namun di luar area oval lingkaran panduan
                 binding.cardBadgeWarningWajah.setCardBackgroundColor(
                     ContextCompat.getColor(ctx, R.color.camera_badge_alert_bg)
@@ -951,7 +695,6 @@ class PresensiFragment : Fragment() {
                 binding.tvStatusWajah.text = "Wajah Di Luar Lingkaran"
             }
             FaceWarningBadgeState.NOT_DETECTED -> {
-                binding.biometricOverlay.setOverlayState(com.andev.absensiswaku.ui.custom.BiometricOverlayView.OverlayState.IDLE)
                 // Status Peringatan: Wajah belum/tidak terdeteksi oleh kamera
                 binding.cardBadgeWarningWajah.setCardBackgroundColor(
                     ContextCompat.getColor(ctx, R.color.camera_badge_alert_bg)
@@ -1092,18 +835,10 @@ class PresensiFragment : Fragment() {
                 if (response.isSuccessful) {
                     Toast.makeText(requireContext(), "Presensi Berhasil Tercatat!", Toast.LENGTH_SHORT).show()
                     handleSuccessPresensi(statusHadir)
-                }
-            }
-            !isLivenessVerified -> {
-                binding.btnSubmitPresensi.apply {
-                    isEnabled = false
-                    text = "Kedipkan Mata (Verifikasi Biometrik Asli)"
-                    val ctx = context ?: return@apply
-                    setBackgroundColor(ContextCompat.getColor(ctx, R.color.btn_disabled_bg))
                 } else if (response.code() == 409 || (response.errorBody()?.string()?.contains("duplicate", true) == true)) {
                     isAlreadyPresensi = true
                     binding.btnSubmitPresensi.isEnabled = false
-                    binding.btnSubmitPresensi.text = "✓ Anda Sudah Presensi Hari Ini"
+                    binding.btnSubmitPresensi.text = "Γ£ô Anda Sudah Presensi Hari Ini"
                     binding.tvBadgeStatusPresensi.text = "SUDAH PRESENSI DATANG"
 
                     MaterialAlertDialogBuilder(requireContext())
@@ -1111,14 +846,6 @@ class PresensiFragment : Fragment() {
                         .setMessage("Presensi hari ini sudah pernah tercatat.")
                         .setPositiveButton("OK") { dialog, _ -> dialog.dismiss() }
                         .show()
-                }
-            }
-            !isLivenessVerified -> {
-                binding.btnSubmitPresensi.apply {
-                    isEnabled = false
-                    text = "Kedipkan Mata (Verifikasi Biometrik Asli)"
-                    val ctx = context ?: return@apply
-                    setBackgroundColor(ContextCompat.getColor(ctx, R.color.btn_disabled_bg))
                 } else {
                     val errorBody = response.errorBody()?.string() ?: ""
                     Toast.makeText(requireContext(), "Gagal simpan ke Supabase (${response.code()}): $errorBody", Toast.LENGTH_LONG).show()
@@ -1127,14 +854,6 @@ class PresensiFragment : Fragment() {
                     val hour = calendar.get(Calendar.HOUR_OF_DAY)
                     val minute = calendar.get(Calendar.MINUTE)
                     evaluatePresensiState(hour * 60 + minute)
-                }
-            }
-            !isLivenessVerified -> {
-                binding.btnSubmitPresensi.apply {
-                    isEnabled = false
-                    text = "Kedipkan Mata (Verifikasi Biometrik Asli)"
-                    val ctx = context ?: return@apply
-                    setBackgroundColor(ContextCompat.getColor(ctx, R.color.btn_disabled_bg))
                 }
             }
 
@@ -1167,12 +886,12 @@ class PresensiFragment : Fragment() {
 
         binding.btnSubmitPresensi.apply {
             isEnabled = false
-            text = "✓ Anda Sudah Presensi Hari Ini"
+            text = "Γ£ô Anda Sudah Presensi Hari Ini"
             setBackgroundColor(ContextCompat.getColor(ctx, R.color.btn_disabled_bg))
         }
 
         MaterialAlertDialogBuilder(ctx)
-            .setTitle("✓ Presensi Berhasil!")
+            .setTitle("Γ£ô Presensi Berhasil!")
             .setMessage("Data presensi masuk Anda ($statusMsg) telah tercatat di sistem SMKN 8 Jakarta.\n\nJarak: ${currentDistanceMeters.roundToInt()}m | AI Match: $scoreStr%")
             .setPositiveButton("Selesai") { dialog, _ -> dialog.dismiss() }
             .show()
