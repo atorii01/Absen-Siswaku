@@ -17,7 +17,7 @@ import com.andev.absensiswaku.data.network.RiwayatModel
 import com.andev.absensiswaku.data.network.SiswaKelolaResponse
 import com.andev.absensiswaku.data.network.SupabaseClient
 import com.andev.absensiswaku.data.pref.SessionManager
-import com.andev.absensiswaku.databinding.DialogUbahKataSandiBinding
+import com.andev.absensiswaku.databinding.DialogUbahKataSandiGuruBinding
 import com.andev.absensiswaku.databinding.FragmentWalasSetelanBinding
 import com.andev.absensiswaku.util.MotionUtils
 import com.andev.absensiswaku.util.applyBounceEffect
@@ -217,32 +217,32 @@ class WalasSetelanFragment : Fragment() {
     private fun showDialogUbahSandi() {
         val ctx = context ?: return
         val dialog = BottomSheetDialog(ctx)
-        val dBinding = DialogUbahKataSandiBinding.inflate(layoutInflater)
+        val dBinding = DialogUbahKataSandiGuruBinding.inflate(layoutInflater)
         dialog.setContentView(dBinding.root)
 
         dBinding.btnCloseDialog.setOnClickListener {
             dialog.dismiss()
         }
 
-        dBinding.btnSimpanPin.setOnClickListener {
-            val lama = dBinding.etPinLama.text?.toString()?.trim().orEmpty()
-            val baru = dBinding.etPinBaru.text?.toString()?.trim().orEmpty()
-            val konfirmasi = dBinding.etKonfirmasiPin.text?.toString()?.trim().orEmpty()
+        dBinding.btnSimpanSandi.setOnClickListener {
+            val lama = dBinding.etSandiLama.text?.toString()?.trim().orEmpty()
+            val baru = dBinding.etSandiBaru.text?.toString()?.trim().orEmpty()
+            val konfirmasi = dBinding.etKonfirmasiSandi.text?.toString()?.trim().orEmpty()
 
-            dBinding.tilPinLama.error = null
-            dBinding.tilPinBaru.error = null
-            dBinding.tilKonfirmasiPin.error = null
+            dBinding.tilSandiLama.error = null
+            dBinding.tilSandiBaru.error = null
+            dBinding.tilKonfirmasiSandi.error = null
 
             if (lama.isEmpty()) {
-                dBinding.tilPinLama.error = "Kata sandi saat ini wajib diisi"
+                dBinding.tilSandiLama.error = "Kata sandi saat ini wajib diisi"
                 return@setOnClickListener
             }
             if (baru.length < 6) {
-                dBinding.tilPinBaru.error = "Kata sandi baru minimal 6 karakter"
+                dBinding.tilSandiBaru.error = "Kata sandi baru minimal 6 karakter"
                 return@setOnClickListener
             }
             if (baru != konfirmasi) {
-                dBinding.tilKonfirmasiPin.error = "Konfirmasi kata sandi tidak cocok"
+                dBinding.tilKonfirmasiSandi.error = "Konfirmasi kata sandi tidak cocok"
                 return@setOnClickListener
             }
 
@@ -259,7 +259,7 @@ class WalasSetelanFragment : Fragment() {
                         val currentPasswordHash = currentUser?.get("password_hash")?.toString() ?: ""
 
                         if (currentPasswordHash.isNotEmpty() && currentPasswordHash != lama) {
-                            dBinding.tilPinLama.error = "Kata sandi saat ini salah"
+                            dBinding.tilSandiLama.error = "Kata sandi saat ini salah"
                             Toast.makeText(ctx, "Kata sandi saat ini salah! Mohon periksa kembali.", Toast.LENGTH_LONG).show()
                             return
                         }
