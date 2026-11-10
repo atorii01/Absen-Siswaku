@@ -25,6 +25,12 @@ interface SupabaseService {
         @Body payload: Map<String, @JvmSuppressWildcards Any>
     ): Call<ResponseBody>
 
+    @PATCH("presensi_harian")
+    fun updatePresensiHarian(
+        @Query("id") filterId: String,
+        @Body payload: Map<String, @JvmSuppressWildcards Any>
+    ): Call<ResponseBody>
+
     @Headers("Prefer: return=representation")
     @POST("presensi_harian")
     fun simpanPresensiSupabase(

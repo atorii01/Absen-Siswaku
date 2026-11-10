@@ -672,12 +672,19 @@ class RiwayatFragment : Fragment() {
             }
         }
 
-        // 3. Waktu Masuk
+        // 3. Waktu Masuk & Pulang
         val jam = item.displayJamMasuk
         dialogBinding.tvJamMasukDetail.text = if (jam == "-" || jam.isEmpty()) {
             if (statusText.equals("Izin", true) || statusText.equals("Sakit", true)) "Dispensasi Harian" else "-"
         } else {
             if (jam.endsWith("WIB")) jam else "$jam WIB"
+        }
+
+        val jamPulang = item.displayJamPulang
+        dialogBinding.tvJamPulangDetail.text = if (jamPulang == "-" || jamPulang.isEmpty()) {
+            if (statusText.equals("Izin", true) || statusText.equals("Sakit", true)) "Dispensasi Harian" else "Belum Pulang"
+        } else {
+            if (jamPulang.endsWith("WIB")) jamPulang else "$jamPulang WIB"
         }
 
         // 4. Biometrik Face Match Score

@@ -136,6 +136,7 @@ data class PresensiRecordResponse(
     @SerializedName("id_kelas") val idKelas: Int? = null,
     @SerializedName("tanggal") val tanggal: String? = null,
     @SerializedName("waktu_masuk") val waktuMasuk: String? = null,
+    @SerializedName("waktu_pulang") val waktuPulang: String? = null,
     @SerializedName("status") val status: String? = null
 )
 

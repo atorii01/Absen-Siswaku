@@ -158,18 +158,22 @@ class BottomSheetSiswaReadonlyDialog : BottomSheetDialogFragment() {
 
             val status: String
             val waktu: String
+            val waktuPulang: String
 
             if (presensi != null) {
                 val isLate = presensi.status.equals("Terlambat", true)
                 status = if (isLate) "TERLAMBAT" else "HADIR"
                 waktu = presensi.waktuMasuk?.takeIf { it.isNotBlank() } ?: "-"
+                waktuPulang = presensi.waktuPulang?.takeIf { it.isNotBlank() } ?: ""
             } else if (izin != null) {
                 val isSakit = izin.jenisIzin.equals("Sakit", true)
                 status = if (isSakit) "SAKIT" else "IZIN"
                 waktu = izin.keterangan?.takeIf { it.isNotBlank() } ?: "Disetujui Walas"
+                waktuPulang = ""
             } else {
                 status = "ALPA"
                 waktu = "-"
+                waktuPulang = ""
             }
 
             SiswaReadOnlyItem(
@@ -177,7 +181,8 @@ class BottomSheetSiswaReadonlyDialog : BottomSheetDialogFragment() {
                 namaLengkap = s.namaLengkap.orEmpty().ifEmpty { "Siswa ${idx + 1}" },
                 nisn = s.nisn.orEmpty().ifEmpty { "-" },
                 waktuMasuk = waktu,
-                status = status
+                status = status,
+                waktuPulang = waktuPulang
             )
         }
     }

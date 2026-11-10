@@ -13,6 +13,8 @@ data class RiwayatModel(
     val tanggal: String? = null,
     @SerializedName("waktu_masuk")
     val waktuMasuk: String? = null,
+    @SerializedName("waktu_pulang")
+    val waktuPulang: String? = null,
     @SerializedName("jam_masuk")
     val jamMasukField: String? = null,
     @SerializedName("status")
@@ -38,6 +40,12 @@ data class RiwayatModel(
         get() = when {
             !waktuMasuk.isNullOrEmpty() -> waktuMasuk
             !jamMasukField.isNullOrEmpty() -> jamMasukField
+            else -> "-"
+        }
+
+    val displayJamPulang: String
+        get() = when {
+            !waktuPulang.isNullOrEmpty() -> waktuPulang
             else -> "-"
         }
 

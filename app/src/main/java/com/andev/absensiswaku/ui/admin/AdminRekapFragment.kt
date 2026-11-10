@@ -453,6 +453,7 @@ class AdminRekapFragment : Fragment() {
                 else -> "Alpa"
             }
             val waktuMasuk = presensi?.waktuMasuk?.takeIf { it.isNotBlank() } ?: "-"
+            val waktuPulang = presensi?.waktuPulang?.takeIf { it.isNotBlank() } ?: "-"
             val namaKelas = siswa.rombelKelas?.namaKelas?.takeIf { it.isNotBlank() }
                 ?: rombelMap[siswa.idKelas]?.namaKelas
                 ?: "XII RPL"
@@ -464,7 +465,8 @@ class AdminRekapFragment : Fragment() {
                 namaKelas = namaKelas,
                 jamMasuk = waktuMasuk,
                 status = statusFinal,
-                idKelas = siswa.idKelas ?: 0
+                idKelas = siswa.idKelas ?: 0,
+                jamPulang = waktuPulang
             )
         }
 

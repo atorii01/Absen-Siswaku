@@ -13,6 +13,8 @@ data class PresensiHarianResponse(
     val tanggal: String? = null,
     @SerializedName("waktu_masuk")
     val waktuMasuk: String? = null,
+    @SerializedName("waktu_pulang")
+    val waktuPulang: String? = null,
     @SerializedName("status")
     val status: String? = null,
     @SerializedName("biometrik_match_score")

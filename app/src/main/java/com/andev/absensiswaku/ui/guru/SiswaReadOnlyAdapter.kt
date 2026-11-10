@@ -13,7 +13,8 @@ data class SiswaReadOnlyItem(
     val namaLengkap: String,
     val nisn: String,
     val waktuMasuk: String,
-    val status: String // "HADIR", "TERLAMBAT", "IZIN", "SAKIT", "ALPA"
+    val status: String, // "HADIR", "TERLAMBAT", "IZIN", "SAKIT", "ALPA"
+    val waktuPulang: String = ""
 ) : Serializable {
     val initialLetters: String
         get() {
@@ -88,7 +89,12 @@ class SiswaReadOnlyAdapter(
                 else -> "-"
             }
 
-            binding.tvNisnWaktu.text = "NISN: ${item.nisn} • $jamMasukFormatted"
+            val pulangText = if (item.waktuPulang.isNotBlank() && item.waktuPulang != "-") {
+                val p = item.waktuPulang.take(5)
+                " • Pulang: ${if (p.endsWith("WIB")) p else "$p WIB"}"
+            } else ""
+
+            binding.tvNisnWaktu.text = "NISN: ${item.nisn} • $jamMasukFormatted$pulangText"
 
             // Badge status berwarna: Hadir (Hijau), Terlambat (Kuning), Izin (Biru), Sakit (Merah/Oranye), Alpa (Merah)
             when (item.status.uppercase()) {

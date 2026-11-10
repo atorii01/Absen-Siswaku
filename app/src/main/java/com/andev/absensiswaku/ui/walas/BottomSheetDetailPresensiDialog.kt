@@ -325,6 +325,7 @@ class BottomSheetDetailPresensiDialog : BottomSheetDialogFragment() {
                 presensi != null -> {
                     val statusDb = presensi.status?.trim().orEmpty()
                     val jam = presensi.displayJamMasuk.take(5).ifEmpty { "06:30" }
+                    val pulangText = if (!presensi.waktuPulang.isNullOrBlank()) " • Pulang ${presensi.displayJamPulang.take(5)}" else ""
                     val jarak = presensi.jarakGerbangMeter?.toInt()
                     val jarakText = if (jarak != null && jarak > 0) " • Akurasi GPS ${jarak}m" else ""
 
@@ -336,7 +337,7 @@ class BottomSheetDetailPresensiDialog : BottomSheetDialogFragment() {
                             namaLengkap = nama,
                             inisial = inisial,
                             nisn = nisn,
-                            subteks = "Masuk $jam WIB$jarakText",
+                            subteks = "Masuk $jam WIB$pulangText$jarakText",
                             status = "TERLAMBAT",
                             badgeLabel = "Terlambat",
                             badgeBgResId = R.drawable.bg_badge_terlambat,
@@ -367,7 +368,7 @@ class BottomSheetDetailPresensiDialog : BottomSheetDialogFragment() {
                             namaLengkap = nama,
                             inisial = inisial,
                             nisn = nisn,
-                            subteks = "Masuk $jam WIB$jarakText",
+                            subteks = "Masuk $jam WIB$pulangText$jarakText",
                             status = "HADIR",
                             badgeLabel = "Hadir",
                             badgeBgResId = R.drawable.bg_badge_hadir,

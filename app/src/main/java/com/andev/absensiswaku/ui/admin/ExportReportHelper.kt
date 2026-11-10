@@ -23,7 +23,8 @@ data class SiswaItem(
     val namaKelas: String,
     val jamMasuk: String,
     val status: String,
-    val idKelas: Int = 0
+    val idKelas: Int = 0,
+    val jamPulang: String = "-"
 )
 
 object ExportReportHelper {
@@ -32,11 +33,11 @@ object ExportReportHelper {
         val fileName = "Rekap_Presensi_SMKN8_${tanggal.replace("-", "")}.csv"
         val sb = StringBuilder()
         sb.append('\uFEFF') // UTF-8 BOM agar rapi di Microsoft Excel
-        sb.append("\"No\",\"NISN\",\"Nama Siswa\",\"Kelas\",\"Tanggal\",\"Jam Masuk\",\"Status Kehadiran\"\n")
+        sb.append("\"No\",\"NISN\",\"Nama Siswa\",\"Kelas\",\"Tanggal\",\"Jam Masuk\",\"Jam Pulang\",\"Status Kehadiran\"\n")
 
         listSiswa.forEachIndexed { index, s ->
             val namaUpper = s.namaLengkap.uppercase(Locale.getDefault()).replace("\"", "\"\"")
-            sb.append("\"${index + 1}\",=\"${s.nisn}\",\"$namaUpper\",\"${s.namaKelas}\",\"$tanggal\",\"${s.jamMasuk}\",\"${s.status}\"\n")
+            sb.append("\"${index + 1}\",=\"${s.nisn}\",\"$namaUpper\",\"${s.namaKelas}\",\"$tanggal\",\"${s.jamMasuk}\",\"${s.jamPulang}\",\"${s.status}\"\n")
         }
 
         val uri: Uri? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -69,11 +70,11 @@ object ExportReportHelper {
         val fileName = "Rekap_Presensi_SMKN8_${tanggal.replace("-", "")}.xlsx"
         val sb = StringBuilder()
         sb.append('\uFEFF') // UTF-8 BOM agar rapi di Microsoft Excel
-        sb.append("\"No\",\"NISN\",\"Nama Siswa\",\"Kelas\",\"Tanggal\",\"Jam Masuk\",\"Status Kehadiran\"\n")
+        sb.append("\"No\",\"NISN\",\"Nama Siswa\",\"Kelas\",\"Tanggal\",\"Jam Masuk\",\"Jam Pulang\",\"Status Kehadiran\"\n")
 
         listSiswa.forEachIndexed { index, s ->
             val namaUpper = s.namaLengkap.uppercase(Locale.getDefault()).replace("\"", "\"\"")
-            sb.append("\"${index + 1}\",=\"${s.nisn}\",\"$namaUpper\",\"${s.namaKelas}\",\"$tanggal\",\"${s.jamMasuk}\",\"${s.status}\"\n")
+            sb.append("\"${index + 1}\",=\"${s.nisn}\",\"$namaUpper\",\"${s.namaKelas}\",\"$tanggal\",\"${s.jamMasuk}\",\"${s.jamPulang}\",\"${s.status}\"\n")
         }
 
         val uri: Uri? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {

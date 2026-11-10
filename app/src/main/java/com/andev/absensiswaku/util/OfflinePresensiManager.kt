@@ -36,6 +36,18 @@ object OfflinePresensiManager {
     }
 
     /**
+     * Menyimpan data presensi pulang yang belum terkirim (offline)
+     */
+    fun savePresensiPulangOffline(context: Context, presensiId: String, waktuPulang: String) {
+        val data = mapOf<String, Any>(
+            "_type" to "pulang",
+            "id" to presensiId,
+            "waktu_pulang" to waktuPulang
+        )
+        savePresensiOffline(context, data)
+    }
+
+    /**
      * Menghitung jumlah antrean presensi offline yang menunggu sinkronisasi
      */
     fun getPendingCount(context: Context): Int {
@@ -94,47 +106,74 @@ object OfflinePresensiManager {
         var processedCount = 0
         val remaining = mutableListOf<Map<String, Any>>()
 
+        fun checkFinish() {
+            if (processedCount == pending.size) {
+                val pref = context.getSharedPreferences(PREF_OFFLINE, Context.MODE_PRIVATE)
+                val newArray = JSONArray()
+                for (rem in remaining) {
+                    newArray.put(JSONObject(rem))
+                }
+                pref.edit().putString(KEY_QUEUE, newArray.toString()).apply()
+
+                if (successCount > 0) {
+                    NotificationHelper.showNotifikasiPresensi(
+                        context,
+                        "Tersinkronisasi Otomatis ($successCount Data)"
+                    )
+                }
+
+                onComplete?.invoke(successCount, failedCount)
+            }
+        }
+
         for (item in pending) {
-            SupabaseClient.instance.simpanPresensi(item).enqueue(object : Callback<ResponseBody> {
-                override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
-                    processedCount++
-                    if (response.isSuccessful || response.code() == 409) {
-                        // 409 berarti record sudah ada di server, tandai sebagai tersinkron
-                        successCount++
-                    } else {
+            val type = item["_type"]?.toString()
+            if (type == "pulang") {
+                val presensiId = item["id"]?.toString() ?: ""
+                val waktuPulang = item["waktu_pulang"]?.toString() ?: ""
+                SupabaseClient.instance.updatePresensiHarian("eq.$presensiId", mapOf("waktu_pulang" to waktuPulang))
+                    .enqueue(object : Callback<ResponseBody> {
+                        override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
+                            processedCount++
+                            if (response.isSuccessful) {
+                                successCount++
+                            } else {
+                                failedCount++
+                                remaining.add(item)
+                            }
+                            checkFinish()
+                        }
+
+                        override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                            processedCount++
+                            failedCount++
+                            remaining.add(item)
+                            checkFinish()
+                        }
+                    })
+            } else {
+                val cleanData = item.filterKeys { !it.startsWith("_") }
+                SupabaseClient.instance.simpanPresensi(cleanData).enqueue(object : Callback<ResponseBody> {
+                    override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
+                        processedCount++
+                        if (response.isSuccessful || response.code() == 409) {
+                            // 409 berarti record sudah ada di server, tandai sebagai tersinkron
+                            successCount++
+                        } else {
+                            failedCount++
+                            remaining.add(item)
+                        }
+                        checkFinish()
+                    }
+
+                    override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                        processedCount++
                         failedCount++
                         remaining.add(item)
+                        checkFinish()
                     }
-                    checkFinish()
-                }
-
-                override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
-                    processedCount++
-                    failedCount++
-                    remaining.add(item)
-                    checkFinish()
-                }
-
-                private fun checkFinish() {
-                    if (processedCount == pending.size) {
-                        val pref = context.getSharedPreferences(PREF_OFFLINE, Context.MODE_PRIVATE)
-                        val newArray = JSONArray()
-                        for (rem in remaining) {
-                            newArray.put(JSONObject(rem))
-                        }
-                        pref.edit().putString(KEY_QUEUE, newArray.toString()).apply()
-
-                        if (successCount > 0) {
-                            NotificationHelper.showNotifikasiPresensi(
-                                context,
-                                "Tersinkronisasi Otomatis ($successCount Data)"
-                            )
-                        }
-
-                        onComplete?.invoke(successCount, failedCount)
-                    }
-                }
-            })
+                })
+            }
         }
     }
 }
