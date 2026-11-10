@@ -2,6 +2,8 @@ package com.andev.absensiswaku.ui.setelan
 
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -11,9 +13,11 @@ import android.widget.ArrayAdapter
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.fragment.app.Fragment
 import com.andev.absensiswaku.LoginActivity
+import com.andev.absensiswaku.R
 import com.andev.absensiswaku.data.network.PengajuanIzinModel
 import com.andev.absensiswaku.data.network.RiwayatModel
 import com.andev.absensiswaku.data.network.SiswaAdminResponse
@@ -31,6 +35,8 @@ import okhttp3.ResponseBody
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import java.io.File
+import java.io.FileOutputStream
 import java.util.Locale
 
 class SetelanFragment : Fragment() {
@@ -39,6 +45,33 @@ class SetelanFragment : Fragment() {
     private val binding get() = _binding!!
 
     private lateinit var sessionManager: SessionManager
+
+    private val galleryLauncher =
+        registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+            uri?.let {
+                try {
+                    val inputStream = requireContext().contentResolver.openInputStream(it)
+                    val bitmap = BitmapFactory.decodeStream(inputStream)
+                    inputStream?.close()
+                    if (bitmap != null) {
+                        saveAndApplyProfilePhoto(bitmap)
+                    }
+                } catch (e: Exception) {
+                    Toast.makeText(
+                        requireContext(),
+                        "Gagal memproses foto dari galeri",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+        }
+
+    private val cameraLauncher =
+        registerForActivityResult(ActivityResultContracts.TakePicturePreview()) { bitmap: Bitmap? ->
+            bitmap?.let {
+                saveAndApplyProfilePhoto(it)
+            }
+        }
 
     companion object {
         private const val PREF_SESSION_NAME = "PREF_SMKN8_SESSION"
@@ -68,6 +101,13 @@ class SetelanFragment : Fragment() {
         setupActionButtons()
         setupLogoutButton()
         loadAttendanceSummary()
+
+        binding.containerFotoProfil.applyBounceEffect {
+            showPilihFotoDialog()
+        }
+        binding.btnBadgeEditFoto.applyBounceEffect {
+            showPilihFotoDialog()
+        }
 
         MotionUtils.animateStaggeredEntrance(
             binding.cardProfilSiswa,
@@ -99,6 +139,29 @@ class SetelanFragment : Fragment() {
         binding.tvRombelWalas.text = "$namaKelas • Wali: $waliKelas"
 
         val siswaId = getStudentId()
+
+        // Muat foto profil tersimpan
+        val ctx = context ?: return
+        val photoFile = File(ctx.filesDir, "avatar_siswa_$siswaId.jpg")
+        if (photoFile.exists()) {
+            try {
+                val bitmap = BitmapFactory.decodeFile(photoFile.absolutePath)
+                if (bitmap != null) {
+                    binding.imgFotoProfil.setImageBitmap(bitmap)
+                    binding.imgTopAvatar.setImageBitmap(bitmap)
+                } else {
+                    binding.imgFotoProfil.setImageResource(R.drawable.ic_avatar)
+                    binding.imgTopAvatar.setImageResource(R.drawable.ic_avatar)
+                }
+            } catch (e: Exception) {
+                binding.imgFotoProfil.setImageResource(R.drawable.ic_avatar)
+                binding.imgTopAvatar.setImageResource(R.drawable.ic_avatar)
+            }
+        } else {
+            binding.imgFotoProfil.setImageResource(R.drawable.ic_avatar)
+            binding.imgTopAvatar.setImageResource(R.drawable.ic_avatar)
+        }
+
         SupabaseClient.instance.getDetailSiswa("eq.$siswaId").enqueue(object : Callback<List<SiswaAdminResponse>> {
             override fun onResponse(call: Call<List<SiswaAdminResponse>>, response: Response<List<SiswaAdminResponse>>) {
                 if (!isAdded || _binding == null) return
@@ -108,6 +171,65 @@ class SetelanFragment : Fragment() {
             }
             override fun onFailure(call: Call<List<SiswaAdminResponse>>, t: Throwable) {}
         })
+    }
+
+    /**
+     * Menyimpan foto profil ke penyimpanan internal privat aplikasi
+     * dan menampilkan secara instan pada header profil & top bar
+     */
+    private fun saveAndApplyProfilePhoto(bitmap: Bitmap) {
+        val ctx = context ?: return
+        val siswaId = getStudentId()
+        try {
+            val file = File(ctx.filesDir, "avatar_siswa_$siswaId.jpg")
+            FileOutputStream(file).use { out ->
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 90, out)
+            }
+            val pref = ctx.getSharedPreferences(PREF_SESSION_NAME, Context.MODE_PRIVATE)
+            pref.edit().putString("KEY_FOTO_PROFIL_$siswaId", file.absolutePath).apply()
+
+            binding.imgFotoProfil.setImageBitmap(bitmap)
+            binding.imgTopAvatar.setImageBitmap(bitmap)
+            Toast.makeText(ctx, "✓ Foto profil siswa berhasil diperbarui!", Toast.LENGTH_SHORT).show()
+        } catch (e: Exception) {
+            Toast.makeText(ctx, "Gagal menyimpan foto: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    /**
+     * Dialog pemilihan sumber foto profil (Kamera, Galeri, Hapus)
+     */
+    private fun showPilihFotoDialog() {
+        val ctx = context ?: return
+        val siswaId = getStudentId()
+        val photoFile = File(ctx.filesDir, "avatar_siswa_$siswaId.jpg")
+        val hasCustomPhoto = photoFile.exists()
+
+        val options = if (hasCustomPhoto) {
+            arrayOf("📸 Ambil Foto Baru (Kamera)", "🖼️ Pilih dari Galeri", "🗑️ Hapus Foto Profil (Avatar Default)")
+        } else {
+            arrayOf("📸 Ambil Foto Baru (Kamera)", "🖼️ Pilih dari Galeri")
+        }
+
+        MaterialAlertDialogBuilder(ctx)
+            .setTitle("Ubah Foto Profil Siswa")
+            .setItems(options) { dialog, which ->
+                dialog.dismiss()
+                when (which) {
+                    0 -> cameraLauncher.launch(null)
+                    1 -> galleryLauncher.launch("image/*")
+                    2 -> {
+                        if (photoFile.exists()) {
+                            photoFile.delete()
+                        }
+                        binding.imgFotoProfil.setImageResource(R.drawable.ic_avatar)
+                        binding.imgTopAvatar.setImageResource(R.drawable.ic_avatar)
+                        Toast.makeText(ctx, "Foto profil dikembalikan ke avatar default.", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+            .setNegativeButton("Batal") { dialog, _ -> dialog.dismiss() }
+            .show()
     }
 
     /**

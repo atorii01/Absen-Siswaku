@@ -101,11 +101,13 @@
                             tools:text="NISN: 0068192341" />
                     </LinearLayout>
 
-                    <ImageView
+                    <com.google.android.material.imageview.ShapeableImageView
                         android:id="@+id/imgTopAvatar"
                         android:layout_width="38dp"
                         android:layout_height="38dp"
                         android:contentDescription="Avatar Top"
+                        android:scaleType="centerCrop"
+                        app:shapeAppearanceOverlay="@style/CircleImageView"
                         android:src="@drawable/ic_avatar" />
                 </LinearLayout>
             </LinearLayout>
@@ -128,23 +130,36 @@
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
 
-                    <!-- Sisi Kiri: Foto profil bulat (56dp x 56dp) + Badge Status Hijau -->
+                    <!-- Sisi Kiri: Foto profil bulat (60dp x 60dp) + Badge Kamera Edit -->
                     <FrameLayout
-                        android:layout_width="56dp"
-                        android:layout_height="56dp">
+                        android:id="@+id/containerFotoProfil"
+                        android:layout_width="60dp"
+                        android:layout_height="60dp"
+                        android:clickable="true"
+                        android:focusable="true">
 
-                        <ImageView
+                        <com.google.android.material.imageview.ShapeableImageView
                             android:id="@+id/imgFotoProfil"
                             android:layout_width="56dp"
                             android:layout_height="56dp"
+                            android:layout_gravity="center"
                             android:contentDescription="Foto Siswa"
+                            android:scaleType="centerCrop"
+                            app:shapeAppearanceOverlay="@style/CircleImageView"
                             android:src="@drawable/ic_avatar" />
 
-                        <View
-                            android:layout_width="14dp"
-                            android:layout_height="14dp"
+                        <!-- Badge Ikon Edit Foto -->
+                        <ImageView
+                            android:id="@+id/btnBadgeEditFoto"
+                            android:layout_width="22dp"
+                            android:layout_height="22dp"
                             android:layout_gravity="bottom|end"
-                            android:background="@drawable/bg_dot_status_online" />
+                            android:background="@drawable/bg_circle_primary_teal"
+                            android:contentDescription="Ubah Foto Profil"
+                            android:elevation="4dp"
+                            android:padding="4dp"
+                            android:src="@drawable/ic_edit"
+                            app:tint="@color/white" />
                     </FrameLayout>
 
                     <!-- Tengah: Identitas Lengkap -->
