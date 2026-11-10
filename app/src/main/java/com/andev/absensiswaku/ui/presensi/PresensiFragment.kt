@@ -176,6 +176,20 @@ class PresensiFragment : Fragment() {
         super.onResume()
         setupHeaderData()
         checkDailyPresensiStatus()
+        syncOfflinePresensiIfNeeded()
+    }
+
+    private fun syncOfflinePresensiIfNeeded() {
+        val ctx = context ?: return
+        if (com.andev.absensiswaku.util.NetworkUtils.isNetworkAvailable(ctx) &&
+            com.andev.absensiswaku.util.OfflinePresensiManager.getPendingCount(ctx) > 0) {
+            com.andev.absensiswaku.util.OfflinePresensiManager.syncPendingPresensi(ctx) { success, _ ->
+                if (success > 0 && isAdded && _binding != null) {
+                    Toast.makeText(ctx, "✓ $success Presensi offline berhasil disinkronkan ke server!", Toast.LENGTH_LONG).show()
+                    checkDailyPresensiStatus()
+                }
+            }
+        }
     }
 
     private fun checkDailyPresensiStatus() {
@@ -907,6 +921,15 @@ class PresensiFragment : Fragment() {
         binding.btnSubmitPresensi.isEnabled = false
         binding.btnSubmitPresensi.text = "Memproses Presensi..."
 
+        // Deteksi apakah sedang offline
+        val currentCtx = context
+        if (currentCtx != null && !com.andev.absensiswaku.util.NetworkUtils.isNetworkAvailable(currentCtx)) {
+            com.andev.absensiswaku.util.OfflinePresensiManager.savePresensiOffline(currentCtx, dataMap)
+            NotificationHelper.showNotifikasiPresensi(currentCtx, "$statusHadir (Tersimpan Offline)")
+            handleSuccessPresensi(statusHadir, isOffline = true)
+            return
+        }
+
         SupabaseClient.instance.simpanPresensi(dataMap).enqueue(object : Callback<ResponseBody> {
             override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
                 if (!isAdded || _binding == null) return
@@ -914,11 +937,11 @@ class PresensiFragment : Fragment() {
                 if (response.isSuccessful) {
                     Toast.makeText(requireContext(), "Presensi Berhasil Tercatat!", Toast.LENGTH_SHORT).show()
                     NotificationHelper.showNotifikasiPresensi(requireContext(), statusHadir)
-                    handleSuccessPresensi(statusHadir)
+                    handleSuccessPresensi(statusHadir, isOffline = false)
                 } else if (response.code() == 409 || (response.errorBody()?.string()?.contains("duplicate", true) == true)) {
                     isAlreadyPresensi = true
                     binding.btnSubmitPresensi.isEnabled = false
-                    binding.btnSubmitPresensi.text = "Γ£ô Anda Sudah Presensi Hari Ini"
+                    binding.btnSubmitPresensi.text = "✓ Anda Sudah Presensi Hari Ini"
                     binding.tvBadgeStatusPresensi.text = "SUDAH PRESENSI DATANG"
 
                     MaterialAlertDialogBuilder(requireContext())
@@ -939,17 +962,25 @@ class PresensiFragment : Fragment() {
 
             override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
                 if (!isAdded || _binding == null) return
-                Toast.makeText(requireContext(), "Koneksi Error: ${t.localizedMessage ?: t.message}", Toast.LENGTH_LONG).show()
-                binding.btnSubmitPresensi.isEnabled = true
-                val calendar = Calendar.getInstance(TimeZone.getTimeZone("Asia/Jakarta"))
-                val hour = calendar.get(Calendar.HOUR_OF_DAY)
-                val minute = calendar.get(Calendar.MINUTE)
-                evaluatePresensiState(hour * 60 + minute)
+                // Cadangkan secara offline jika request jaringan terputus
+                val fallbackCtx = context
+                if (fallbackCtx != null) {
+                    com.andev.absensiswaku.util.OfflinePresensiManager.savePresensiOffline(fallbackCtx, dataMap)
+                    NotificationHelper.showNotifikasiPresensi(fallbackCtx, "$statusHadir (Tersimpan Offline)")
+                    handleSuccessPresensi(statusHadir, isOffline = true)
+                } else {
+                    Toast.makeText(requireContext(), "Koneksi Error: ${t.localizedMessage ?: t.message}", Toast.LENGTH_LONG).show()
+                    binding.btnSubmitPresensi.isEnabled = true
+                    val calendar = Calendar.getInstance(TimeZone.getTimeZone("Asia/Jakarta"))
+                    val hour = calendar.get(Calendar.HOUR_OF_DAY)
+                    val minute = calendar.get(Calendar.MINUTE)
+                    evaluatePresensiState(hour * 60 + minute)
+                }
             }
         })
     }
 
-    private fun handleSuccessPresensi(status: String) {
+    private fun handleSuccessPresensi(status: String, isOffline: Boolean = false) {
         if (!isAdded || _binding == null) return
 
         val ctx = context ?: return
@@ -964,20 +995,27 @@ class PresensiFragment : Fragment() {
         val scoreStr = String.format(Locale.US, "%.1f", if (lastBiometricScore > 0) lastBiometricScore else 95.0)
 
         binding.tvBadgeStatusPresensi.apply {
-            text = "SUDAH PRESENSI ($statusMsg)"
+            text = if (isOffline) "SUDAH PRESENSI ($statusMsg - OFFLINE)" else "SUDAH PRESENSI ($statusMsg)"
             setBackgroundResource(R.drawable.bg_badge_pill_blue)
             setTextColor(ContextCompat.getColor(ctx, R.color.primary_teal))
         }
 
         binding.btnSubmitPresensi.apply {
             isEnabled = false
-            text = "Γ£ô Anda Sudah Presensi Hari Ini"
+            text = if (isOffline) "✓ Presensi Tersimpan Offline" else "✓ Anda Sudah Presensi Hari Ini"
             setBackgroundColor(ContextCompat.getColor(ctx, R.color.btn_disabled_bg))
         }
 
+        val dialogTitle = if (isOffline) "✓ Presensi Tersimpan Offline" else "✓ Presensi Berhasil!"
+        val dialogMessage = if (isOffline) {
+            "Data presensi Anda ($statusMsg) telah diverifikasi liveness biometrik & GPS, lalu disimpan secara aman di memori lokal.\n\nSistem SMKN 8 Jakarta akan otomatis mengunggah data ini ke cloud saat terhubung ke internet.\n\nJarak: ${currentDistanceMeters.roundToInt()}m | AI Match: $scoreStr%"
+        } else {
+            "Data presensi masuk Anda ($statusMsg) telah tercatat di sistem SMKN 8 Jakarta.\n\nJarak: ${currentDistanceMeters.roundToInt()}m | AI Match: $scoreStr%"
+        }
+
         MaterialAlertDialogBuilder(ctx)
-            .setTitle("Γ£ô Presensi Berhasil!")
-            .setMessage("Data presensi masuk Anda ($statusMsg) telah tercatat di sistem SMKN 8 Jakarta.\n\nJarak: ${currentDistanceMeters.roundToInt()}m | AI Match: $scoreStr%")
+            .setTitle(dialogTitle)
+            .setMessage(dialogMessage)
             .setPositiveButton("Selesai") { dialog, _ -> dialog.dismiss() }
             .show()
     }

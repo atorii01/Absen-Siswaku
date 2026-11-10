@@ -435,6 +435,11 @@ class PengajuanFragment : Fragment() {
             return
         }
 
+        if (!com.andev.absensiswaku.util.NetworkUtils.isNetworkAvailable(ctx)) {
+            Toast.makeText(ctx, "Tidak ada koneksi internet. Pastikan perangkat Anda terhubung sebelum mengirim pengajuan.", Toast.LENGTH_LONG).show()
+            return
+        }
+
         val pref = ctx.getSharedPreferences("PREF_SMKN8_SESSION", Context.MODE_PRIVATE)
         val siswaIdInt = try {
             pref?.getInt("user_id", 0)?.takeIf { it != 0 }

@@ -270,6 +270,11 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun performSiswaLogin(nisn: String, pin: String) {
+        if (!com.andev.absensiswaku.util.NetworkUtils.isNetworkAvailable(this)) {
+            Toast.makeText(this, "Tidak ada koneksi internet. Periksa Wi-Fi atau data seluler Anda.", Toast.LENGTH_LONG).show()
+            return
+        }
+
         showLoading(true)
 
         val nisnEq = "eq.$nisn"
@@ -381,6 +386,11 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun performGuruLogin(identifier: String, secret: String) {
+        if (!com.andev.absensiswaku.util.NetworkUtils.isNetworkAvailable(this)) {
+            Toast.makeText(this, "Tidak ada koneksi internet. Periksa Wi-Fi atau data seluler Anda.", Toast.LENGTH_LONG).show()
+            return
+        }
+
         showLoading(true)
 
         val cleanId = identifier.trim()

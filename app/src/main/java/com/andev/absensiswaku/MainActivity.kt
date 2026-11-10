@@ -99,6 +99,18 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        if (com.andev.absensiswaku.util.NetworkUtils.isNetworkAvailable(this) &&
+            com.andev.absensiswaku.util.OfflinePresensiManager.getPendingCount(this) > 0) {
+            com.andev.absensiswaku.util.OfflinePresensiManager.syncPendingPresensi(this) { success, _ ->
+                if (success > 0) {
+                    Toast.makeText(this, "✓ $success Presensi offline berhasil disinkronkan ke server!", Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+    }
+
     private fun setupBottomNavigation() {
         binding.bottomNavigation.setOnItemSelectedListener { item ->
             // Mencegah re-instantiate fragment jika tab yang sama ditekan berulang kali
