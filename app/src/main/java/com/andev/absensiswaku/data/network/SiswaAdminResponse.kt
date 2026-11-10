@@ -11,6 +11,7 @@ data class SiswaAdminResponse(
     @SerializedName("nik") val nik: String? = null,
     @SerializedName("jenis_kelamin") val jenisKelamin: String? = null,
     @SerializedName("no_wa_orang_tua") val noWaOrangTua: String? = null,
+    @SerializedName("pin_presensi") val pinPresensi: String? = null,
     @SerializedName("rombel_kelas") val rombelKelas: RombelInfoResponse? = null
 ) {
     val initialLetters: String

@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ArrayAdapter
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.Toast
@@ -15,12 +16,17 @@ import androidx.fragment.app.Fragment
 import com.andev.absensiswaku.LoginActivity
 import com.andev.absensiswaku.data.network.PengajuanIzinModel
 import com.andev.absensiswaku.data.network.RiwayatModel
+import com.andev.absensiswaku.data.network.SiswaAdminResponse
 import com.andev.absensiswaku.data.network.SupabaseClient
 import com.andev.absensiswaku.data.pref.SessionManager
+import com.andev.absensiswaku.databinding.DialogPerbaruiProfilSiswaBinding
+import com.andev.absensiswaku.databinding.DialogUbahKataSandiBinding
 import com.andev.absensiswaku.databinding.FragmentSetelanBinding
 import com.andev.absensiswaku.util.MotionUtils
 import com.andev.absensiswaku.util.applyBounceEffect
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import okhttp3.ResponseBody
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -81,8 +87,8 @@ class SetelanFragment : Fragment() {
     private fun setupProfileData() {
         if (!isAdded || _binding == null) return
 
-        val nama = sessionManager.getNama().ifEmpty { "Muhammad Fadhil" }
-        val nisn = sessionManager.getNisn().ifEmpty { "0061829103" }
+        val nama = sessionManager.getNama().ifEmpty { "PETER MALEKE" }
+        val nisn = sessionManager.getNisn().ifEmpty { "0092046657" }
         val namaKelas = sessionManager.getNamaKelas().ifEmpty { "12 RPL 1" }
         val waliKelas = sessionManager.getWaliKelas().ifEmpty { "Farauk Pratama S.Kom" }
 
@@ -90,6 +96,17 @@ class SetelanFragment : Fragment() {
         binding.tvNamaSiswa.text = nama
         binding.tvNisnNik.text = "NISN: $nisn • NIK Terdaftar"
         binding.tvRombelWalas.text = "$namaKelas • Wali: $waliKelas"
+
+        val siswaId = getStudentId()
+        SupabaseClient.instance.getDetailSiswa("eq.$siswaId").enqueue(object : Callback<List<SiswaAdminResponse>> {
+            override fun onResponse(call: Call<List<SiswaAdminResponse>>, response: Response<List<SiswaAdminResponse>>) {
+                if (!isAdded || _binding == null) return
+                val detail = response.body()?.firstOrNull() ?: return
+                val nikStr = if (!detail.nik.isNullOrBlank()) "NIK: ${detail.nik}" else "NIK Terdaftar"
+                binding.tvNisnNik.text = "NISN: $nisn • $nikStr"
+            }
+            override fun onFailure(call: Call<List<SiswaAdminResponse>>, t: Throwable) {}
+        })
     }
 
     /**
@@ -296,94 +313,237 @@ class SetelanFragment : Fragment() {
     /**
      * Konfigurasi Aksi Tombol "Perbarui Data" & "Ubah Kata Sandi"
      */
-    private fun setupActionButtons() {
-        // Tombol 1: Perbarui Data
-        binding.btnPerbaruiData.applyBounceEffect {
-            val nama = sessionManager.getNama().ifEmpty { "Muhammad Fadhil" }
-            val nisn = sessionManager.getNisn().ifEmpty { "0061829103" }
-            val walas = sessionManager.getWaliKelas().ifEmpty { "Farauk Pratama S.Kom" }
+    private fun getStudentId(): Int {
+        val pref = requireContext().getSharedPreferences(PREF_SESSION_NAME, Context.MODE_PRIVATE)
+        return try {
+            pref.getInt("ID_SISWA", 0).takeIf { it != 0 }
+                ?: pref.getInt("user_id", 0).takeIf { it != 0 }
+                ?: pref.getString("ID_SISWA", "0")?.toIntOrNull()
+                ?: pref.getString("user_id", "0")?.toIntOrNull()
+                ?: sessionManager.getUserId().takeIf { it != 0 }
+                ?: 203
+        } catch (e: Exception) {
+            203
+        }
+    }
 
-            MaterialAlertDialogBuilder(requireContext())
-                .setTitle("Sinkronisasi Data Siswa")
-                .setMessage(
-                    "Data identitas ($nama - NISN: $nisn) telah tersinkronisasi otomatis dengan server Pusdatin Dapodik Kemendikbudristek & SMKN 8 Jakarta.\n\n" +
-                            "Untuk mengajukan pembaruan biodata, nomor HP wali murid, atau berkas kependudukan, silakan hubungi Tata Usaha (TU) atau Wali Kelas ($walas)."
-                )
-                .setPositiveButton("Hubungi Walas") { dialog, _ ->
-                    dialog.dismiss()
-                    try {
-                        val waIntent = Intent(Intent.ACTION_VIEW).apply {
-                            data = Uri.parse("https://api.whatsapp.com/send?phone=6281234567890&text=Halo%20Bapak/Ibu%20Wali%20Kelas,%20saya%20$nama%20ingin%20memperbarui%20data%20siswa.")
-                        }
-                        startActivity(waIntent)
-                    } catch (e: Exception) {
-                        Toast.makeText(requireContext(), "Nomor kontak WhatsApp wali kelas: 0812-3456-7890", Toast.LENGTH_LONG).show()
-                    }
-                }
-                .setNegativeButton("Tutup") { dialog, _ ->
-                    dialog.dismiss()
-                }
-                .show()
+    /**
+     * Konfigurasi Aksi Tombol "Perbarui Data" & "Ubah Kata Sandi"
+     */
+    private fun setupActionButtons() {
+        // Tombol 1: Perbarui Data Profil Siswa
+        binding.btnPerbaruiData.applyBounceEffect {
+            showDialogPerbaruiProfil()
         }
 
-        // Tombol 2: Ubah Kata Sandi
+        // Tombol 2: Ubah Kata Sandi / PIN Presensi
         binding.btnUbahPassword.applyBounceEffect {
             showDialogUbahPassword()
         }
     }
 
     /**
-     * Menampilkan dialog pengubahan PIN presensi / kata sandi siswa
+     * Menampilkan BottomSheetDialog untuk pembaruan profil siswa (NIK, No. WA Wali, Jenis Kelamin)
+     * yang langsung tersinkronisasi ke database Supabase.
+     */
+    private fun showDialogPerbaruiProfil() {
+        val ctx = context ?: return
+        val dialog = BottomSheetDialog(ctx)
+        val dBinding = DialogPerbaruiProfilSiswaBinding.inflate(layoutInflater)
+        dialog.setContentView(dBinding.root)
+
+        val nama = sessionManager.getNama().ifEmpty { "PETER MALEKE" }
+        val nisn = sessionManager.getNisn().ifEmpty { "0092046657" }
+        val namaKelas = sessionManager.getNamaKelas().ifEmpty { "XII RPL 1" }
+        val siswaId = getStudentId()
+
+        dBinding.tvProfilNama.text = nama
+        dBinding.tvProfilNisnKelas.text = "NISN: $nisn • $namaKelas"
+
+        // Setup dropdown pilihan jenis kelamin
+        val listJk = arrayOf("Laki-laki", "Perempuan")
+        val jkAdapter = ArrayAdapter(ctx, android.R.layout.simple_dropdown_item_1line, listJk)
+        dBinding.actvJenisKelamin.setAdapter(jkAdapter)
+
+        dBinding.btnCloseDialog.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        // Ambil data profil terkini dari Supabase
+        dBinding.pbLoading.visibility = View.VISIBLE
+        SupabaseClient.instance.getDetailSiswa("eq.$siswaId").enqueue(object : Callback<List<SiswaAdminResponse>> {
+            override fun onResponse(call: Call<List<SiswaAdminResponse>>, response: Response<List<SiswaAdminResponse>>) {
+                if (!isAdded || _binding == null) return
+                dBinding.pbLoading.visibility = View.GONE
+                if (response.isSuccessful && !response.body().isNullOrEmpty()) {
+                    val s = response.body()!![0]
+                    dBinding.etNik.setText(s.nik ?: "")
+                    dBinding.etNoWa.setText(s.noWaOrangTua ?: "")
+                    if (!s.jenisKelamin.isNullOrBlank()) {
+                        dBinding.actvJenisKelamin.setText(s.jenisKelamin, false)
+                    }
+                }
+            }
+
+            override fun onFailure(call: Call<List<SiswaAdminResponse>>, t: Throwable) {
+                if (!isAdded || _binding == null) return
+                dBinding.pbLoading.visibility = View.GONE
+            }
+        })
+
+        // Simpan pembaruan profil ke Supabase
+        dBinding.btnSimpanProfil.setOnClickListener {
+            val nik = dBinding.etNik.text?.toString()?.trim().orEmpty()
+            val noWa = dBinding.etNoWa.text?.toString()?.trim().orEmpty()
+            val jk = dBinding.actvJenisKelamin.text?.toString()?.trim().orEmpty()
+
+            if (noWa.isNotEmpty() && noWa.length < 9) {
+                dBinding.tilNoWa.error = "Nomor WhatsApp minimal 9-10 digit"
+                return@setOnClickListener
+            }
+            dBinding.tilNoWa.error = null
+
+            dBinding.pbLoading.visibility = View.VISIBLE
+            dBinding.btnSimpanProfil.isEnabled = false
+
+            val payload = mutableMapOf<String, Any>(
+                "no_wa_orang_tua" to noWa,
+                "jenis_kelamin" to if (jk.isNotEmpty()) jk else "Laki-laki"
+            )
+            if (nik.isNotEmpty()) {
+                payload["nik"] = nik
+            }
+
+            SupabaseClient.instance.updateSiswa("eq.$siswaId", payload).enqueue(object : Callback<ResponseBody> {
+                override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
+                    if (!isAdded || _binding == null) return
+                    dBinding.pbLoading.visibility = View.GONE
+                    dBinding.btnSimpanProfil.isEnabled = true
+
+                    if (response.isSuccessful) {
+                        Toast.makeText(ctx, "✓ Data profil siswa berhasil diperbarui!", Toast.LENGTH_LONG).show()
+                        dialog.dismiss()
+                        setupProfileData()
+                    } else {
+                        Toast.makeText(ctx, "Gagal memperbarui profil: ${response.code()}", Toast.LENGTH_SHORT).show()
+                    }
+                }
+
+                override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                    if (!isAdded || _binding == null) return
+                    dBinding.pbLoading.visibility = View.GONE
+                    dBinding.btnSimpanProfil.isEnabled = true
+                    Toast.makeText(ctx, "Koneksi terputus: ${t.localizedMessage}", Toast.LENGTH_SHORT).show()
+                }
+            })
+        }
+
+        dialog.show()
+    }
+
+    /**
+     * Menampilkan BottomSheetDialog pengubahan PIN presensi siswa
+     * dengan verifikasi PIN lama terhadap server Supabase dan enkripsi/update langsung.
      */
     private fun showDialogUbahPassword() {
         val ctx = context ?: return
-        val paddingHorizontal = (24 * resources.displayMetrics.density).toInt()
-        val paddingVertical = (12 * resources.displayMetrics.density).toInt()
-        val inputContainer = LinearLayout(ctx).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(paddingHorizontal, paddingVertical, paddingHorizontal, paddingVertical)
+        val dialog = BottomSheetDialog(ctx)
+        val dBinding = DialogUbahKataSandiBinding.inflate(layoutInflater)
+        dialog.setContentView(dBinding.root)
+
+        val siswaId = getStudentId()
+
+        dBinding.btnCloseDialog.setOnClickListener {
+            dialog.dismiss()
         }
 
-        val etPinLama = EditText(ctx).apply {
-            hint = "PIN / Sandi Lama"
-            inputType = android.text.InputType.TYPE_CLASS_NUMBER or android.text.InputType.TYPE_NUMBER_VARIATION_PASSWORD
-        }
+        dBinding.btnSimpanPin.setOnClickListener {
+            val pinLama = dBinding.etPinLama.text?.toString()?.trim().orEmpty()
+            val pinBaru = dBinding.etPinBaru.text?.toString()?.trim().orEmpty()
+            val konfirmasiPin = dBinding.etKonfirmasiPin.text?.toString()?.trim().orEmpty()
 
-        val etPinBaru = EditText(ctx).apply {
-            hint = "PIN / Sandi Baru (Min. 4 Digit)"
-            inputType = android.text.InputType.TYPE_CLASS_NUMBER or android.text.InputType.TYPE_NUMBER_VARIATION_PASSWORD
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                topMargin = (12 * resources.displayMetrics.density).toInt()
+            dBinding.tilPinLama.error = null
+            dBinding.tilPinBaru.error = null
+            dBinding.tilKonfirmasiPin.error = null
+
+            if (pinLama.isEmpty()) {
+                dBinding.tilPinLama.error = "PIN saat ini wajib diisi"
+                return@setOnClickListener
             }
-        }
+            if (pinBaru.length != 6) {
+                dBinding.tilPinBaru.error = "PIN baru harus 6 digit angka"
+                return@setOnClickListener
+            }
+            if (pinBaru == pinLama) {
+                dBinding.tilPinBaru.error = "PIN baru tidak boleh sama dengan PIN saat ini"
+                return@setOnClickListener
+            }
+            if (pinBaru != konfirmasiPin) {
+                dBinding.tilKonfirmasiPin.error = "Konfirmasi PIN tidak cocok"
+                return@setOnClickListener
+            }
 
-        inputContainer.addView(etPinLama)
-        inputContainer.addView(etPinBaru)
+            dBinding.pbLoadingPin.visibility = View.VISIBLE
+            dBinding.btnSimpanPin.isEnabled = false
 
-        MaterialAlertDialogBuilder(ctx)
-            .setTitle("Ubah Kata Sandi / PIN Presensi")
-            .setMessage("Masukkan PIN presensi saat ini dan buat PIN presensi baru Anda.")
-            .setView(inputContainer)
-            .setPositiveButton("Simpan Sandi") { dialog, _ ->
-                val pinLama = etPinLama.text.toString().trim()
-                val pinBaru = etPinBaru.text.toString().trim()
+            // Langkah 1: Validasi PIN lama terhadap server Supabase
+            SupabaseClient.instance.getDetailSiswa("eq.$siswaId").enqueue(object : Callback<List<SiswaAdminResponse>> {
+                override fun onResponse(call: Call<List<SiswaAdminResponse>>, response: Response<List<SiswaAdminResponse>>) {
+                    if (!isAdded || _binding == null) return
 
-                if (pinLama.isEmpty() || pinBaru.isEmpty()) {
-                    Toast.makeText(ctx, "PIN lama dan PIN baru wajib diisi.", Toast.LENGTH_SHORT).show()
-                } else if (pinBaru.length < 4) {
-                    Toast.makeText(ctx, "PIN baru minimal terdiri dari 4 digit.", Toast.LENGTH_SHORT).show()
-                } else {
-                    dialog.dismiss()
-                    Toast.makeText(ctx, "✓ Kata sandi / PIN presensi berhasil diperbarui!", Toast.LENGTH_LONG).show()
+                    val siswaList = response.body()
+                    val actualPin = siswaList?.firstOrNull()?.pinPresensi
+
+                    if (actualPin != null && actualPin != pinLama) {
+                        dBinding.pbLoadingPin.visibility = View.GONE
+                        dBinding.btnSimpanPin.isEnabled = true
+                        dBinding.tilPinLama.error = "PIN saat ini salah!"
+                        Toast.makeText(ctx, "PIN saat ini tidak cocok. Periksa kembali PIN Anda.", Toast.LENGTH_SHORT).show()
+                        return
+                    }
+
+                    // Langkah 2: Update PIN baru ke database Supabase
+                    val payload = mapOf("pin_presensi" to pinBaru)
+                    SupabaseClient.instance.updateSiswa("eq.$siswaId", payload).enqueue(object : Callback<ResponseBody> {
+                        override fun onResponse(call: Call<ResponseBody>, patchResp: Response<ResponseBody>) {
+                            if (!isAdded || _binding == null) return
+                            dBinding.pbLoadingPin.visibility = View.GONE
+                            dBinding.btnSimpanPin.isEnabled = true
+
+                            if (patchResp.isSuccessful) {
+                                // Update session & saved credentials if Remember Me is active
+                                val prefAuth = ctx.getSharedPreferences("PREF_SMKN8_AUTH", Context.MODE_PRIVATE)
+                                val isRemembered = prefAuth.getBoolean("KEY_REMEMBER", false)
+                                if (isRemembered) {
+                                    prefAuth.edit().putString("KEY_SAVED_PIN", pinBaru).apply()
+                                }
+
+                                Toast.makeText(ctx, "✓ PIN Presensi berhasil diperbarui menjadi $pinBaru", Toast.LENGTH_LONG).show()
+                                dialog.dismiss()
+                            } else {
+                                Toast.makeText(ctx, "Gagal memperbarui PIN: ${patchResp.code()}", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+
+                        override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                            if (!isAdded || _binding == null) return
+                            dBinding.pbLoadingPin.visibility = View.GONE
+                            dBinding.btnSimpanPin.isEnabled = true
+                            Toast.makeText(ctx, "Koneksi terputus: ${t.localizedMessage}", Toast.LENGTH_SHORT).show()
+                        }
+                    })
                 }
-            }
-            .setNegativeButton("Batal") { dialog, _ ->
-                dialog.dismiss()
-            }
-            .show()
+
+                override fun onFailure(call: Call<List<SiswaAdminResponse>>, t: Throwable) {
+                    if (!isAdded || _binding == null) return
+                    dBinding.pbLoadingPin.visibility = View.GONE
+                    dBinding.btnSimpanPin.isEnabled = true
+                    Toast.makeText(ctx, "Gagal memverifikasi akun: ${t.localizedMessage}", Toast.LENGTH_SHORT).show()
+                }
+            })
+        }
+
+        dialog.show()
     }
 
     /**

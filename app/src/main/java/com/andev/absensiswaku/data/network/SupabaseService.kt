@@ -134,6 +134,12 @@ interface SupabaseService {
         @Body payload: List<Map<String, @JvmSuppressWildcards Any>>
     ): Call<ResponseBody>
 
+    @GET("siswa")
+    fun getDetailSiswa(
+        @Query("id") idFilter: String,
+        @Query("select") select: String = "id,nisn,nama_lengkap,id_kelas,nik,jenis_kelamin,no_wa_orang_tua,pin_presensi,rombel_kelas(nama_kelas)"
+    ): Call<List<SiswaAdminResponse>>
+
     @Headers("Prefer: return=representation")
     @PATCH("siswa")
     fun updateSiswa(
