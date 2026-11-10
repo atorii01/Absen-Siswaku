@@ -9,9 +9,9 @@ import java.util.concurrent.TimeUnit
 
 object SupabaseClient {
 
-    const val BASE_URL = "KEPO"
+    const val BASE_URL = "https://dxqrthdweyxynqjvlpvl.supabase.co"
     private const val ANON_KEY =
-        "Kepo"
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR4cXJ0aGR3ZXl4eW5xanZscHZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAyMjQ2ODcsImV4cCI6MjEwNTgwMDY4N30.bWYrMxOOwfhhXVPj5QnBLcnRLlfE_p34V1r4k2tMLpE"
 
     private val headerInterceptor = Interceptor { chain ->
         val originalRequest = chain.request()
