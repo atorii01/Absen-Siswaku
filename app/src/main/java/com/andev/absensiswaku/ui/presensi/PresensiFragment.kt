@@ -376,6 +376,14 @@ class PresensiFragment : Fragment() {
                     setBackgroundColor(ContextCompat.getColor(ctx, R.color.btn_disabled_bg))
                 }
             }
+            !isLivenessVerified -> {
+                binding.btnSubmitPresensi.apply {
+                    isEnabled = false
+                    text = "Kedipkan Mata (Verifikasi Liveness)"
+                    val ctx = context ?: return@apply
+                    setBackgroundColor(ContextCompat.getColor(ctx, R.color.btn_disabled_bg))
+                }
+            }
             !inRadius -> {
                 binding.btnSubmitPresensi.apply {
                     isEnabled = false
@@ -589,10 +597,29 @@ class PresensiFragment : Fragment() {
                     lastBiometricScore = (baseScore + eyeBonus + smileBonus).coerceIn(85.0, 99.2)
                     val scoreStr = String.format(Locale.US, "%.1f", lastBiometricScore)
 
+                    val leftEye = face.leftEyeOpenProbability ?: -1f
+                    val rightEye = face.rightEyeOpenProbability ?: -1f
+
                     if (isFaceInsideCircle) {
-                        binding.tvStatusKameraChip.text = "ΓÇó Kamera Aktif ΓÇó Wajah Terdeteksi"
-                        updateFaceWarningBadge(FaceWarningBadgeState.MATCHED, scoreStr)
+                        if (!isLivenessVerified) {
+                            if (leftEye in 0.0f..0.25f && rightEye in 0.0f..0.25f) {
+                                hasEyesClosed = true
+                            } else if (hasEyesClosed && leftEye > 0.60f && rightEye > 0.60f) {
+                                isLivenessVerified = true
+                                view?.performHapticFeedback(android.view.HapticFeedbackConstants.KEYBOARD_TAP)
+                            }
+                        }
+
+                        if (isLivenessVerified) {
+                            binding.tvStatusKameraChip.text = "ΓÇó Kamera Aktif ΓÇó Wajah Terverifikasi (Live)"
+                            updateFaceWarningBadge(FaceWarningBadgeState.MATCHED, "$scoreStr% (Live ✓)")
+                        } else {
+                            binding.tvStatusKameraChip.text = "ΓÇó Kedipkan Mata Untuk Verifikasi ΓÇó"
+                            updateFaceWarningBadge(FaceWarningBadgeState.NEED_BLINK, scoreStr)
+                        }
                     } else {
+                        hasEyesClosed = false
+                        isLivenessVerified = false
                         binding.tvStatusKameraChip.text = "ΓÇó Kamera Aktif ΓÇó Wajah Di Luar Radius"
                         updateFaceWarningBadge(FaceWarningBadgeState.OUTSIDE_CIRCLE)
                     }
@@ -600,6 +627,8 @@ class PresensiFragment : Fragment() {
                     isFaceDetected = false
                     isFaceInsideCircle = false
                     lastBiometricScore = 0.0
+                    hasEyesClosed = false
+                    isLivenessVerified = false
 
                     binding.tvStatusKameraChip.text = "ΓÇó Kamera Aktif ΓÇó Wajah Tidak Terdeteksi"
                     updateFaceWarningBadge(FaceWarningBadgeState.NOT_DETECTED)
@@ -653,6 +682,7 @@ class PresensiFragment : Fragment() {
 
     private enum class FaceWarningBadgeState {
         MATCHED,
+        NEED_BLINK,
         OUTSIDE_CIRCLE,
         NOT_DETECTED
     }
@@ -667,6 +697,7 @@ class PresensiFragment : Fragment() {
 
         when (state) {
             FaceWarningBadgeState.MATCHED -> {
+                binding.biometricOverlay.setOverlayState(com.andev.absensiswaku.ui.custom.BiometricOverlayView.OverlayState.MATCHED)
                 // Status Berhasil / Wajah Terdeteksi & Presisi di Dalam Lingkaran
                 binding.cardBadgeWarningWajah.setCardBackgroundColor(
                     ContextCompat.getColor(ctx, R.color.camera_badge_success_bg)
@@ -678,9 +709,24 @@ class PresensiFragment : Fragment() {
                 binding.ivStatusWarningIcon.setImageResource(R.drawable.ic_check_circle)
                 binding.ivStatusWarningIcon.imageTintList =
                     ColorStateList.valueOf(ContextCompat.getColor(ctx, R.color.white))
-                binding.tvStatusWajah.text = "AI Match $scoreStr%"
+                binding.tvStatusWajah.text = if (scoreStr.contains("%")) "AI Match $scoreStr" else "AI Match $scoreStr%"
+            }
+            FaceWarningBadgeState.NEED_BLINK -> {
+                binding.biometricOverlay.setOverlayState(com.andev.absensiswaku.ui.custom.BiometricOverlayView.OverlayState.MATCHED)
+                binding.cardBadgeWarningWajah.setCardBackgroundColor(
+                    ContextCompat.getColor(ctx, R.color.camera_badge_alert_bg)
+                )
+                binding.cardBadgeWarningWajah.strokeColor =
+                    ContextCompat.getColor(ctx, R.color.camera_badge_alert_stroke)
+                binding.cardBadgeWarningWajah.strokeWidth =
+                    (1 * resources.displayMetrics.density).roundToInt()
+                binding.ivStatusWarningIcon.setImageResource(R.drawable.ic_check_circle)
+                binding.ivStatusWarningIcon.imageTintList =
+                    ColorStateList.valueOf(ContextCompat.getColor(ctx, R.color.camera_badge_alert_icon_yellow))
+                binding.tvStatusWajah.text = "Kedipkan Mata Anda"
             }
             FaceWarningBadgeState.OUTSIDE_CIRCLE -> {
+                binding.biometricOverlay.setOverlayState(com.andev.absensiswaku.ui.custom.BiometricOverlayView.OverlayState.OUTSIDE)
                 // Status Peringatan: Wajah terdeteksi namun di luar area oval lingkaran panduan
                 binding.cardBadgeWarningWajah.setCardBackgroundColor(
                     ContextCompat.getColor(ctx, R.color.camera_badge_alert_bg)
@@ -695,6 +741,7 @@ class PresensiFragment : Fragment() {
                 binding.tvStatusWajah.text = "Wajah Di Luar Lingkaran"
             }
             FaceWarningBadgeState.NOT_DETECTED -> {
+                binding.biometricOverlay.setOverlayState(com.andev.absensiswaku.ui.custom.BiometricOverlayView.OverlayState.IDLE)
                 // Status Peringatan: Wajah belum/tidak terdeteksi oleh kamera
                 binding.cardBadgeWarningWajah.setCardBackgroundColor(
                     ContextCompat.getColor(ctx, R.color.camera_badge_alert_bg)
@@ -769,6 +816,11 @@ class PresensiFragment : Fragment() {
 
             if (!isFaceInsideCircle) {
                 Toast.makeText(ctx, "Presensi ditolak: Posisikan wajah Anda tepat di dalam lingkaran panduan hijau!", Toast.LENGTH_LONG).show()
+                return@applyBounceEffect
+            }
+
+            if (!isLivenessVerified) {
+                Toast.makeText(ctx, "Presensi ditolak: Silakan kedipkan mata untuk verifikasi biometrik asli!", Toast.LENGTH_LONG).show()
                 return@applyBounceEffect
             }
 
@@ -874,6 +926,11 @@ class PresensiFragment : Fragment() {
 
         val ctx = context ?: return
         isAlreadyPresensi = true
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            view?.performHapticFeedback(android.view.HapticFeedbackConstants.CONFIRM)
+        } else {
+            view?.performHapticFeedback(android.view.HapticFeedbackConstants.KEYBOARD_TAP)
+        }
 
         val statusMsg = if (status.equals("Hadir", true)) "Tepat Waktu" else "Terlambat"
         val scoreStr = String.format(Locale.US, "%.1f", if (lastBiometricScore > 0) lastBiometricScore else 95.0)
