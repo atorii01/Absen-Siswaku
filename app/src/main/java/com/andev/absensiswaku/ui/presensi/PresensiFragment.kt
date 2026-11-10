@@ -1,4 +1,4 @@
-﻿package com.andev.absensiswaku.ui.presensi
+package com.andev.absensiswaku.ui.presensi
 
 import android.Manifest
 import android.annotation.SuppressLint
@@ -271,7 +271,7 @@ class PresensiFragment : Fragment() {
         binding.tvTanggalHeader.text = dateFormatted
         binding.tvTopBarNisn.text = "NISN: $nisn"
         binding.tvNamaSiswa.text = nama
-        binding.tvKelasNisnSub.text = "Kelas $namaKelas ΓÇó NISN: $nisn"
+        binding.tvKelasNisnSub.text = "Kelas $namaKelas \u2022 NISN: $nisn"
         binding.tvBatasMasukJam.text = "06:40 WIB"
     }
 
@@ -363,7 +363,7 @@ class PresensiFragment : Fragment() {
             !isFaceDetected -> {
                 binding.btnSubmitPresensi.apply {
                     isEnabled = false
-                    text = "Γ£ò Wajah Tidak Terdeteksi"
+                    text = "✕ Wajah Tidak Terdeteksi"
                     val ctx = context ?: return@apply
                     setBackgroundColor(ContextCompat.getColor(ctx, R.color.btn_disabled_bg))
                 }
@@ -371,7 +371,7 @@ class PresensiFragment : Fragment() {
             !isFaceInsideCircle -> {
                 binding.btnSubmitPresensi.apply {
                     isEnabled = false
-                    text = "Γ£ò Wajah Di Luar Radius Lingkaran Panduan"
+                    text = "✕ Wajah Di Luar Radius Lingkaran Panduan"
                     val ctx = context ?: return@apply
                     setBackgroundColor(ContextCompat.getColor(ctx, R.color.btn_disabled_bg))
                 }
@@ -483,7 +483,7 @@ class PresensiFragment : Fragment() {
             binding.progressBarJarak.progress = 50
             binding.tvPosisiProgress.text = "Posisi: Fake GPS"
 
-            binding.tvStatusRadiusTitle.text = "Γ£ò Ilegal / Fake GPS Terdeteksi"
+            binding.tvStatusRadiusTitle.text = "✕ Ilegal / Fake GPS Terdeteksi"
             binding.tvStatusRadiusTitle.setTextColor(
                 ContextCompat.getColor(ctx, R.color.status_unread_text)
             )
@@ -611,16 +611,16 @@ class PresensiFragment : Fragment() {
                         }
 
                         if (isLivenessVerified) {
-                            binding.tvStatusKameraChip.text = "ΓÇó Kamera Aktif ΓÇó Wajah Terverifikasi (Live)"
+                            binding.tvStatusKameraChip.text = "Kamera Aktif"
                             updateFaceWarningBadge(FaceWarningBadgeState.MATCHED, "$scoreStr% (Live ✓)")
                         } else {
-                            binding.tvStatusKameraChip.text = "ΓÇó Kedipkan Mata Untuk Verifikasi ΓÇó"
+                            binding.tvStatusKameraChip.text = "Kamera Aktif"
                             updateFaceWarningBadge(FaceWarningBadgeState.NEED_BLINK, scoreStr)
                         }
                     } else {
                         hasEyesClosed = false
                         isLivenessVerified = false
-                        binding.tvStatusKameraChip.text = "ΓÇó Kamera Aktif ΓÇó Wajah Di Luar Radius"
+                        binding.tvStatusKameraChip.text = "Kamera Aktif"
                         updateFaceWarningBadge(FaceWarningBadgeState.OUTSIDE_CIRCLE)
                     }
                 } else {
@@ -630,7 +630,7 @@ class PresensiFragment : Fragment() {
                     hasEyesClosed = false
                     isLivenessVerified = false
 
-                    binding.tvStatusKameraChip.text = "ΓÇó Kamera Aktif ΓÇó Wajah Tidak Terdeteksi"
+                    binding.tvStatusKameraChip.text = "Kamera Aktif"
                     updateFaceWarningBadge(FaceWarningBadgeState.NOT_DETECTED)
                 }
 
