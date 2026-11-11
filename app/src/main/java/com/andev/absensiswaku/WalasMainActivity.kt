@@ -2,12 +2,21 @@ package com.andev.absensiswaku
 
 import android.content.Context
 import android.content.Intent
+import android.content.res.ColorStateList
+import android.graphics.Color
 import android.os.Bundle
-import android.widget.Toast
+import android.transition.ChangeBounds
+import android.transition.Fade
+import android.transition.TransitionManager
+import android.transition.TransitionSet
+import android.view.HapticFeedbackConstants
+import android.view.View
+import android.view.animation.DecelerateInterpolator
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
@@ -22,6 +31,8 @@ open class WalasMainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityWalasMainBinding
     private lateinit var sessionManager: SessionManager
+    var currentTabId: Int = R.id.nav_walas_presensi
+        private set
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -80,78 +91,123 @@ open class WalasMainActivity : AppCompatActivity() {
             insets
         }
 
+        val isAdmin = userRole.equals("SUPER_ADMIN", true) || userRole.equals("ADMIN", true)
+        if (isAdmin) {
+            binding.tvWalasLaporan.text = "Rekap"
+            binding.tvWalasSiswa.text = "Master Data"
+        } else {
+            binding.tvWalasLaporan.text = "Laporan"
+            binding.tvWalasSiswa.text = "Siswa"
+        }
+
         setupBottomNavigation()
         setupBackPressHandler()
 
-        val isAdmin = userRole.equals("SUPER_ADMIN", true) || userRole.equals("ADMIN", true)
-
-        if (isAdmin) {
-            binding.bottomNavigation.menu.findItem(R.id.nav_walas_siswa)?.title = "Master Data"
-            binding.bottomNavigation.menu.findItem(R.id.nav_walas_laporan)?.title = "Rekap"
-        }
-
         if (savedInstanceState == null) {
-            if (isAdmin) {
-                loadFragment(com.andev.absensiswaku.ui.admin.AdminPresensiFragment())
-            } else {
-                loadFragment(WalasPresensiFragment())
-            }
+            selectTab(R.id.nav_walas_presensi, animate = false)
         }
     }
 
     private fun setupBottomNavigation() {
+        binding.tabWalasPresensi.setOnClickListener {
+            it.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+            selectTab(R.id.nav_walas_presensi)
+        }
+        binding.tabWalasLaporan.setOnClickListener {
+            it.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+            selectTab(R.id.nav_walas_laporan)
+        }
+        binding.tabWalasSiswa.setOnClickListener {
+            it.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+            selectTab(R.id.nav_walas_siswa)
+        }
+        binding.tabWalasSetelan.setOnClickListener {
+            it.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+            selectTab(R.id.nav_walas_setelan)
+        }
+    }
+
+    fun selectTab(tabId: Int, animate: Boolean = true) {
+        if (currentTabId == tabId && supportFragmentManager.findFragmentById(R.id.fragmentContainer) != null && animate) {
+            return
+        }
+        updateNavDockVisuals(tabId, animate)
+        loadTabFragment(tabId, animate)
+    }
+
+    private fun updateNavDockVisuals(selectedId: Int, animate: Boolean = true) {
+        if (animate) {
+            val transition = TransitionSet().apply {
+                ordering = TransitionSet.ORDERING_TOGETHER
+                addTransition(ChangeBounds())
+                addTransition(Fade())
+                duration = 160
+                interpolator = DecelerateInterpolator()
+            }
+            TransitionManager.beginDelayedTransition(binding.dockNavLayout, transition)
+        }
+
+        val items = listOf(
+            Triple(R.id.nav_walas_presensi, binding.tabWalasPresensi, Pair(binding.icWalasPresensi, binding.tvWalasPresensi)),
+            Triple(R.id.nav_walas_laporan, binding.tabWalasLaporan, Pair(binding.icWalasLaporan, binding.tvWalasLaporan)),
+            Triple(R.id.nav_walas_siswa, binding.tabWalasSiswa, Pair(binding.icWalasSiswa, binding.tvWalasSiswa)),
+            Triple(R.id.nav_walas_setelan, binding.tabWalasSetelan, Pair(binding.icWalasSetelan, binding.tvWalasSetelan))
+        )
+
+        val density = resources.displayMetrics.density
+        val activePaddingH = (16 * density).toInt()
+        val inactivePaddingH = (14 * density).toInt()
+
+        val tintActive = ContextCompat.getColor(this, R.color.white)
+        val tintInactive = Color.parseColor("#80B7E5BA")
+
+        for ((id, tabLayout, views) in items) {
+            val (ic, tv) = views
+            val isActive = (id == selectedId)
+            if (isActive) {
+                tabLayout.setBackgroundResource(R.drawable.bg_nav_pill_active)
+                tabLayout.setPadding(activePaddingH, 0, activePaddingH, 0)
+                ic.imageTintList = ColorStateList.valueOf(tintActive)
+                tv.visibility = View.VISIBLE
+            } else {
+                tabLayout.setBackgroundColor(Color.TRANSPARENT)
+                tabLayout.setPadding(inactivePaddingH, 0, inactivePaddingH, 0)
+                ic.imageTintList = ColorStateList.valueOf(tintInactive)
+                tv.visibility = View.GONE
+            }
+        }
+    }
+
+    private fun loadTabFragment(tabId: Int, animate: Boolean = true) {
         val pref = getSharedPreferences("PREF_SMKN8_SESSION", Context.MODE_PRIVATE)
         val userRole = pref.getString("ROLE", "")?.takeIf { it.isNotEmpty() } ?: sessionManager.getRole()
         val isAdmin = userRole.equals("SUPER_ADMIN", true) || userRole.equals("ADMIN", true)
 
-        if (isAdmin) {
-            binding.bottomNavigation.menu.findItem(R.id.nav_walas_siswa)?.title = "Master Data"
-            binding.bottomNavigation.menu.findItem(R.id.nav_walas_laporan)?.title = "Rekap"
+        val fragment: Fragment = when (tabId) {
+            R.id.nav_walas_presensi -> if (isAdmin) com.andev.absensiswaku.ui.admin.AdminPresensiFragment() else WalasPresensiFragment()
+            R.id.nav_walas_laporan -> if (isAdmin) com.andev.absensiswaku.ui.admin.AdminRekapFragment() else WalasLaporanFragment()
+            R.id.nav_walas_siswa -> if (isAdmin) com.andev.absensiswaku.ui.admin.AdminMasterDataFragment() else WalasSiswaFragment()
+            R.id.nav_walas_setelan -> if (isAdmin) com.andev.absensiswaku.ui.admin.AdminSetelanFragment() else WalasSetelanFragment()
+            else -> WalasPresensiFragment()
         }
 
-        binding.bottomNavigation.setOnItemSelectedListener { item ->
-            if (binding.bottomNavigation.selectedItemId == item.itemId && supportFragmentManager.findFragmentById(R.id.fragmentContainer) != null) {
-                return@setOnItemSelectedListener true
-            }
+        currentTabId = tabId
 
-            when (item.itemId) {
-                R.id.nav_walas_presensi -> {
-                    if (isAdmin) {
-                        loadFragment(com.andev.absensiswaku.ui.admin.AdminPresensiFragment())
-                    } else {
-                        loadFragment(WalasPresensiFragment())
-                    }
-                    true
-                }
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.fragmentContainer, fragment)
+            .commitNowAllowingStateLoss()
 
-                R.id.nav_walas_laporan -> {
-                    if (isAdmin) {
-                        loadFragment(com.andev.absensiswaku.ui.admin.AdminRekapFragment())
-                    } else {
-                        loadFragment(WalasLaporanFragment())
-                    }
-                    true
-                }
-
-                R.id.nav_walas_siswa -> {
-                    if (isAdmin) {
-                        loadFragment(com.andev.absensiswaku.ui.admin.AdminMasterDataFragment())
-                    } else {
-                        loadFragment(WalasSiswaFragment())
-                    }
-                    true
-                }
-
-                R.id.nav_walas_setelan -> {
-                    if (isAdmin) {
-                        loadFragment(com.andev.absensiswaku.ui.admin.AdminSetelanFragment())
-                    } else {
-                        loadFragment(WalasSetelanFragment())
-                    }
-                    true
-                }
-
-                else -> false
+        fragment.view?.let { v ->
+            v.visibility = View.VISIBLE
+            if (animate) {
+                v.alpha = 0f
+                v.animate()
+                    .alpha(1f)
+                    .setDuration(160)
+                    .setInterpolator(DecelerateInterpolator())
+                    .start()
+            } else {
+                v.alpha = 1f
             }
         }
     }
@@ -159,8 +215,8 @@ open class WalasMainActivity : AppCompatActivity() {
     private fun setupBackPressHandler() {
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                if (binding.bottomNavigation.selectedItemId != R.id.nav_walas_presensi) {
-                    binding.bottomNavigation.selectedItemId = R.id.nav_walas_presensi
+                if (currentTabId != R.id.nav_walas_presensi) {
+                    selectTab(R.id.nav_walas_presensi)
                 } else {
                     finish()
                 }
@@ -169,12 +225,13 @@ open class WalasMainActivity : AppCompatActivity() {
     }
 
     fun loadFragment(fragment: Fragment) {
-        supportFragmentManager.beginTransaction()
-            .setCustomAnimations(
-                R.anim.fragment_fade_enter,
-                R.anim.fragment_fade_exit
-            )
-            .replace(R.id.fragmentContainer, fragment)
-            .commit()
+        val tabId = when (fragment) {
+            is WalasPresensiFragment, is com.andev.absensiswaku.ui.admin.AdminPresensiFragment -> R.id.nav_walas_presensi
+            is WalasLaporanFragment, is com.andev.absensiswaku.ui.admin.AdminRekapFragment -> R.id.nav_walas_laporan
+            is WalasSiswaFragment, is com.andev.absensiswaku.ui.admin.AdminMasterDataFragment -> R.id.nav_walas_siswa
+            is WalasSetelanFragment, is com.andev.absensiswaku.ui.admin.AdminSetelanFragment -> R.id.nav_walas_setelan
+            else -> R.id.nav_walas_presensi
+        }
+        selectTab(tabId)
     }
 }

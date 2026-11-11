@@ -19,32 +19,160 @@
 
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/cardFloatingNavContainer"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginHorizontal="36dp"
         android:layout_marginBottom="16dp"
         app:cardBackgroundColor="@color/jade_dark_pine"
-        app:cardCornerRadius="32dp"
-        app:cardElevation="10dp"
-        app:strokeColor="#26FFFFFF"
+        app:cardCornerRadius="34dp"
+        app:cardElevation="12dp"
+        app:strokeColor="#2EFFFFFF"
         app:strokeWidth="1dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent">
 
-        <com.google.android.material.bottomnavigation.BottomNavigationView
-            android:id="@+id/bottomNavigation"
-            android:layout_width="match_parent"
-            android:layout_height="64dp"
-            android:background="@android:color/transparent"
-            app:elevation="0dp"
-            app:itemActiveIndicatorStyle="@style/Widget.Custom.FloatingNavIndicator"
-            app:itemIconSize="22dp"
-            app:itemIconTint="@color/nav_item_floating_color"
-            app:itemRippleColor="#20FFFFFF"
-            app:itemTextColor="@color/nav_item_floating_color"
-            app:labelVisibilityMode="unlabeled"
-            app:menu="@menu/menu_walas_bottom_nav" />
+        <LinearLayout
+            android:id="@+id/dockNavLayout"
+            android:layout_width="wrap_content"
+            android:layout_height="58dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingHorizontal="6dp"
+            android:paddingVertical="6dp">
+
+            <!-- Tab 1: Presensi -->
+            <LinearLayout
+                android:id="@+id/tabWalasPresensi"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_marginHorizontal="3dp"
+                android:background="@drawable/bg_nav_pill_active"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackgroundBorderless"
+                android:gravity="center"
+                android:paddingHorizontal="16dp">
+
+                <ImageView
+                    android:id="@+id/icWalasPresensi"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:contentDescription="Presensi"
+                    android:src="@drawable/ic_check_circle"
+                    app:tint="@color/white" />
+
+                <TextView
+                    android:id="@+id/tvWalasPresensi"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:text="Presensi"
+                    android:textColor="@color/white"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:visibility="visible" />
+            </LinearLayout>
+
+            <!-- Tab 2: Laporan / Rekap -->
+            <LinearLayout
+                android:id="@+id/tabWalasLaporan"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_marginHorizontal="3dp"
+                android:background="@android:color/transparent"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackgroundBorderless"
+                android:gravity="center"
+                android:paddingHorizontal="14dp">
+
+                <ImageView
+                    android:id="@+id/icWalasLaporan"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:contentDescription="Laporan"
+                    android:src="@drawable/ic_assignment"
+                    app:tint="#80B7E5BA" />
+
+                <TextView
+                    android:id="@+id/tvWalasLaporan"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:text="Laporan"
+                    android:textColor="@color/white"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:visibility="gone" />
+            </LinearLayout>
+
+            <!-- Tab 3: Siswa / Master Data -->
+            <LinearLayout
+                android:id="@+id/tabWalasSiswa"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_marginHorizontal="3dp"
+                android:background="@android:color/transparent"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackgroundBorderless"
+                android:gravity="center"
+                android:paddingHorizontal="14dp">
+
+                <ImageView
+                    android:id="@+id/icWalasSiswa"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:contentDescription="Siswa"
+                    android:src="@drawable/ic_people"
+                    app:tint="#80B7E5BA" />
+
+                <TextView
+                    android:id="@+id/tvWalasSiswa"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:text="Siswa"
+                    android:textColor="@color/white"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:visibility="gone" />
+            </LinearLayout>
+
+            <!-- Tab 4: Setelan -->
+            <LinearLayout
+                android:id="@+id/tabWalasSetelan"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_marginHorizontal="3dp"
+                android:background="@android:color/transparent"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackgroundBorderless"
+                android:gravity="center"
+                android:paddingHorizontal="14dp">
+
+                <ImageView
+                    android:id="@+id/icWalasSetelan"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:contentDescription="Setelan"
+                    android:src="@drawable/ic_settings"
+                    app:tint="#80B7E5BA" />
+
+                <TextView
+                    android:id="@+id/tvWalasSetelan"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:text="Setelan"
+                    android:textColor="@color/white"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:visibility="gone" />
+            </LinearLayout>
+
+        </LinearLayout>
 
     </com.google.android.material.card.MaterialCardView>
 
