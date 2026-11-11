@@ -38,7 +38,6 @@
             android:layout_height="64dp"
             android:background="@android:color/transparent"
             app:elevation="0dp"
-            app:itemActiveIndicatorColor="@color/jade_forest"
             app:itemIconTint="@color/nav_item_floating_color"
             app:itemRippleColor="#20FFFFFF"
             app:itemTextColor="@color/nav_item_floating_color"

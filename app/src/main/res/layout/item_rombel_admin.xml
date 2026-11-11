@@ -183,7 +183,7 @@
                 android:insetTop="0dp"
                 android:insetBottom="0dp"
                 android:paddingHorizontal="6dp"
-                android:text="📍 Audit Foto &amp; GPS"
+                android:text="Audit Foto &amp; GPS"
                 android:textColor="@color/primary_teal"
                 android:textSize="11.5sp"
                 android:textStyle="bold"

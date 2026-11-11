@@ -219,7 +219,7 @@ class AdminMasterDataFragment : Fragment() {
                 resetForm()
                 binding.cardFormTambahSiswa.visibility = View.VISIBLE
                 binding.tvModeForm.text = "Mode: Input Baru"
-                binding.btnSimpanSiswa.text = "💾 Simpan Data Siswa"
+                binding.btnSimpanSiswa.text = "Simpan Data Siswa"
             }
         }
 
@@ -280,7 +280,7 @@ class AdminMasterDataFragment : Fragment() {
         editingSiswaId = siswa.id
         binding.cardFormTambahSiswa.visibility = View.VISIBLE
         binding.tvModeForm.text = "Mode: Edit Siswa (#${siswa.id})"
-        binding.btnSimpanSiswa.text = "💾 Perbarui Data Siswa"
+        binding.btnSimpanSiswa.text = "Perbarui Data Siswa"
 
         binding.etNisnSiswa.setText(siswa.nisn)
         binding.etNikSiswa.setText(siswa.nik ?: "")
@@ -340,7 +340,7 @@ class AdminMasterDataFragment : Fragment() {
                     override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
                         if (!isAdded || _binding == null) return
                         binding.btnSimpanSiswa.isEnabled = true
-                        binding.btnSimpanSiswa.text = "💾 Simpan Data Siswa"
+                        binding.btnSimpanSiswa.text = "Simpan Data Siswa"
 
                         if (response.isSuccessful) {
                             Toast.makeText(requireContext(), "Siswa $nama berhasil ditambahkan ke Dapodik!", Toast.LENGTH_SHORT).show()
@@ -355,7 +355,7 @@ class AdminMasterDataFragment : Fragment() {
                     override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
                         if (!isAdded || _binding == null) return
                         binding.btnSimpanSiswa.isEnabled = true
-                        binding.btnSimpanSiswa.text = "💾 Simpan Data Siswa"
+                        binding.btnSimpanSiswa.text = "Simpan Data Siswa"
                         Toast.makeText(requireContext(), "Koneksi gagal: ${t.localizedMessage}", Toast.LENGTH_SHORT).show()
                     }
                 })
@@ -367,7 +367,7 @@ class AdminMasterDataFragment : Fragment() {
                     override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
                         if (!isAdded || _binding == null) return
                         binding.btnSimpanSiswa.isEnabled = true
-                        binding.btnSimpanSiswa.text = "💾 Perbarui Data Siswa"
+                        binding.btnSimpanSiswa.text = "Perbarui Data Siswa"
 
                         if (response.isSuccessful) {
                             Toast.makeText(requireContext(), "Data siswa $nama berhasil diperbarui!", Toast.LENGTH_SHORT).show()
@@ -382,7 +382,7 @@ class AdminMasterDataFragment : Fragment() {
                     override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
                         if (!isAdded || _binding == null) return
                         binding.btnSimpanSiswa.isEnabled = true
-                        binding.btnSimpanSiswa.text = "💾 Perbarui Data Siswa"
+                        binding.btnSimpanSiswa.text = "Perbarui Data Siswa"
                         Toast.makeText(requireContext(), "Koneksi gagal: ${t.localizedMessage}", Toast.LENGTH_SHORT).show()
                     }
                 })
@@ -430,8 +430,8 @@ class AdminMasterDataFragment : Fragment() {
     private fun setupImportExcelButton() {
         binding.btnImporExcel.applyBounceEffect {
             val options = arrayOf(
-                "📥 Unduh Template Format Excel/CSV",
-                "📂 Pilih Berkas & Unggah Data Siswa"
+                "Unduh Template Format Excel/CSV",
+                "Pilih Berkas & Unggah Data Siswa"
             )
             MaterialAlertDialogBuilder(requireContext())
                 .setTitle("Impor Data Siswa Dapodik")
@@ -491,7 +491,7 @@ class AdminMasterDataFragment : Fragment() {
         val options = arrayOf(
             "🪑 Ubah Kuota Kapasitas Kursi",
             "⏰ Ganti Sesi KBM (Pagi / Siang)",
-            "🔄 Sinkronkan Ulang Siswa Rombel Ini"
+            "Sinkronkan Ulang Siswa Rombel Ini"
         )
 
         MaterialAlertDialogBuilder(requireContext())
@@ -580,7 +580,7 @@ class AdminMasterDataFragment : Fragment() {
     }
 
     private fun sinkronkanUlangRombel(rombel: RombelMapelResponse) {
-        Toast.makeText(requireContext(), "🔄 Menyinkronkan data rombel ${rombel.namaKelas}...", Toast.LENGTH_SHORT).show()
+        Toast.makeText(requireContext(), "Menyinkronkan data rombel ${rombel.namaKelas}...", Toast.LENGTH_SHORT).show()
         loadDataFromSupabase()
     }
 

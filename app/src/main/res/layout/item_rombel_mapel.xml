@@ -170,7 +170,7 @@
             android:backgroundTint="@color/primary_teal_container"
             android:insetTop="0dp"
             android:insetBottom="0dp"
-            android:text="📄 Lihat Daftar Siswa (Read-Only)"
+            android:text="Lihat Daftar Siswa (Read-Only)"
             android:textAllCaps="false"
             android:textColor="@color/primary_teal"
             android:textSize="13sp"

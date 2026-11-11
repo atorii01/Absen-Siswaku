@@ -10,7 +10,7 @@
         android:id="@+id/nestedScrollAdmin"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/screen_bg"
+        android:background="@drawable/bg_mint_aura_header"
         android:fillViewport="true"
         android:overScrollMode="never">
 
@@ -19,7 +19,7 @@
         android:layout_height="wrap_content"
         android:animateLayoutChanges="true"
         android:orientation="vertical"
-        android:paddingBottom="24dp">
+        android:paddingBottom="96dp">
 
         <!-- ================= 1. TOP BAR PORTAL SUPER ADMIN ================= -->
         <LinearLayout
@@ -756,7 +756,7 @@
                     android:insetTop="0dp"
                     android:insetBottom="0dp"
                     android:paddingHorizontal="14dp"
-                    android:text="📢 Broadcast Walas"
+                    android:text="Broadcast Walas"
                     android:textColor="#FFFFFF"
                     android:textSize="12sp"
                     android:textStyle="bold"

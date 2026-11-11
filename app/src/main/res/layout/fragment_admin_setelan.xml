@@ -5,7 +5,7 @@
     android:id="@+id/nestedScrollAdminSetelan"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/screen_bg"
+    android:background="@drawable/bg_mint_aura_header"
     android:fillViewport="true"
     android:overScrollMode="never">
 
@@ -14,7 +14,7 @@
         android:layout_height="wrap_content"
         android:animateLayoutChanges="true"
         android:orientation="vertical"
-        android:paddingBottom="36dp">
+        android:paddingBottom="96dp">
 
         <!-- ================= 1. TOP BAR SUPER ADMIN ================= -->
         <LinearLayout
@@ -983,7 +983,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="10dp"
                         android:backgroundTint="@color/primary_teal"
-                        android:text="🔄 Sinkronkan Sekarang"
+                        android:text="Sinkronkan Sekarang"
                         android:textColor="@color/white"
                         android:textSize="13sp"
                         android:textStyle="bold"
