@@ -19,7 +19,7 @@ object SupabaseClient {
             .header("apikey", ANON_KEY)
             .header("Authorization", "Bearer $ANON_KEY")
             .header("Content-Type", "application/json")
-            .build()
+            .build()    
         chain.proceed(newRequest)
     }
 
