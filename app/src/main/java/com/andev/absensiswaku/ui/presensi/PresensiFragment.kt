@@ -369,6 +369,7 @@ class PresensiFragment : Fragment() {
     }
 
     private fun startLiveClock() {
+        if (!isAdded || _binding == null || view == null) return
         liveClockJob?.cancel()
         liveClockJob = viewLifecycleOwner.lifecycleScope.launch {
             while (isActive) {
@@ -642,9 +643,10 @@ class PresensiFragment : Fragment() {
 
     private fun startCamera() {
         val ctx = context ?: return
+        if (!isAdded || _binding == null || view == null) return
         val cameraProviderFuture = ProcessCameraProvider.getInstance(ctx)
         cameraProviderFuture.addListener({
-            if (!isAdded || _binding == null) return@addListener
+            if (!isAdded || _binding == null || view == null) return@addListener
             try {
                 cameraProvider = cameraProviderFuture.get()
 
