@@ -4,8 +4,15 @@ import android.Manifest
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.content.res.ColorStateList
+import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
+import android.transition.AutoTransition
+import android.transition.TransitionManager
+import android.view.HapticFeedbackConstants
+import android.view.View
+import android.view.animation.DecelerateInterpolator
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.enableEdgeToEdge
@@ -24,8 +31,6 @@ import com.andev.absensiswaku.ui.riwayat.RiwayatFragment
 import com.andev.absensiswaku.ui.setelan.SetelanFragment
 import com.andev.absensiswaku.ui.walas.WalasPresensiFragment
 import com.andev.absensiswaku.util.NotificationHelper
-
-
 
 class MainActivity : AppCompatActivity() {
 
@@ -125,6 +130,7 @@ class MainActivity : AppCompatActivity() {
 
         if (savedInstanceState == null) {
             navigateToTab(R.id.nav_presensi)
+            updateNavDockVisuals(R.id.nav_presensi, animate = false)
         } else {
             val visibleFragment = supportFragmentManager.fragments.firstOrNull { it.isVisible }
             val activeTabId = when (visibleFragment?.tag) {
@@ -133,26 +139,75 @@ class MainActivity : AppCompatActivity() {
                 "setelan" -> R.id.nav_setelan
                 else -> R.id.nav_presensi
             }
-            currentTabId = activeTabId
-            binding.bottomNavigation.selectedItemId = activeTabId
+            navigateToTab(activeTabId)
+            updateNavDockVisuals(activeTabId, animate = false)
         }
     }
 
     private fun setupBottomNavigation() {
-        binding.bottomNavigation.setOnItemSelectedListener { item ->
-            if (currentTabId == item.itemId && supportFragmentManager.findFragmentById(R.id.fragmentContainer) != null) {
-                return@setOnItemSelectedListener true
-            }
-            navigateToTab(item.itemId)
-            true
+        binding.tabPresensi.setOnClickListener {
+            it.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+            selectTab(R.id.nav_presensi)
+        }
+        binding.tabRiwayat.setOnClickListener {
+            it.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+            selectTab(R.id.nav_riwayat)
+        }
+        binding.tabPengajuan.setOnClickListener {
+            it.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+            selectTab(R.id.nav_pengajuan)
+        }
+        binding.tabSetelan.setOnClickListener {
+            it.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+            selectTab(R.id.nav_setelan)
         }
     }
 
     fun selectTab(tabId: Int, animate: Boolean = true) {
-        if (binding.bottomNavigation.selectedItemId != tabId) {
-            binding.bottomNavigation.selectedItemId = tabId
-        } else {
-            navigateToTab(tabId)
+        if (currentTabId == tabId && supportFragmentManager.findFragmentById(R.id.fragmentContainer) != null) {
+            return
+        }
+        navigateToTab(tabId)
+        updateNavDockVisuals(tabId, animate)
+    }
+
+    private fun updateNavDockVisuals(selectedId: Int, animate: Boolean = true) {
+        if (animate) {
+            val transition = AutoTransition().apply {
+                duration = 200
+                interpolator = DecelerateInterpolator()
+            }
+            TransitionManager.beginDelayedTransition(binding.dockNavLayout, transition)
+        }
+
+        val items = listOf(
+            Triple(R.id.nav_presensi, binding.tabPresensi, Pair(binding.icPresensi, binding.tvPresensi)),
+            Triple(R.id.nav_riwayat, binding.tabRiwayat, Pair(binding.icRiwayat, binding.tvRiwayat)),
+            Triple(R.id.nav_pengajuan, binding.tabPengajuan, Pair(binding.icPengajuan, binding.tvPengajuan)),
+            Triple(R.id.nav_setelan, binding.tabSetelan, Pair(binding.icSetelan, binding.tvSetelan))
+        )
+
+        val density = resources.displayMetrics.density
+        val activePaddingH = (16 * density).toInt()
+        val inactivePaddingH = (14 * density).toInt()
+
+        val tintActive = ContextCompat.getColor(this, R.color.white)
+        val tintInactive = Color.parseColor("#80B7E5BA")
+
+        for ((id, tabLayout, views) in items) {
+            val (ic, tv) = views
+            val isActive = (id == selectedId)
+            if (isActive) {
+                tabLayout.setBackgroundResource(R.drawable.bg_nav_pill_active)
+                tabLayout.setPadding(activePaddingH, 0, activePaddingH, 0)
+                ic.imageTintList = ColorStateList.valueOf(tintActive)
+                tv.visibility = View.VISIBLE
+            } else {
+                tabLayout.setBackgroundColor(Color.TRANSPARENT)
+                tabLayout.setPadding(inactivePaddingH, 0, inactivePaddingH, 0)
+                ic.imageTintList = ColorStateList.valueOf(tintInactive)
+                tv.visibility = View.GONE
+            }
         }
     }
 
@@ -168,12 +223,13 @@ class MainActivity : AppCompatActivity() {
         currentTabId = tabId
 
         val transaction = supportFragmentManager.beginTransaction()
-        transaction.setCustomAnimations(R.anim.fragment_fade_enter, R.anim.fragment_fade_exit)
 
         // 1. Hide every fragment currently attached in FragmentManager that is NOT the target
+        // and immediately set its view visibility to GONE so it never intercepts touch or stays drawn
         for (f in supportFragmentManager.fragments) {
             if (f.tag != targetTag) {
                 transaction.hide(f)
+                f.view?.visibility = View.GONE
             }
         }
 
@@ -191,9 +247,11 @@ class MainActivity : AppCompatActivity() {
                 transaction.add(R.id.fragmentContainer, targetFragment, targetTag)
             } else {
                 transaction.show(targetFragment)
+                targetFragment.view?.visibility = View.VISIBLE
             }
         } else {
             transaction.show(targetFragment)
+            targetFragment.view?.visibility = View.VISIBLE
         }
 
         transaction.commitAllowingStateLoss()
@@ -224,13 +282,11 @@ class MainActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        // Hanya hapus sesi jika activity benar-benar di-finish, bukan saat perubahan konfigurasi (rotasi layar/ganti tema)
         if (isFinishing) {
             val pref = getSharedPreferences("PREF_SMKN8_SESSION", Context.MODE_PRIVATE)
             val isRemembered = pref.getBoolean("KEY_REMEMBER_DEVICE", false) ||
                     pref.getBoolean("KEY_REMEMBER_ME", false) ||
                     pref.getBoolean("KEY_REMEMBER", false)
-            // Jika tidak memilih "Ingat di perangkat ini", bersihkan sesi saat keluar aplikasi
             if (!isRemembered && ::sessionManager.isInitialized) {
                 sessionManager.clearSession()
             }

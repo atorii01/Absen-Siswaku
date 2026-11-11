@@ -373,7 +373,7 @@ class PengajuanFragment : Fragment() {
         }
 
         binding.btnBatal.applyBounceEffect {
-            (activity as? MainActivity)?.loadFragmentFromOutside(PresensiFragment())
+            (activity as? MainActivity)?.selectTab(R.id.nav_presensi)
         }
     }
 
@@ -525,7 +525,7 @@ class PengajuanFragment : Fragment() {
                         .setMessage("Pengajuan $formattedJenisIzin Anda telah berhasil dikirimkan ke Wali Kelas ($namaWalas). Pantau status verifikasi pada Tab Riwayat.")
                         .setPositiveButton("Selesai") { dialog, _ ->
                             dialog.dismiss()
-                            (activity as? MainActivity)?.loadFragmentFromOutside(RiwayatFragment(), R.id.nav_riwayat)
+                            (activity as? MainActivity)?.selectTab(R.id.nav_riwayat)
                         }
                         .show()
                 } else {

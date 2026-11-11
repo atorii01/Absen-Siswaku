@@ -46,6 +46,7 @@ class SetelanFragment : Fragment() {
     private val binding get() = _binding!!
 
     private lateinit var sessionManager: SessionManager
+    private var hasLoadedSummary = false
 
     private val galleryLauncher =
         registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
@@ -120,7 +121,9 @@ class SetelanFragment : Fragment() {
     override fun onResume() {
         super.onResume()
         setupProfileData()
-        loadAttendanceSummary()
+        if (!hasLoadedSummary) {
+            loadAttendanceSummary()
+        }
     }
 
     /**
@@ -306,6 +309,7 @@ class SetelanFragment : Fragment() {
         izinList: List<PengajuanIzinModel>
     ) {
         if (!isAdded || _binding == null) return
+        hasLoadedSummary = true
 
         if (presensiList.isEmpty() && izinList.isEmpty()) {
             // Data default awal agar tampilan tetap menawan sesuai mockup acuan

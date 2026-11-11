@@ -22,7 +22,11 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import com.andev.absensiswaku.R
 import com.andev.absensiswaku.data.network.PengajuanIzinModel
 import com.andev.absensiswaku.data.network.RiwayatModel
@@ -99,14 +103,18 @@ class RiwayatFragment : Fragment() {
     override fun onResume() {
         super.onResume()
         setupHeaderData()
-        loadSemuaRiwayat()
+        if (allRiwayatList.isEmpty()) {
+            loadSemuaRiwayat()
+        }
     }
 
     override fun onHiddenChanged(hidden: Boolean) {
         super.onHiddenChanged(hidden)
         if (!hidden) {
             setupHeaderData()
-            loadSemuaRiwayat()
+            if (allRiwayatList.isEmpty()) {
+                loadSemuaRiwayat()
+            }
         }
     }
 
@@ -262,31 +270,45 @@ class RiwayatFragment : Fragment() {
             })
     }
 
+    companion object {
+        private val parserWithT = ThreadLocal.withInitial {
+            SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault()).apply {
+                timeZone = TimeZone.getTimeZone("UTC")
+            }
+        }
+        private val parserWithSpace = ThreadLocal.withInitial {
+            SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).apply {
+                timeZone = TimeZone.getTimeZone("UTC")
+            }
+        }
+        private val parserDateOnly = ThreadLocal.withInitial {
+            SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).apply {
+                timeZone = TimeZone.getTimeZone("UTC")
+            }
+        }
+        private val wibFormatter = ThreadLocal.withInitial {
+            SimpleDateFormat("HH:mm:ss 'WIB'", Locale.forLanguageTag("id-ID")).apply {
+                timeZone = TimeZone.getTimeZone("Asia/Jakarta")
+            }
+        }
+    }
+
     /**
-     * Konversi timestamp UTC ISO 8601 dari Supabase ke format jam WIB dengan parser fallback
+     * Konversi timestamp UTC ISO 8601 dari Supabase ke format jam WIB dengan parser thread-local
      */
     private fun formatIsoKeWib(isoString: String?): String {
         if (isoString.isNullOrEmpty()) return "07:00 WIB"
         return try {
             val cleanIso = isoString.substringBefore(".").substringBefore("+").trim()
             val parser = if (cleanIso.contains("T")) {
-                SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault()).apply {
-                    timeZone = TimeZone.getTimeZone("UTC")
-                }
+                parserWithT.get()!!
             } else if (cleanIso.contains(" ")) {
-                SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).apply {
-                    timeZone = TimeZone.getTimeZone("UTC")
-                }
+                parserWithSpace.get()!!
             } else {
-                SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).apply {
-                    timeZone = TimeZone.getTimeZone("UTC")
-                }
-            }
-            val formatter = SimpleDateFormat("HH:mm:ss 'WIB'", Locale.forLanguageTag("id-ID")).apply {
-                timeZone = TimeZone.getTimeZone("Asia/Jakarta")
+                parserDateOnly.get()!!
             }
             val date = parser.parse(cleanIso) ?: Date()
-            formatter.format(date)
+            wibFormatter.get()!!.format(date)
         } catch (e: Exception) {
             "07:00 WIB"
         }
@@ -301,8 +323,9 @@ class RiwayatFragment : Fragment() {
                 ) {
                     if (!isAdded || _binding == null) return
 
-                    val mappedIzinList = if (response.isSuccessful && response.body() != null) {
-                        response.body()!!.map { item ->
+                    val rawIzin = response.body() ?: emptyList()
+                    viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
+                        val mappedIzinList = rawIzin.map { item ->
                             val statusVerif = item.statusVerifikasi?.trim().orEmpty()
                             val jenis = item.jenisIzin?.trim().orEmpty().ifEmpty { "Izin" }
 
@@ -326,16 +349,28 @@ class RiwayatFragment : Fragment() {
                                 jenisIzin = jenis
                             )
                         }
-                    } else {
-                        emptyList()
-                    }
 
-                    combineAndApplyLists(listPresensi, mappedIzinList)
+                        val combined = (listPresensi + mappedIzinList).sortedByDescending { it.tanggal }
+                        withContext(Dispatchers.Main) {
+                            if (!isAdded || _binding == null) return@withContext
+                            binding.swipeRefreshRiwayat.isRefreshing = false
+                            allRiwayatList = combined
+                            applyMonthFilter(selectedMonthIndex)
+                        }
+                    }
                 }
 
                 override fun onFailure(call: Call<List<PengajuanIzinModel>>, t: Throwable) {
                     if (!isAdded || _binding == null) return
-                    combineAndApplyLists(listPresensi, emptyList())
+                    viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
+                        val combined = listPresensi.sortedByDescending { it.tanggal }
+                        withContext(Dispatchers.Main) {
+                            if (!isAdded || _binding == null) return@withContext
+                            binding.swipeRefreshRiwayat.isRefreshing = false
+                            allRiwayatList = combined
+                            applyMonthFilter(selectedMonthIndex)
+                        }
+                    }
                 }
             })
     }
@@ -344,8 +379,7 @@ class RiwayatFragment : Fragment() {
         if (_binding != null) {
             binding.swipeRefreshRiwayat.isRefreshing = false
         }
-        val combined = (presensiList + izinList).sortedByDescending { it.tanggal }
-        allRiwayatList = combined
+        allRiwayatList = (presensiList + izinList).sortedByDescending { it.tanggal }
         applyMonthFilter(selectedMonthIndex)
     }
 
@@ -430,7 +464,6 @@ class RiwayatFragment : Fragment() {
             binding.rvRiwayatPresensi.visibility = View.VISIBLE
             binding.tvCountRecordHeader.text = "${filteredList.size} Catatan Terbaru"
             riwayatAdapter.updateData(filteredList)
-            binding.rvRiwayatPresensi.scheduleLayoutAnimation()
         }
     }
 
