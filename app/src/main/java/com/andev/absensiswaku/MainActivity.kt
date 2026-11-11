@@ -141,7 +141,7 @@ class MainActivity : AppCompatActivity() {
                 "setelan" -> R.id.nav_setelan
                 else -> R.id.nav_presensi
             }
-            navigateToTab(activeTabId, animate = false)
+            currentTabId = activeTabId
             updateNavDockVisuals(activeTabId, animate = false)
         }
     }
@@ -257,7 +257,11 @@ class MainActivity : AppCompatActivity() {
             transaction.show(targetFragment)
         }
 
-        transaction.commitNowAllowingStateLoss()
+        if (supportFragmentManager.isStateSaved) {
+            transaction.commitAllowingStateLoss()
+        } else {
+            transaction.commitNowAllowingStateLoss()
+        }
 
         // Sinkronisasi animasi fade-in form dengan durasi 160ms yang persis sama dengan ekspansi navbar pill
         targetFragment.view?.let { v ->
