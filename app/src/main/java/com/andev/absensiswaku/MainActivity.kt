@@ -25,10 +25,25 @@ import com.andev.absensiswaku.ui.setelan.SetelanFragment
 import com.andev.absensiswaku.ui.walas.WalasPresensiFragment
 import com.andev.absensiswaku.util.NotificationHelper
 
+import android.content.res.ColorStateList
+import android.graphics.Color
+import android.view.MotionEvent
+import android.view.View
+import android.view.animation.PathInterpolator
+import androidx.core.content.ContextCompat
+
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var sessionManager: SessionManager
+
+    private lateinit var presensiFragment: Fragment
+    private val riwayatFragment by lazy { RiwayatFragment() }
+    private val pengajuanFragment by lazy { PengajuanFragment() }
+    private val setelanFragment by lazy { SetelanFragment() }
+    private var activeFragment: Fragment? = null
+    var currentTabId: Int = R.id.nav_presensi
+        private set
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -94,15 +109,7 @@ class MainActivity : AppCompatActivity() {
 
         setupBottomNavigation()
         setupBackPressHandler()
-
-        if (savedInstanceState == null) {
-            val isGuru = sessionManager.getRole().equals("GURU", true)
-            if (isGuru) {
-                loadFragment(WalasPresensiFragment())
-            } else {
-                loadFragment(PresensiFragment())
-            }
-        }
+        initFragments(savedInstanceState)
     }
 
     override fun onResume() {
@@ -117,36 +124,153 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun setupBottomNavigation() {
-        binding.bottomNavigation.setOnItemSelectedListener { item ->
-            // Mencegah re-instantiate fragment jika tab yang sama ditekan berulang kali
-            if (binding.bottomNavigation.selectedItemId == item.itemId && supportFragmentManager.findFragmentById(R.id.fragmentContainer) != null) {
-                return@setOnItemSelectedListener true
-            }
+    private fun initFragments(savedInstanceState: Bundle?) {
+        val isGuru = sessionManager.getRole().equals("GURU", true)
+        presensiFragment = if (isGuru) WalasPresensiFragment() else PresensiFragment()
 
-            when (item.itemId) {
-                R.id.nav_presensi -> {
-                    val isGuru = sessionManager.getRole().equals("GURU", true)
-                    if (isGuru) {
-                        loadFragment(WalasPresensiFragment())
-                    } else {
-                        loadFragment(PresensiFragment())
+        if (savedInstanceState == null) {
+            supportFragmentManager.beginTransaction()
+                .add(R.id.fragmentContainer, presensiFragment, "presensi")
+                .commit()
+            activeFragment = presensiFragment
+            currentTabId = R.id.nav_presensi
+        } else {
+            presensiFragment = supportFragmentManager.findFragmentByTag("presensi") ?: presensiFragment
+            activeFragment = supportFragmentManager.fragments.firstOrNull { it.isVisible } ?: presensiFragment
+        }
+        updateNavUI(currentTabId, animate = false)
+    }
+
+    private fun setupBottomNavigation() {
+        val interpolator = PathInterpolator(0.05f, 0.7f, 0.1f, 1.0f)
+
+        fun bindTab(tabView: View, iconView: View, targetTabId: Int) {
+            tabView.setOnTouchListener { _, event ->
+                when (event.action) {
+                    MotionEvent.ACTION_DOWN -> {
+                        iconView.animate()
+                            .scaleX(0.85f)
+                            .scaleY(0.85f)
+                            .setDuration(100)
+                            .setInterpolator(interpolator)
+                            .start()
+                        false
                     }
-                    true
+                    MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                        iconView.animate()
+                            .scaleX(1.0f)
+                            .scaleY(1.0f)
+                            .setDuration(150)
+                            .setInterpolator(interpolator)
+                            .start()
+                        false
+                    }
+                    else -> false
                 }
-                R.id.nav_riwayat -> {
-                    loadFragment(RiwayatFragment())
-                    true
+            }
+            tabView.setOnClickListener {
+                selectTab(targetTabId, animate = true)
+            }
+        }
+
+        bindTab(binding.tabPresensi, binding.iconPresensi, R.id.nav_presensi)
+        bindTab(binding.tabRiwayat, binding.iconRiwayat, R.id.nav_riwayat)
+        bindTab(binding.tabPengajuan, binding.iconPengajuan, R.id.nav_pengajuan)
+        bindTab(binding.tabSetelan, binding.iconSetelan, R.id.nav_setelan)
+    }
+
+    fun selectTab(tabId: Int, animate: Boolean = true) {
+        if (currentTabId == tabId && activeFragment != null) return
+
+        val (targetFragment, tag) = when (tabId) {
+            R.id.nav_presensi -> Pair(presensiFragment, "presensi")
+            R.id.nav_riwayat -> Pair(riwayatFragment, "riwayat")
+            R.id.nav_pengajuan -> Pair(pengajuanFragment, "pengajuan")
+            R.id.nav_setelan -> Pair(setelanFragment, "setelan")
+            else -> return
+        }
+
+        val transaction = supportFragmentManager.beginTransaction()
+        if (animate) {
+            transaction.setCustomAnimations(R.anim.fragment_fade_enter, R.anim.fragment_fade_exit)
+        }
+
+        activeFragment?.let { transaction.hide(it) }
+
+        val existing = supportFragmentManager.findFragmentByTag(tag)
+        if (existing == null) {
+            transaction.add(R.id.fragmentContainer, targetFragment, tag)
+        } else {
+            transaction.show(existing)
+        }
+        transaction.commit()
+        activeFragment = targetFragment
+        currentTabId = tabId
+
+        updateNavUI(tabId, animate)
+    }
+
+    private fun updateNavUI(selectedTabId: Int, animate: Boolean) {
+        val tabList = listOf(
+            Triple(R.id.nav_presensi, binding.pillPresensi, binding.iconPresensi),
+            Triple(R.id.nav_riwayat, binding.pillRiwayat, binding.iconRiwayat),
+            Triple(R.id.nav_pengajuan, binding.pillPengajuan, binding.iconPengajuan),
+            Triple(R.id.nav_setelan, binding.pillSetelan, binding.iconSetelan)
+        )
+
+        val activeColor = ContextCompat.getColor(this, R.color.jade_light_mint)
+        val inactiveColor = Color.parseColor("#80FFFFFF")
+        val interpolator = PathInterpolator(0.05f, 0.7f, 0.1f, 1.0f)
+
+        tabList.forEach { (id, pill, icon) ->
+            val isSelected = (id == selectedTabId)
+            if (isSelected) {
+                if (pill.visibility != View.VISIBLE) {
+                    pill.visibility = View.VISIBLE
+                    if (animate) {
+                        pill.alpha = 0f
+                        pill.scaleX = 0.6f
+                        pill.scaleY = 0.6f
+                        pill.animate()
+                            .alpha(1f)
+                            .scaleX(1f)
+                            .scaleY(1f)
+                            .setDuration(240)
+                            .setInterpolator(interpolator)
+                            .start()
+                    } else {
+                        pill.alpha = 1f
+                        pill.scaleX = 1f
+                        pill.scaleY = 1f
+                    }
                 }
-                R.id.nav_pengajuan -> {
-                    loadFragment(PengajuanFragment())
-                    true
+                icon.imageTintList = ColorStateList.valueOf(activeColor)
+                if (animate) {
+                    icon.animate()
+                        .scaleX(1.2f)
+                        .scaleY(1.2f)
+                        .setDuration(120)
+                        .withEndAction {
+                            icon.animate().scaleX(1f).scaleY(1f).setDuration(160).start()
+                        }.start()
                 }
-                R.id.nav_setelan -> {
-                    loadFragment(SetelanFragment())
-                    true
+            } else {
+                if (pill.visibility == View.VISIBLE) {
+                    if (animate) {
+                        pill.animate()
+                            .alpha(0f)
+                            .scaleX(0.6f)
+                            .scaleY(0.6f)
+                            .setDuration(180)
+                            .withEndAction { pill.visibility = View.GONE }
+                            .start()
+                    } else {
+                        pill.visibility = View.GONE
+                    }
                 }
-                else -> false
+                icon.imageTintList = ColorStateList.valueOf(inactiveColor)
+                icon.scaleX = 1f
+                icon.scaleY = 1f
             }
         }
     }
@@ -154,9 +278,8 @@ class MainActivity : AppCompatActivity() {
     private fun setupBackPressHandler() {
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                // Jika sedang di tab selain Presensi, navigasi kembali ke Tab Presensi (Home)
-                if (binding.bottomNavigation.selectedItemId != R.id.nav_presensi) {
-                    binding.bottomNavigation.selectedItemId = R.id.nav_presensi
+                if (currentTabId != R.id.nav_presensi) {
+                    selectTab(R.id.nav_presensi, animate = true)
                 } else {
                     finish()
                 }
@@ -165,28 +288,14 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun loadFragmentFromOutside(fragment: Fragment, navItemId: Int? = null) {
-        if (navItemId != null) {
-            binding.bottomNavigation.selectedItemId = navItemId
-        } else {
-            when (fragment) {
-                is PresensiFragment -> binding.bottomNavigation.selectedItemId = R.id.nav_presensi
-                is WalasPresensiFragment -> binding.bottomNavigation.selectedItemId = R.id.nav_presensi
-                is RiwayatFragment -> binding.bottomNavigation.selectedItemId = R.id.nav_riwayat
-                is PengajuanFragment -> binding.bottomNavigation.selectedItemId = R.id.nav_pengajuan
-                is SetelanFragment -> binding.bottomNavigation.selectedItemId = R.id.nav_setelan
-            }
+        val tabId = navItemId ?: when (fragment) {
+            is PresensiFragment, is WalasPresensiFragment -> R.id.nav_presensi
+            is RiwayatFragment -> R.id.nav_riwayat
+            is PengajuanFragment -> R.id.nav_pengajuan
+            is SetelanFragment -> R.id.nav_setelan
+            else -> R.id.nav_presensi
         }
-        loadFragment(fragment)
-    }
-
-    private fun loadFragment(fragment: Fragment) {
-        supportFragmentManager.beginTransaction()
-            .setCustomAnimations(
-                R.anim.fragment_fade_enter,
-                R.anim.fragment_fade_exit
-            )
-            .replace(R.id.fragmentContainer, fragment)
-            .commit()
+        selectTab(tabId, animate = true)
     }
 
     override fun onDestroy() {
