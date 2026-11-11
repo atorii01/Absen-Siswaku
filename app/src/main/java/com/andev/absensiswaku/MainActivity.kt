@@ -25,11 +25,7 @@ import com.andev.absensiswaku.ui.setelan.SetelanFragment
 import com.andev.absensiswaku.ui.walas.WalasPresensiFragment
 import com.andev.absensiswaku.util.NotificationHelper
 
-import android.content.res.ColorStateList
-import android.graphics.Color
-import android.view.MotionEvent
-import android.view.View
-import android.view.animation.PathInterpolator
+
 
 class MainActivity : AppCompatActivity() {
 
@@ -40,7 +36,6 @@ class MainActivity : AppCompatActivity() {
     private val riwayatFragment by lazy { RiwayatFragment() }
     private val pengajuanFragment by lazy { PengajuanFragment() }
     private val setelanFragment by lazy { SetelanFragment() }
-    private var activeFragment: Fragment? = null
     var currentTabId: Int = R.id.nav_presensi
         private set
 
@@ -131,154 +126,87 @@ class MainActivity : AppCompatActivity() {
             supportFragmentManager.beginTransaction()
                 .add(R.id.fragmentContainer, presensiFragment, "presensi")
                 .commit()
-            activeFragment = presensiFragment
             currentTabId = R.id.nav_presensi
+            binding.bottomNavigation.selectedItemId = R.id.nav_presensi
         } else {
             presensiFragment = supportFragmentManager.findFragmentByTag("presensi") ?: presensiFragment
-            activeFragment = supportFragmentManager.fragments.firstOrNull { it.isVisible } ?: presensiFragment
+            val visibleFragment = supportFragmentManager.fragments.firstOrNull { it.isVisible }
+            val restoredTabId = when (visibleFragment?.tag) {
+                "riwayat" -> R.id.nav_riwayat
+                "pengajuan" -> R.id.nav_pengajuan
+                "setelan" -> R.id.nav_setelan
+                else -> R.id.nav_presensi
+            }
+            currentTabId = restoredTabId
+            binding.bottomNavigation.selectedItemId = restoredTabId
         }
-        updateNavUI(currentTabId, animate = false)
     }
 
     private fun setupBottomNavigation() {
-        val interpolator = PathInterpolator(0.05f, 0.7f, 0.1f, 1.0f)
-
-        fun bindTab(tabView: View, iconView: View, targetTabId: Int) {
-            tabView.setOnTouchListener { _, event ->
-                when (event.action) {
-                    MotionEvent.ACTION_DOWN -> {
-                        iconView.animate()
-                            .scaleX(0.85f)
-                            .scaleY(0.85f)
-                            .setDuration(100)
-                            .setInterpolator(interpolator)
-                            .start()
-                        false
-                    }
-                    MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                        iconView.animate()
-                            .scaleX(1.0f)
-                            .scaleY(1.0f)
-                            .setDuration(150)
-                            .setInterpolator(interpolator)
-                            .start()
-                        false
-                    }
-                    else -> false
-                }
+        binding.bottomNavigation.setOnItemSelectedListener { item ->
+            if (binding.bottomNavigation.selectedItemId == item.itemId &&
+                supportFragmentManager.findFragmentById(R.id.fragmentContainer) != null &&
+                currentTabId == item.itemId
+            ) {
+                return@setOnItemSelectedListener true
             }
-            tabView.setOnClickListener {
-                selectTab(targetTabId, animate = true)
-            }
+            navigateToTab(item.itemId)
+            true
         }
-
-        bindTab(binding.tabPresensi, binding.iconPresensi, R.id.nav_presensi)
-        bindTab(binding.tabRiwayat, binding.iconRiwayat, R.id.nav_riwayat)
-        bindTab(binding.tabPengajuan, binding.iconPengajuan, R.id.nav_pengajuan)
-        bindTab(binding.tabSetelan, binding.iconSetelan, R.id.nav_setelan)
     }
 
     fun selectTab(tabId: Int, animate: Boolean = true) {
-        if (currentTabId == tabId && activeFragment != null) return
+        if (binding.bottomNavigation.selectedItemId != tabId) {
+            binding.bottomNavigation.selectedItemId = tabId
+        } else {
+            navigateToTab(tabId)
+        }
+    }
 
-        val (targetFragment, tag) = when (tabId) {
-            R.id.nav_presensi -> Pair(presensiFragment, "presensi")
-            R.id.nav_riwayat -> Pair(riwayatFragment, "riwayat")
-            R.id.nav_pengajuan -> Pair(pengajuanFragment, "pengajuan")
-            R.id.nav_setelan -> Pair(setelanFragment, "setelan")
+    private fun navigateToTab(tabId: Int) {
+        val targetTag = when (tabId) {
+            R.id.nav_presensi -> "presensi"
+            R.id.nav_riwayat -> "riwayat"
+            R.id.nav_pengajuan -> "pengajuan"
+            R.id.nav_setelan -> "setelan"
             else -> return
         }
 
-        val transaction = supportFragmentManager.beginTransaction()
-        if (animate) {
-            transaction.setCustomAnimations(R.anim.fragment_fade_enter, R.anim.fragment_fade_exit)
-        }
-
-        activeFragment?.let { transaction.hide(it) }
-
-        val existing = supportFragmentManager.findFragmentByTag(tag)
-        if (existing == null) {
-            transaction.add(R.id.fragmentContainer, targetFragment, tag)
-        } else {
-            transaction.show(existing)
-        }
-        transaction.commit()
-        activeFragment = targetFragment
         currentTabId = tabId
 
-        updateNavUI(tabId, animate)
-    }
+        val transaction = supportFragmentManager.beginTransaction()
+        transaction.setCustomAnimations(R.anim.fragment_fade_enter, R.anim.fragment_fade_exit)
 
-    private fun updateNavUI(selectedTabId: Int, animate: Boolean) {
-        val tabList = listOf(
-            Triple(R.id.nav_presensi, binding.pillPresensi, binding.iconPresensi),
-            Triple(R.id.nav_riwayat, binding.pillRiwayat, binding.iconRiwayat),
-            Triple(R.id.nav_pengajuan, binding.pillPengajuan, binding.iconPengajuan),
-            Triple(R.id.nav_setelan, binding.pillSetelan, binding.iconSetelan)
-        )
-
-        val activeColor = ContextCompat.getColor(this, R.color.jade_light_mint)
-        val inactiveColor = Color.parseColor("#80FFFFFF")
-        val interpolator = PathInterpolator(0.05f, 0.7f, 0.1f, 1.0f)
-
-        tabList.forEach { (id, pill, icon) ->
-            val isSelected = (id == selectedTabId)
-            if (isSelected) {
-                if (pill.visibility != View.VISIBLE) {
-                    pill.visibility = View.VISIBLE
-                    if (animate) {
-                        pill.alpha = 0f
-                        pill.scaleX = 0.6f
-                        pill.scaleY = 0.6f
-                        pill.animate()
-                            .alpha(1f)
-                            .scaleX(1f)
-                            .scaleY(1f)
-                            .setDuration(240)
-                            .setInterpolator(interpolator)
-                            .start()
-                    } else {
-                        pill.alpha = 1f
-                        pill.scaleX = 1f
-                        pill.scaleY = 1f
-                    }
-                }
-                icon.imageTintList = ColorStateList.valueOf(activeColor)
-                if (animate) {
-                    icon.animate()
-                        .scaleX(1.2f)
-                        .scaleY(1.2f)
-                        .setDuration(120)
-                        .withEndAction {
-                            icon.animate().scaleX(1f).scaleY(1f).setDuration(160).start()
-                        }.start()
-                }
-            } else {
-                if (pill.visibility == View.VISIBLE) {
-                    if (animate) {
-                        pill.animate()
-                            .alpha(0f)
-                            .scaleX(0.6f)
-                            .scaleY(0.6f)
-                            .setDuration(180)
-                            .withEndAction { pill.visibility = View.GONE }
-                            .start()
-                    } else {
-                        pill.visibility = View.GONE
-                    }
-                }
-                icon.imageTintList = ColorStateList.valueOf(inactiveColor)
-                icon.scaleX = 1f
-                icon.scaleY = 1f
+        // 1. Hide every fragment currently attached in FragmentManager that is NOT the target
+        for (f in supportFragmentManager.fragments) {
+            if (f.tag != targetTag) {
+                transaction.hide(f)
             }
         }
+
+        // 2. Find or instantiate target fragment
+        var targetFragment = supportFragmentManager.findFragmentByTag(targetTag)
+        if (targetFragment == null) {
+            targetFragment = when (tabId) {
+                R.id.nav_presensi -> presensiFragment
+                R.id.nav_riwayat -> riwayatFragment
+                R.id.nav_pengajuan -> pengajuanFragment
+                R.id.nav_setelan -> setelanFragment
+                else -> return
+            }
+            transaction.add(R.id.fragmentContainer, targetFragment, targetTag)
+        } else {
+            transaction.show(targetFragment)
+        }
+
+        transaction.commitAllowingStateLoss()
     }
 
     private fun setupBackPressHandler() {
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 if (currentTabId != R.id.nav_presensi) {
-                    selectTab(R.id.nav_presensi, animate = true)
+                    selectTab(R.id.nav_presensi)
                 } else {
                     finish()
                 }
@@ -294,7 +222,7 @@ class MainActivity : AppCompatActivity() {
             is SetelanFragment -> R.id.nav_setelan
             else -> R.id.nav_presensi
         }
-        selectTab(tabId, animate = true)
+        selectTab(tabId)
     }
 
     override fun onDestroy() {

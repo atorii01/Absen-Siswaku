@@ -1199,10 +1199,14 @@ class PresensiFragment : Fragment() {
         super.onHiddenChanged(hidden)
         if (hidden) {
             liveClockJob?.cancel()
+            cameraProvider?.unbindAll()
+            locationCallback?.let { fusedLocationClient.removeLocationUpdates(it) }
         } else {
             startLiveClock()
             checkDailyPresensiStatus()
             updateOfflineBannerUI()
+            startCamera()
+            startLocationUpdates()
         }
     }
 

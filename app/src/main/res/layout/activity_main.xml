@@ -20,133 +20,32 @@
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/cardFloatingNavContainer"
         android:layout_width="match_parent"
-        android:layout_height="64dp"
+        android:layout_height="wrap_content"
         android:layout_marginHorizontal="36dp"
         android:layout_marginBottom="16dp"
         app:cardBackgroundColor="@color/jade_dark_pine"
         app:cardCornerRadius="32dp"
-        app:cardElevation="12dp"
+        app:cardElevation="10dp"
         app:strokeColor="#26FFFFFF"
         app:strokeWidth="1dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent">
 
-        <LinearLayout
-            android:id="@+id/navItemsContainer"
+        <com.google.android.material.bottomnavigation.BottomNavigationView
+            android:id="@+id/bottomNavigation"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:gravity="center"
-            android:orientation="horizontal"
-            android:paddingHorizontal="6dp">
+            android:layout_height="64dp"
+            android:background="@android:color/transparent"
+            app:elevation="0dp"
+            app:itemActiveIndicatorStyle="@style/Widget.Custom.FloatingNavIndicator"
+            app:itemIconSize="22dp"
+            app:itemIconTint="@color/nav_item_floating_color"
+            app:itemRippleColor="#20FFFFFF"
+            app:itemTextColor="@color/nav_item_floating_color"
+            app:labelVisibilityMode="unlabeled"
+            app:menu="@menu/menu_bottom_nav" />
 
-            <!-- Tab 1: Presensi -->
-            <FrameLayout
-                android:id="@+id/tabPresensi"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:clickable="true"
-                android:focusable="true">
-
-                <View
-                    android:id="@+id/pillPresensi"
-                    android:layout_width="54dp"
-                    android:layout_height="36dp"
-                    android:layout_gravity="center"
-                    android:background="@drawable/bg_nav_pill_active" />
-
-                <ImageView
-                    android:id="@+id/iconPresensi"
-                    android:layout_width="22dp"
-                    android:layout_height="22dp"
-                    android:layout_gravity="center"
-                    android:contentDescription="Presensi"
-                    android:src="@drawable/ic_nav_presensi"
-                    app:tint="@color/jade_light_mint" />
-            </FrameLayout>
-
-            <!-- Tab 2: Riwayat -->
-            <FrameLayout
-                android:id="@+id/tabRiwayat"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:clickable="true"
-                android:focusable="true">
-
-                <View
-                    android:id="@+id/pillRiwayat"
-                    android:layout_width="54dp"
-                    android:layout_height="36dp"
-                    android:layout_gravity="center"
-                    android:background="@drawable/bg_nav_pill_active"
-                    android:visibility="gone" />
-
-                <ImageView
-                    android:id="@+id/iconRiwayat"
-                    android:layout_width="22dp"
-                    android:layout_height="22dp"
-                    android:layout_gravity="center"
-                    android:contentDescription="Riwayat"
-                    android:src="@drawable/ic_nav_riwayat"
-                    app:tint="#80FFFFFF" />
-            </FrameLayout>
-
-            <!-- Tab 3: Pengajuan -->
-            <FrameLayout
-                android:id="@+id/tabPengajuan"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:clickable="true"
-                android:focusable="true">
-
-                <View
-                    android:id="@+id/pillPengajuan"
-                    android:layout_width="54dp"
-                    android:layout_height="36dp"
-                    android:layout_gravity="center"
-                    android:background="@drawable/bg_nav_pill_active"
-                    android:visibility="gone" />
-
-                <ImageView
-                    android:id="@+id/iconPengajuan"
-                    android:layout_width="22dp"
-                    android:layout_height="22dp"
-                    android:layout_gravity="center"
-                    android:contentDescription="Pengajuan"
-                    android:src="@drawable/ic_nav_pengajuan"
-                    app:tint="#80FFFFFF" />
-            </FrameLayout>
-
-            <!-- Tab 4: Setelan -->
-            <FrameLayout
-                android:id="@+id/tabSetelan"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:clickable="true"
-                android:focusable="true">
-
-                <View
-                    android:id="@+id/pillSetelan"
-                    android:layout_width="54dp"
-                    android:layout_height="36dp"
-                    android:layout_gravity="center"
-                    android:background="@drawable/bg_nav_pill_active"
-                    android:visibility="gone" />
-
-                <ImageView
-                    android:id="@+id/iconSetelan"
-                    android:layout_width="22dp"
-                    android:layout_height="22dp"
-                    android:layout_gravity="center"
-                    android:contentDescription="Setelan"
-                    android:src="@drawable/ic_nav_setelan"
-                    app:tint="#80FFFFFF" />
-            </FrameLayout>
-        </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
