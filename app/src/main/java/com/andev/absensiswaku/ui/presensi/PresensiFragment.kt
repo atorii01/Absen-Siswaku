@@ -364,9 +364,7 @@ class PresensiFragment : Fragment() {
         com.andev.absensiswaku.util.AvatarHelper.loadAvatar(ctx, avatarFile, binding.imgAvatar)
 
         binding.imgAvatar.applyBounceEffect {
-            (activity as? MainActivity)?.let { mainAct ->
-                mainAct.findViewById<BottomNavigationView>(R.id.bottomNavigation)?.selectedItemId = R.id.nav_setelan
-            }
+            (activity as? MainActivity)?.selectTab(R.id.nav_setelan)
         }
     }
 
