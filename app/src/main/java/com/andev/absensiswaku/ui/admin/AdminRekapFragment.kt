@@ -47,6 +47,7 @@ class AdminRekapFragment : Fragment() {
     private var selectedPeriod: PeriodType = PeriodType.MINGGUAN
     private var selectedRombelIndex: Int = 0 // 0 = Seluruh Kelas
     private val historyDownloads = mutableListOf<RiwayatUnduhanModel>()
+    private var hasLoadedData: Boolean = false
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -76,10 +77,10 @@ class AdminRekapFragment : Fragment() {
 
         binding.swipeRefreshAdminRekap.setColorSchemeResources(R.color.primary_teal)
         binding.swipeRefreshAdminRekap.setOnRefreshListener {
-            loadDataFromSupabase()
+            loadDataFromSupabase(force = true)
         }
 
-        loadDataFromSupabase()
+        loadDataFromSupabase(force = false)
     }
 
     override fun onResume() {
@@ -290,7 +291,8 @@ class AdminRekapFragment : Fragment() {
         }
     }
 
-    private fun loadDataFromSupabase() {
+    private fun loadDataFromSupabase(force: Boolean = false) {
+        if (!force && hasLoadedData) return
         val todayDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
 
         // 1. Ambil daftar rombel
@@ -388,6 +390,7 @@ class AdminRekapFragment : Fragment() {
 
     private fun calculateMetrics(todayDate: String) {
         if (_binding == null) return
+        hasLoadedData = true
         binding.swipeRefreshAdminRekap.isRefreshing = false
 
         val totalRombel = allRombelList.size.takeIf { it > 0 } ?: 10

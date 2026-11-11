@@ -56,6 +56,7 @@ class RiwayatFragment : Fragment() {
     private lateinit var riwayatAdapter: RiwayatAdapter
 
     private var allRiwayatList: List<RiwayatModel> = emptyList()
+    private var hasLoadedData = false
 
     private var month1Pattern = ""
     private var month2Pattern = ""
@@ -89,7 +90,7 @@ class RiwayatFragment : Fragment() {
 
         binding.swipeRefreshRiwayat.setColorSchemeResources(R.color.primary_teal)
         binding.swipeRefreshRiwayat.setOnRefreshListener {
-            loadSemuaRiwayat()
+            loadSemuaRiwayat(force = true)
         }
 
         MotionUtils.animateStaggeredEntrance(
@@ -103,8 +104,8 @@ class RiwayatFragment : Fragment() {
     override fun onResume() {
         super.onResume()
         setupHeaderData()
-        if (allRiwayatList.isEmpty()) {
-            loadSemuaRiwayat()
+        if (!hasLoadedData) {
+            loadSemuaRiwayat(force = false)
         }
     }
 
@@ -113,8 +114,8 @@ class RiwayatFragment : Fragment() {
         if (!hidden) {
             if (!isAdded || _binding == null || view == null) return
             setupHeaderData()
-            if (allRiwayatList.isEmpty()) {
-                loadSemuaRiwayat()
+            if (!hasLoadedData) {
+                loadSemuaRiwayat(force = false)
             }
         }
     }
@@ -230,8 +231,9 @@ class RiwayatFragment : Fragment() {
         }
     }
 
-    private fun loadSemuaRiwayat() {
+    private fun loadSemuaRiwayat(force: Boolean = false) {
         if (!isAdded || _binding == null) return
+        if (!force && hasLoadedData) return
 
         val pref = context?.getSharedPreferences("PREF_SMKN8_SESSION", Context.MODE_PRIVATE)
 
@@ -355,6 +357,7 @@ class RiwayatFragment : Fragment() {
                         withContext(Dispatchers.Main) {
                             if (!isAdded || _binding == null) return@withContext
                             binding.swipeRefreshRiwayat.isRefreshing = false
+                            hasLoadedData = true
                             allRiwayatList = combined
                             applyMonthFilter(selectedMonthIndex)
                         }
@@ -368,6 +371,7 @@ class RiwayatFragment : Fragment() {
                         withContext(Dispatchers.Main) {
                             if (!isAdded || _binding == null) return@withContext
                             binding.swipeRefreshRiwayat.isRefreshing = false
+                            hasLoadedData = true
                             allRiwayatList = combined
                             applyMonthFilter(selectedMonthIndex)
                         }

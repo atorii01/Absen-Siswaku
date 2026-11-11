@@ -1220,12 +1220,6 @@ class PresensiFragment : Fragment() {
         super.onHiddenChanged(hidden)
         if (hidden) {
             liveClockJob?.cancel()
-            try {
-                cameraProvider?.unbindAll()
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-            camera = null
             isAnalyzingFrame = false
             locationCallback?.let { fusedLocationClient.removeLocationUpdates(it) }
         } else {
@@ -1233,9 +1227,25 @@ class PresensiFragment : Fragment() {
             startLiveClock()
             checkDailyPresensiStatus()
             updateOfflineBannerUI()
-            startCamera()
             startLocationUpdates()
+            val ctx = context
+            if (camera == null && ctx != null && ContextCompat.checkSelfPermission(ctx, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+                startCamera()
+            }
         }
+    }
+
+    override fun onStop() {
+        super.onStop()
+        liveClockJob?.cancel()
+        locationCallback?.let { fusedLocationClient.removeLocationUpdates(it) }
+        try {
+            cameraProvider?.unbindAll()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        camera = null
+        isAnalyzingFrame = false
     }
 
     override fun onDestroyView() {

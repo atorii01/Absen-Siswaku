@@ -269,7 +269,7 @@ class WalasLaporanFragment : Fragment() {
 
     private fun loadDataFromSupabase(force: Boolean = false) {
         if (!isAdded || _binding == null) return
-        if (!force && hasLoadedData && currentRekapHarianList.isNotEmpty()) return
+        if (!force && hasLoadedData) return
         binding.progressBarLoading.visibility = View.VISIBLE
         binding.layoutEmptyState.visibility = View.GONE
 

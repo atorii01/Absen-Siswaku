@@ -139,6 +139,32 @@ class MainActivity : AppCompatActivity() {
             updateNavDockVisuals(restoredTabId, animate = false)
             navigateToTab(restoredTabId, animate = false)
         }
+
+        android.os.Looper.myQueue().addIdleHandler {
+            preWarmFragments()
+            false
+        }
+    }
+
+    private fun preWarmFragments() {
+        if (isFinishing || isDestroyed) return
+        val transaction = supportFragmentManager.beginTransaction()
+        var hasAdded = false
+        if (supportFragmentManager.findFragmentByTag("riwayat") == null) {
+            transaction.add(R.id.fragmentContainer, riwayatFragment, "riwayat").hide(riwayatFragment)
+            hasAdded = true
+        }
+        if (supportFragmentManager.findFragmentByTag("pengajuan") == null) {
+            transaction.add(R.id.fragmentContainer, pengajuanFragment, "pengajuan").hide(pengajuanFragment)
+            hasAdded = true
+        }
+        if (supportFragmentManager.findFragmentByTag("setelan") == null) {
+            transaction.add(R.id.fragmentContainer, setelanFragment, "setelan").hide(setelanFragment)
+            hasAdded = true
+        }
+        if (hasAdded && !supportFragmentManager.isStateSaved) {
+            transaction.commitAllowingStateLoss()
+        }
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -230,15 +256,12 @@ class MainActivity : AppCompatActivity() {
 
         val transaction = supportFragmentManager.beginTransaction()
 
-        // 1. Sembunyikan semua fragment non-aktif seketika
         for (f in supportFragmentManager.fragments) {
-            if (f.tag != targetTag) {
+            if (f.tag != targetTag && !f.isHidden) {
                 transaction.hide(f)
-                f.view?.visibility = View.GONE
             }
         }
 
-        // 2. Dapatkan atau buat fragment target
         var targetFragment = supportFragmentManager.findFragmentByTag(targetTag)
         if (targetFragment == null) {
             targetFragment = when (tabId) {
@@ -248,35 +271,12 @@ class MainActivity : AppCompatActivity() {
                 R.id.nav_setelan -> setelanFragment
                 else -> return
             }
-            if (!targetFragment.isAdded) {
-                transaction.add(R.id.fragmentContainer, targetFragment, targetTag)
-            } else {
-                transaction.show(targetFragment)
-            }
+            transaction.add(R.id.fragmentContainer, targetFragment, targetTag)
         } else {
             transaction.show(targetFragment)
         }
 
-        if (supportFragmentManager.isStateSaved) {
-            transaction.commitAllowingStateLoss()
-        } else {
-            transaction.commitNowAllowingStateLoss()
-        }
-
-        // Sinkronisasi animasi fade-in form dengan durasi 160ms yang persis sama dengan ekspansi navbar pill
-        targetFragment.view?.let { v ->
-            v.visibility = View.VISIBLE
-            if (animate) {
-                v.alpha = 0f
-                v.animate()
-                    .alpha(1f)
-                    .setDuration(160)
-                    .setInterpolator(DecelerateInterpolator())
-                    .start()
-            } else {
-                v.alpha = 1f
-            }
-        }
+        transaction.commitAllowingStateLoss()
     }
 
     private fun setupBackPressHandler() {

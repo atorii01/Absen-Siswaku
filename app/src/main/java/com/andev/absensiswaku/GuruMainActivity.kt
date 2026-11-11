@@ -104,6 +104,30 @@ class GuruMainActivity : AppCompatActivity() {
             updateNavDockVisuals(restoredTabId, animate = false)
             loadTabFragment(restoredTabId, animate = false)
         }
+
+        android.os.Looper.myQueue().addIdleHandler {
+            preWarmFragments()
+            false
+        }
+    }
+
+    private fun preWarmFragments() {
+        if (isFinishing || isDestroyed) return
+        val transaction = supportFragmentManager.beginTransaction()
+        var hasAdded = false
+        if (supportFragmentManager.findFragmentByTag("guru_rekap") == null) {
+            val f = GuruRekapFragment()
+            transaction.add(R.id.fragmentContainer, f, "guru_rekap").hide(f)
+            hasAdded = true
+        }
+        if (supportFragmentManager.findFragmentByTag("guru_setelan") == null) {
+            val f = GuruSetelanFragment()
+            transaction.add(R.id.fragmentContainer, f, "guru_setelan").hide(f)
+            hasAdded = true
+        }
+        if (hasAdded && !supportFragmentManager.isStateSaved) {
+            transaction.commitAllowingStateLoss()
+        }
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -189,9 +213,8 @@ class GuruMainActivity : AppCompatActivity() {
         val transaction = supportFragmentManager.beginTransaction()
 
         for (f in supportFragmentManager.fragments) {
-            if (f.tag != targetTag) {
+            if (f.tag != targetTag && !f.isHidden) {
                 transaction.hide(f)
-                f.view?.visibility = View.GONE
             }
         }
 
@@ -203,34 +226,12 @@ class GuruMainActivity : AppCompatActivity() {
                 R.id.nav_guru_setelan -> GuruSetelanFragment()
                 else -> return
             }
-            if (!targetFragment.isAdded) {
-                transaction.add(R.id.fragmentContainer, targetFragment, targetTag)
-            } else {
-                transaction.show(targetFragment)
-            }
+            transaction.add(R.id.fragmentContainer, targetFragment, targetTag)
         } else {
             transaction.show(targetFragment)
         }
 
-        if (supportFragmentManager.isStateSaved) {
-            transaction.commitAllowingStateLoss()
-        } else {
-            transaction.commitNowAllowingStateLoss()
-        }
-
-        targetFragment.view?.let { v ->
-            v.visibility = View.VISIBLE
-            if (animate) {
-                v.alpha = 0f
-                v.animate()
-                    .alpha(1f)
-                    .setDuration(160)
-                    .setInterpolator(DecelerateInterpolator())
-                    .start()
-            } else {
-                v.alpha = 1f
-            }
-        }
+        transaction.commitAllowingStateLoss()
     }
 
     private fun setupBackPressHandler() {

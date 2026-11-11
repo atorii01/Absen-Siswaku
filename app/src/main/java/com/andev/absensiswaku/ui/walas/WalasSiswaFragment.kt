@@ -473,7 +473,7 @@ class WalasSiswaFragment : Fragment() {
      */
     private fun loadDataSiswaFromSupabase(force: Boolean = false) {
         if (!isAdded || _binding == null) return
-        if (!force && hasLoadedData && (siswaAdapter.itemCount > 0)) return
+        if (!force && hasLoadedData) return
 
         binding.progressBarLoadingSiswa.visibility = View.VISIBLE
         binding.layoutEmptyStateSiswa.visibility = View.GONE

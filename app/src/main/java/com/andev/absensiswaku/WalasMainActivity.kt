@@ -111,6 +111,41 @@ open class WalasMainActivity : AppCompatActivity() {
             updateNavDockVisuals(restoredTabId, animate = false)
             loadTabFragment(restoredTabId, animate = false)
         }
+
+        android.os.Looper.myQueue().addIdleHandler {
+            preWarmFragments()
+            false
+        }
+    }
+
+    private fun preWarmFragments() {
+        if (isFinishing || isDestroyed) return
+        val pref = getSharedPreferences("PREF_SMKN8_SESSION", Context.MODE_PRIVATE)
+        val userRole = pref.getString("ROLE", "")?.takeIf { it.isNotEmpty() } ?: sessionManager.getRole()
+        val isAdmin = userRole.equals("SUPER_ADMIN", true) || userRole.equals("ADMIN", true)
+
+        val transaction = supportFragmentManager.beginTransaction()
+        var hasAdded = false
+
+        if (supportFragmentManager.findFragmentByTag("walas_laporan") == null) {
+            val f = if (isAdmin) com.andev.absensiswaku.ui.admin.AdminRekapFragment() else WalasLaporanFragment()
+            transaction.add(R.id.fragmentContainer, f, "walas_laporan").hide(f)
+            hasAdded = true
+        }
+        if (supportFragmentManager.findFragmentByTag("walas_siswa") == null) {
+            val f = if (isAdmin) com.andev.absensiswaku.ui.admin.AdminMasterDataFragment() else WalasSiswaFragment()
+            transaction.add(R.id.fragmentContainer, f, "walas_siswa").hide(f)
+            hasAdded = true
+        }
+        if (supportFragmentManager.findFragmentByTag("walas_setelan") == null) {
+            val f = if (isAdmin) com.andev.absensiswaku.ui.admin.AdminSetelanFragment() else WalasSetelanFragment()
+            transaction.add(R.id.fragmentContainer, f, "walas_setelan").hide(f)
+            hasAdded = true
+        }
+
+        if (hasAdded && !supportFragmentManager.isStateSaved) {
+            transaction.commitAllowingStateLoss()
+        }
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -202,9 +237,8 @@ open class WalasMainActivity : AppCompatActivity() {
         val transaction = supportFragmentManager.beginTransaction()
 
         for (f in supportFragmentManager.fragments) {
-            if (f.tag != targetTag) {
+            if (f.tag != targetTag && !f.isHidden) {
                 transaction.hide(f)
-                f.view?.visibility = View.GONE
             }
         }
 
@@ -221,34 +255,12 @@ open class WalasMainActivity : AppCompatActivity() {
                 R.id.nav_walas_setelan -> if (isAdmin) com.andev.absensiswaku.ui.admin.AdminSetelanFragment() else WalasSetelanFragment()
                 else -> return
             }
-            if (!targetFragment.isAdded) {
-                transaction.add(R.id.fragmentContainer, targetFragment, targetTag)
-            } else {
-                transaction.show(targetFragment)
-            }
+            transaction.add(R.id.fragmentContainer, targetFragment, targetTag)
         } else {
             transaction.show(targetFragment)
         }
 
-        if (supportFragmentManager.isStateSaved) {
-            transaction.commitAllowingStateLoss()
-        } else {
-            transaction.commitNowAllowingStateLoss()
-        }
-
-        targetFragment.view?.let { v ->
-            v.visibility = View.VISIBLE
-            if (animate) {
-                v.alpha = 0f
-                v.animate()
-                    .alpha(1f)
-                    .setDuration(160)
-                    .setInterpolator(DecelerateInterpolator())
-                    .start()
-            } else {
-                v.alpha = 1f
-            }
-        }
+        transaction.commitAllowingStateLoss()
     }
 
     private fun setupBackPressHandler() {

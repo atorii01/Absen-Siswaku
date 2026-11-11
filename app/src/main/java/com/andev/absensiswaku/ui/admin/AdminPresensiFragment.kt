@@ -40,6 +40,7 @@ class AdminPresensiFragment : Fragment() {
     private var izinDisetujuiList: List<PengajuanIzinResponse> = emptyList()
 
     private var selectedCategory: String = "ALL"
+    private var hasLoadedData: Boolean = false
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -60,10 +61,10 @@ class AdminPresensiFragment : Fragment() {
 
         binding.swipeRefreshAdminPresensi.setColorSchemeResources(R.color.primary_teal)
         binding.swipeRefreshAdminPresensi.setOnRefreshListener {
-            loadDataFromSupabase()
+            loadDataFromSupabase(force = true)
         }
 
-        loadDataFromSupabase()
+        loadDataFromSupabase(force = false)
 
         MotionUtils.animateStaggeredEntrance(
             binding.cardHeroTingkatKehadiran,
@@ -214,7 +215,8 @@ class AdminPresensiFragment : Fragment() {
         }
     }
 
-    private fun loadDataFromSupabase() {
+    private fun loadDataFromSupabase(force: Boolean = false) {
+        if (!force && hasLoadedData) return
         binding.progressBarAdmin.visibility = View.VISIBLE
 
         val todayDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
@@ -274,6 +276,7 @@ class AdminPresensiFragment : Fragment() {
                     if (!isAdded || _binding == null) return
                     binding.progressBarAdmin.visibility = View.GONE
                     binding.swipeRefreshAdminPresensi.isRefreshing = false
+                    hasLoadedData = true
                     izinDisetujuiList = response.body().orEmpty()
                     calculateAccumulation(todayDate)
                 }

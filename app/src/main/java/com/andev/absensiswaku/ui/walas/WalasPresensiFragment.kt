@@ -200,7 +200,7 @@ class WalasPresensiFragment : Fragment() {
      * Difilter murni berdasarkan id_kelas walas yang sedang aktif.
      */
     private fun loadDataFromSupabase(force: Boolean = false) {
-        if (!force && hasLoadedData && hadirList.isNotEmpty()) return
+        if (!force && hasLoadedData) return
 
         val todayIso = try {
             SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())

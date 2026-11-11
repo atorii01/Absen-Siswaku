@@ -47,6 +47,7 @@ class AdminMasterDataFragment : Fragment() {
     private var selectedGender: String = "L"
     private var editingSiswaId: Int? = null
     private var selectedFilterKelasId: Int? = null
+    private var hasLoadedData: Boolean = false
 
     private val filePickerLauncher = registerForActivityResult(
         ActivityResultContracts.GetContent()
@@ -82,10 +83,10 @@ class AdminMasterDataFragment : Fragment() {
 
         binding.swipeRefreshMasterData.setColorSchemeResources(R.color.primary_teal)
         binding.swipeRefreshMasterData.setOnRefreshListener {
-            loadDataFromSupabase()
+            loadDataFromSupabase(force = true)
         }
 
-        loadDataFromSupabase()
+        loadDataFromSupabase(force = false)
     }
 
     override fun onResume() {
@@ -592,7 +593,8 @@ class AdminMasterDataFragment : Fragment() {
         updateUiMetrics()
     }
 
-    private fun loadDataFromSupabase() {
+    private fun loadDataFromSupabase(force: Boolean = false) {
+        if (!force && hasLoadedData) return
         // 1. Ambil 10 Rombel
         SupabaseClient.instance.getRombelMapel()
             .enqueue(object : Callback<List<RombelMapelResponse>> {
@@ -631,6 +633,7 @@ class AdminMasterDataFragment : Fragment() {
                 ) {
                     if (!isAdded || _binding == null) return
                     binding.swipeRefreshMasterData.isRefreshing = false
+                    hasLoadedData = true
                     val list = response.body() ?: emptyList()
                     allSiswaList = list
                     siswaAdapter.submitList(list)
