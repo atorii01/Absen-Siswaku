@@ -1197,6 +1197,17 @@ class PresensiFragment : Fragment() {
             .show()
     }
 
+    override fun onHiddenChanged(hidden: Boolean) {
+        super.onHiddenChanged(hidden)
+        if (hidden) {
+            liveClockJob?.cancel()
+        } else {
+            startLiveClock()
+            checkDailyPresensiStatus()
+            updateOfflineBannerUI()
+        }
+    }
+
     override fun onDestroyView() {
         super.onDestroyView()
         cancellationTokenSource?.cancel()
