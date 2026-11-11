@@ -14,7 +14,7 @@
         android:layout_height="wrap_content"
         android:animateLayoutChanges="true"
         android:orientation="vertical"
-        android:paddingBottom="96dp">
+        android:paddingBottom="140dp">
 
         <!-- ================= 1. TOP BAR SUPER ADMIN ================= -->
         <LinearLayout
