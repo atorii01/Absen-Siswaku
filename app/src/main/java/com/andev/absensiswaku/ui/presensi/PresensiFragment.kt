@@ -88,6 +88,9 @@ class PresensiFragment : Fragment() {
 
     // Google ML Kit Face Detector
     private lateinit var faceDetector: FaceDetector
+    private var cameraExecutor: java.util.concurrent.ExecutorService? = null
+    @Volatile private var isAnalyzingFrame: Boolean = false
+    private var lastFrameAnalysisTimestamp: Long = 0L
     private var isFaceDetected: Boolean = false
     private var isFaceInsideCircle: Boolean = false
     private var lastBiometricScore: Double = 0.0
@@ -644,6 +647,11 @@ class PresensiFragment : Fragment() {
     private fun startCamera() {
         val ctx = context ?: return
         if (!isAdded || _binding == null || view == null) return
+
+        if (cameraExecutor == null || cameraExecutor?.isShutdown == true) {
+            cameraExecutor = java.util.concurrent.Executors.newSingleThreadExecutor()
+        }
+
         val cameraProviderFuture = ProcessCameraProvider.getInstance(ctx)
         cameraProviderFuture.addListener({
             if (!isAdded || _binding == null || view == null) return@addListener
@@ -660,7 +668,8 @@ class PresensiFragment : Fragment() {
                     .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                     .build()
 
-                imageAnalysis.setAnalyzer(ContextCompat.getMainExecutor(requireContext())) { imageProxy ->
+                val executor = cameraExecutor ?: return@addListener
+                imageAnalysis.setAnalyzer(executor) { imageProxy ->
                     processImageFrameForFaceDetection(imageProxy)
                 }
 
@@ -681,11 +690,20 @@ class PresensiFragment : Fragment() {
 
     @OptIn(ExperimentalGetImage::class)
     private fun processImageFrameForFaceDetection(imageProxy: ImageProxy) {
+        val currentTime = System.currentTimeMillis()
+        if (isAnalyzingFrame || currentTime - lastFrameAnalysisTimestamp < 150L) {
+            imageProxy.close()
+            return
+        }
+
         val mediaImage = imageProxy.image
         if (mediaImage == null) {
             imageProxy.close()
             return
         }
+
+        isAnalyzingFrame = true
+        lastFrameAnalysisTimestamp = currentTime
 
         val inputImage = InputImage.fromMediaImage(mediaImage, imageProxy.imageInfo.rotationDegrees)
 
@@ -759,6 +777,7 @@ class PresensiFragment : Fragment() {
                 updateFaceWarningBadge(FaceWarningBadgeState.NOT_DETECTED)
             }
             .addOnCompleteListener {
+                isAnalyzingFrame = false
                 imageProxy.close()
             }
     }
@@ -1201,7 +1220,13 @@ class PresensiFragment : Fragment() {
         super.onHiddenChanged(hidden)
         if (hidden) {
             liveClockJob?.cancel()
-            cameraProvider?.unbindAll()
+            try {
+                cameraProvider?.unbindAll()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+            camera = null
+            isAnalyzingFrame = false
             locationCallback?.let { fusedLocationClient.removeLocationUpdates(it) }
         } else {
             if (!isAdded || _binding == null || view == null) return
@@ -1218,9 +1243,22 @@ class PresensiFragment : Fragment() {
         cancellationTokenSource?.cancel()
         liveClockJob?.cancel()
         locationCallback?.let { fusedLocationClient.removeLocationUpdates(it) }
-        cameraProvider?.unbindAll()
+        try {
+            cameraProvider?.unbindAll()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        camera = null
+        cameraProvider = null
+        isAnalyzingFrame = false
+        cameraExecutor?.shutdown()
+        cameraExecutor = null
         if (::faceDetector.isInitialized) {
-            faceDetector.close()
+            try {
+                faceDetector.close()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
         _binding = null
     }

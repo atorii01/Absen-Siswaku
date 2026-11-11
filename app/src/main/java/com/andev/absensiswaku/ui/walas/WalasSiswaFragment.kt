@@ -43,6 +43,7 @@ class WalasSiswaFragment : Fragment() {
     private var idKelas: Int = 9
     private var namaKelas: String = "XII RPL"
     private var namaWalas: String = "Farauk Pratama, S.Kom."
+    private var hasLoadedData = false
 
     private var editingStudentId: Int? = null
 
@@ -81,10 +82,10 @@ class WalasSiswaFragment : Fragment() {
 
         binding.swipeRefreshWalasSiswa.setColorSchemeResources(R.color.primary_teal)
         binding.swipeRefreshWalasSiswa.setOnRefreshListener {
-            loadDataSiswaFromSupabase()
+            loadDataSiswaFromSupabase(force = true)
         }
 
-        loadDataSiswaFromSupabase()
+        loadDataSiswaFromSupabase(force = false)
 
         MotionUtils.animateStaggeredEntrance(
             binding.tvSubteksHeader,
@@ -470,8 +471,9 @@ class WalasSiswaFragment : Fragment() {
     /**
      * Pengambilan & Pemasangan Data Siswa Riil dari Supabase
      */
-    private fun loadDataSiswaFromSupabase() {
+    private fun loadDataSiswaFromSupabase(force: Boolean = false) {
         if (!isAdded || _binding == null) return
+        if (!force && hasLoadedData && (siswaAdapter.itemCount > 0)) return
 
         binding.progressBarLoadingSiswa.visibility = View.VISIBLE
         binding.layoutEmptyStateSiswa.visibility = View.GONE
@@ -485,6 +487,7 @@ class WalasSiswaFragment : Fragment() {
                     if (!isAdded || _binding == null) return
                     binding.progressBarLoadingSiswa.visibility = View.GONE
                     binding.swipeRefreshWalasSiswa.isRefreshing = false
+                    hasLoadedData = true
 
                     val listSiswa = if (response.isSuccessful && !response.body().isNullOrEmpty()) {
                         response.body()!!
@@ -494,7 +497,6 @@ class WalasSiswaFragment : Fragment() {
 
                     // 1. Update adapter RecyclerView
                     siswaAdapter.submitList(listSiswa)
-                    binding.rvDaftarSiswa.scheduleLayoutAnimation()
 
                     // 2. Hitung statistik laki-laki dan perempuan dinamis
                     val countL = listSiswa.count {
@@ -531,7 +533,7 @@ class WalasSiswaFragment : Fragment() {
 
                     val listSiswa = createInitialFallbackStudents()
                     siswaAdapter.submitList(listSiswa)
-                    binding.rvDaftarSiswa.scheduleLayoutAnimation()
+                    hasLoadedData = true
 
                     val countL = listSiswa.count {
                         val jk = it.jenisKelamin?.uppercase().orEmpty()

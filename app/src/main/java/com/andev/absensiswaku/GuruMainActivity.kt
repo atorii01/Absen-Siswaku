@@ -102,6 +102,7 @@ class GuruMainActivity : AppCompatActivity() {
             val restoredTabId = savedInstanceState.getInt("CURRENT_TAB_ID", R.id.nav_guru_presensi)
             currentTabId = restoredTabId
             updateNavDockVisuals(restoredTabId, animate = false)
+            loadTabFragment(restoredTabId, animate = false)
         }
     }
 
@@ -176,20 +177,48 @@ class GuruMainActivity : AppCompatActivity() {
     }
 
     private fun loadTabFragment(tabId: Int, animate: Boolean = true) {
-        val fragment: Fragment = when (tabId) {
-            R.id.nav_guru_presensi -> GuruPresensiFragment()
-            R.id.nav_guru_rekap -> GuruRekapFragment()
-            R.id.nav_guru_setelan -> GuruSetelanFragment()
-            else -> GuruPresensiFragment()
+        val targetTag = when (tabId) {
+            R.id.nav_guru_presensi -> "guru_presensi"
+            R.id.nav_guru_rekap -> "guru_rekap"
+            R.id.nav_guru_setelan -> "guru_setelan"
+            else -> return
         }
 
         currentTabId = tabId
 
-        supportFragmentManager.beginTransaction()
-            .replace(R.id.fragmentContainer, fragment)
-            .commitNowAllowingStateLoss()
+        val transaction = supportFragmentManager.beginTransaction()
 
-        fragment.view?.let { v ->
+        for (f in supportFragmentManager.fragments) {
+            if (f.tag != targetTag) {
+                transaction.hide(f)
+                f.view?.visibility = View.GONE
+            }
+        }
+
+        var targetFragment = supportFragmentManager.findFragmentByTag(targetTag)
+        if (targetFragment == null) {
+            targetFragment = when (tabId) {
+                R.id.nav_guru_presensi -> GuruPresensiFragment()
+                R.id.nav_guru_rekap -> GuruRekapFragment()
+                R.id.nav_guru_setelan -> GuruSetelanFragment()
+                else -> return
+            }
+            if (!targetFragment.isAdded) {
+                transaction.add(R.id.fragmentContainer, targetFragment, targetTag)
+            } else {
+                transaction.show(targetFragment)
+            }
+        } else {
+            transaction.show(targetFragment)
+        }
+
+        if (supportFragmentManager.isStateSaved) {
+            transaction.commitAllowingStateLoss()
+        } else {
+            transaction.commitNowAllowingStateLoss()
+        }
+
+        targetFragment.view?.let { v ->
             v.visibility = View.VISIBLE
             if (animate) {
                 v.alpha = 0f

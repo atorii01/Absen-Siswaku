@@ -61,6 +61,7 @@ class WalasPresensiFragment : Fragment() {
     private var countHadir = 0
     private var countVerifikasi = 0
     private var countAlpa = 0
+    private var hasLoadedData = false
 
     private val siswaKelasMap = mutableMapOf<Int, SiswaMiniResponse>()
     private val antreanList = mutableListOf<PengajuanIzinResponse>()
@@ -92,10 +93,10 @@ class WalasPresensiFragment : Fragment() {
 
         binding.swipeRefreshWalasPresensi.setColorSchemeResources(R.color.primary_teal)
         binding.swipeRefreshWalasPresensi.setOnRefreshListener {
-            loadDataFromSupabase()
+            loadDataFromSupabase(force = true)
         }
 
-        loadDataFromSupabase()
+        loadDataFromSupabase(force = false)
 
         MotionUtils.animateStaggeredEntrance(
             binding.tvGreetingWalas,
@@ -107,7 +108,6 @@ class WalasPresensiFragment : Fragment() {
     override fun onResume() {
         super.onResume()
         loadSessionData()
-        loadDataFromSupabase()
         context?.let { ctx ->
             com.andev.absensiswaku.util.AvatarHelper.loadAvatar(
                 ctx,
@@ -199,7 +199,9 @@ class WalasPresensiFragment : Fragment() {
      * Mengambil data antrean izin, siswa hadir, dan jumlah siswa secara dinamis dari Supabase
      * Difilter murni berdasarkan id_kelas walas yang sedang aktif.
      */
-    private fun loadDataFromSupabase() {
+    private fun loadDataFromSupabase(force: Boolean = false) {
+        if (!force && hasLoadedData && hadirList.isNotEmpty()) return
+
         val todayIso = try {
             SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
         } catch (e: Exception) {
@@ -300,6 +302,7 @@ class WalasPresensiFragment : Fragment() {
                     }
                     hadirList.clear()
                     hadirList.addAll(mapped)
+                    hasLoadedData = true
                 } else {
                     hadirList.clear()
                 }
@@ -333,7 +336,6 @@ class WalasPresensiFragment : Fragment() {
             binding.rvAntreanIzin.visibility = View.VISIBLE
             binding.layoutEmptyAntrean.visibility = View.GONE
             antreanAdapter.updateData(antreanList)
-            binding.rvAntreanIzin.scheduleLayoutAnimation()
         }
     }
 
@@ -351,7 +353,6 @@ class WalasPresensiFragment : Fragment() {
             binding.rvSiswaHadir.visibility = View.VISIBLE
             binding.layoutEmptyHadir.visibility = View.GONE
             siswaHadirAdapter.updateData(hadirList)
-            binding.rvSiswaHadir.scheduleLayoutAnimation()
         }
     }
 

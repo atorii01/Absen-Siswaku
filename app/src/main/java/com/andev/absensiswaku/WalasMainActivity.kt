@@ -109,6 +109,7 @@ open class WalasMainActivity : AppCompatActivity() {
             val restoredTabId = savedInstanceState.getInt("CURRENT_TAB_ID", R.id.nav_walas_presensi)
             currentTabId = restoredTabId
             updateNavDockVisuals(restoredTabId, animate = false)
+            loadTabFragment(restoredTabId, animate = false)
         }
     }
 
@@ -188,25 +189,54 @@ open class WalasMainActivity : AppCompatActivity() {
     }
 
     private fun loadTabFragment(tabId: Int, animate: Boolean = true) {
-        val pref = getSharedPreferences("PREF_SMKN8_SESSION", Context.MODE_PRIVATE)
-        val userRole = pref.getString("ROLE", "")?.takeIf { it.isNotEmpty() } ?: sessionManager.getRole()
-        val isAdmin = userRole.equals("SUPER_ADMIN", true) || userRole.equals("ADMIN", true)
-
-        val fragment: Fragment = when (tabId) {
-            R.id.nav_walas_presensi -> if (isAdmin) com.andev.absensiswaku.ui.admin.AdminPresensiFragment() else WalasPresensiFragment()
-            R.id.nav_walas_laporan -> if (isAdmin) com.andev.absensiswaku.ui.admin.AdminRekapFragment() else WalasLaporanFragment()
-            R.id.nav_walas_siswa -> if (isAdmin) com.andev.absensiswaku.ui.admin.AdminMasterDataFragment() else WalasSiswaFragment()
-            R.id.nav_walas_setelan -> if (isAdmin) com.andev.absensiswaku.ui.admin.AdminSetelanFragment() else WalasSetelanFragment()
-            else -> WalasPresensiFragment()
+        val targetTag = when (tabId) {
+            R.id.nav_walas_presensi -> "walas_presensi"
+            R.id.nav_walas_laporan -> "walas_laporan"
+            R.id.nav_walas_siswa -> "walas_siswa"
+            R.id.nav_walas_setelan -> "walas_setelan"
+            else -> return
         }
 
         currentTabId = tabId
 
-        supportFragmentManager.beginTransaction()
-            .replace(R.id.fragmentContainer, fragment)
-            .commitNowAllowingStateLoss()
+        val transaction = supportFragmentManager.beginTransaction()
 
-        fragment.view?.let { v ->
+        for (f in supportFragmentManager.fragments) {
+            if (f.tag != targetTag) {
+                transaction.hide(f)
+                f.view?.visibility = View.GONE
+            }
+        }
+
+        var targetFragment = supportFragmentManager.findFragmentByTag(targetTag)
+        if (targetFragment == null) {
+            val pref = getSharedPreferences("PREF_SMKN8_SESSION", Context.MODE_PRIVATE)
+            val userRole = pref.getString("ROLE", "")?.takeIf { it.isNotEmpty() } ?: sessionManager.getRole()
+            val isAdmin = userRole.equals("SUPER_ADMIN", true) || userRole.equals("ADMIN", true)
+
+            targetFragment = when (tabId) {
+                R.id.nav_walas_presensi -> if (isAdmin) com.andev.absensiswaku.ui.admin.AdminPresensiFragment() else WalasPresensiFragment()
+                R.id.nav_walas_laporan -> if (isAdmin) com.andev.absensiswaku.ui.admin.AdminRekapFragment() else WalasLaporanFragment()
+                R.id.nav_walas_siswa -> if (isAdmin) com.andev.absensiswaku.ui.admin.AdminMasterDataFragment() else WalasSiswaFragment()
+                R.id.nav_walas_setelan -> if (isAdmin) com.andev.absensiswaku.ui.admin.AdminSetelanFragment() else WalasSetelanFragment()
+                else -> return
+            }
+            if (!targetFragment.isAdded) {
+                transaction.add(R.id.fragmentContainer, targetFragment, targetTag)
+            } else {
+                transaction.show(targetFragment)
+            }
+        } else {
+            transaction.show(targetFragment)
+        }
+
+        if (supportFragmentManager.isStateSaved) {
+            transaction.commitAllowingStateLoss()
+        } else {
+            transaction.commitNowAllowingStateLoss()
+        }
+
+        targetFragment.view?.let { v ->
             v.visibility = View.VISIBLE
             if (animate) {
                 v.alpha = 0f

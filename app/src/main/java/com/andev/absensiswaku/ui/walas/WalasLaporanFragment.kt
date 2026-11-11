@@ -56,6 +56,7 @@ class WalasLaporanFragment : Fragment() {
     private val allPresensiList = mutableListOf<RiwayatModel>()
     private val allIzinList = mutableListOf<PengajuanIzinResponse>()
     private val currentRekapHarianList = mutableListOf<HistoriKehadiranModel>()
+    private var hasLoadedData = false
 
     private lateinit var rekapHarianAdapter: HistoriKehadiranAdapter
 
@@ -77,7 +78,7 @@ class WalasLaporanFragment : Fragment() {
 
         binding.swipeRefreshWalasLaporan.setColorSchemeResources(R.color.primary_teal)
         binding.swipeRefreshWalasLaporan.setOnRefreshListener {
-            loadDataFromSupabase()
+            loadDataFromSupabase(force = true)
         }
 
         loadSessionData()
@@ -92,7 +93,6 @@ class WalasLaporanFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        loadSessionData()
         context?.let { ctx ->
             com.andev.absensiswaku.util.AvatarHelper.loadAvatar(
                 ctx,
@@ -267,8 +267,9 @@ class WalasLaporanFragment : Fragment() {
         picker.show(childFragmentManager, "DATE_RANGE_PICKER")
     }
 
-    private fun loadDataFromSupabase() {
+    private fun loadDataFromSupabase(force: Boolean = false) {
         if (!isAdded || _binding == null) return
+        if (!force && hasLoadedData && currentRekapHarianList.isNotEmpty()) return
         binding.progressBarLoading.visibility = View.VISIBLE
         binding.layoutEmptyState.visibility = View.GONE
 
@@ -531,6 +532,8 @@ class WalasLaporanFragment : Fragment() {
             )
         }
 
+        hasLoadedData = true
+
         // Tampilkan Empty State jika tidak ada rekaman riwayat di database
         if (currentRekapHarianList.isEmpty()) {
             binding.layoutEmptyState.visibility = View.VISIBLE
@@ -539,7 +542,6 @@ class WalasLaporanFragment : Fragment() {
             binding.layoutEmptyState.visibility = View.GONE
             binding.rvRiwayatHarianKelas.visibility = View.VISIBLE
             rekapHarianAdapter.updateData(currentRekapHarianList)
-            binding.rvRiwayatHarianKelas.scheduleLayoutAnimation()
         }
     }
 
