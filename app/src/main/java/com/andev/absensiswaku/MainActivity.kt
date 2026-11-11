@@ -8,8 +8,10 @@ import android.content.res.ColorStateList
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
-import android.transition.AutoTransition
+import android.transition.ChangeBounds
+import android.transition.Fade
 import android.transition.TransitionManager
+import android.transition.TransitionSet
 import android.view.HapticFeedbackConstants
 import android.view.View
 import android.view.animation.DecelerateInterpolator
@@ -129,7 +131,7 @@ class MainActivity : AppCompatActivity() {
         presensiFragment = existingPresensi ?: if (isGuru) WalasPresensiFragment() else PresensiFragment()
 
         if (savedInstanceState == null) {
-            navigateToTab(R.id.nav_presensi)
+            navigateToTab(R.id.nav_presensi, animate = false)
             updateNavDockVisuals(R.id.nav_presensi, animate = false)
         } else {
             val visibleFragment = supportFragmentManager.fragments.firstOrNull { it.isVisible }
@@ -139,7 +141,7 @@ class MainActivity : AppCompatActivity() {
                 "setelan" -> R.id.nav_setelan
                 else -> R.id.nav_presensi
             }
-            navigateToTab(activeTabId)
+            navigateToTab(activeTabId, animate = false)
             updateNavDockVisuals(activeTabId, animate = false)
         }
     }
@@ -167,14 +169,18 @@ class MainActivity : AppCompatActivity() {
         if (currentTabId == tabId && supportFragmentManager.findFragmentById(R.id.fragmentContainer) != null) {
             return
         }
-        navigateToTab(tabId)
+        // Jalankan transisi navbar dan pergantian form bersamaan tanpa jeda
         updateNavDockVisuals(tabId, animate)
+        navigateToTab(tabId, animate)
     }
 
     private fun updateNavDockVisuals(selectedId: Int, animate: Boolean = true) {
         if (animate) {
-            val transition = AutoTransition().apply {
-                duration = 200
+            val transition = TransitionSet().apply {
+                ordering = TransitionSet.ORDERING_TOGETHER
+                addTransition(ChangeBounds())
+                addTransition(Fade())
+                duration = 160
                 interpolator = DecelerateInterpolator()
             }
             TransitionManager.beginDelayedTransition(binding.dockNavLayout, transition)
@@ -211,7 +217,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun navigateToTab(tabId: Int) {
+    private fun navigateToTab(tabId: Int, animate: Boolean = true) {
         val targetTag = when (tabId) {
             R.id.nav_presensi -> "presensi"
             R.id.nav_riwayat -> "riwayat"
@@ -224,8 +230,7 @@ class MainActivity : AppCompatActivity() {
 
         val transaction = supportFragmentManager.beginTransaction()
 
-        // 1. Hide every fragment currently attached in FragmentManager that is NOT the target
-        // and immediately set its view visibility to GONE so it never intercepts touch or stays drawn
+        // 1. Sembunyikan semua fragment non-aktif seketika
         for (f in supportFragmentManager.fragments) {
             if (f.tag != targetTag) {
                 transaction.hide(f)
@@ -233,7 +238,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // 2. Find or instantiate target fragment
+        // 2. Dapatkan atau buat fragment target
         var targetFragment = supportFragmentManager.findFragmentByTag(targetTag)
         if (targetFragment == null) {
             targetFragment = when (tabId) {
@@ -247,14 +252,27 @@ class MainActivity : AppCompatActivity() {
                 transaction.add(R.id.fragmentContainer, targetFragment, targetTag)
             } else {
                 transaction.show(targetFragment)
-                targetFragment.view?.visibility = View.VISIBLE
             }
         } else {
             transaction.show(targetFragment)
-            targetFragment.view?.visibility = View.VISIBLE
         }
 
-        transaction.commitAllowingStateLoss()
+        transaction.commitNowAllowingStateLoss()
+
+        // Sinkronisasi animasi fade-in form dengan durasi 160ms yang persis sama dengan ekspansi navbar pill
+        targetFragment.view?.let { v ->
+            v.visibility = View.VISIBLE
+            if (animate) {
+                v.alpha = 0f
+                v.animate()
+                    .alpha(1f)
+                    .setDuration(160)
+                    .setInterpolator(DecelerateInterpolator())
+                    .start()
+            } else {
+                v.alpha = 1f
+            }
+        }
     }
 
     private fun setupBackPressHandler() {
