@@ -1204,6 +1204,7 @@ class PresensiFragment : Fragment() {
             cameraProvider?.unbindAll()
             locationCallback?.let { fusedLocationClient.removeLocationUpdates(it) }
         } else {
+            if (!isAdded || _binding == null || view == null) return
             startLiveClock()
             checkDailyPresensiStatus()
             updateOfflineBannerUI()

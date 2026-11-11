@@ -111,6 +111,7 @@ class RiwayatFragment : Fragment() {
     override fun onHiddenChanged(hidden: Boolean) {
         super.onHiddenChanged(hidden)
         if (!hidden) {
+            if (!isAdded || _binding == null || view == null) return
             setupHeaderData()
             if (allRiwayatList.isEmpty()) {
                 loadSemuaRiwayat()
