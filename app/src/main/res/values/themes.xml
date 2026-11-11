@@ -5,6 +5,8 @@
         <item name="colorOnPrimary">@color/white</item>
         <item name="colorPrimaryContainer">@color/primary_teal_container</item>
         <item name="colorOnPrimaryContainer">@color/on_primary_teal_container</item>
+        <item name="colorSecondaryContainer">@color/jade_forest</item>
+        <item name="colorOnSecondaryContainer">@color/jade_light_mint</item>
         <item name="android:windowBackground">@color/screen_bg</item>
         <item name="colorSurface">@color/card_bg</item>
         <item name="colorOnSurface">@color/text_primary</item>
@@ -12,7 +14,13 @@
         <item name="colorOnSurfaceVariant">@color/text_secondary</item>
         <item name="colorOutline">@color/card_stroke</item>
         <item name="android:statusBarColor">@color/screen_bg</item>
-        <item name="android:navigationBarColor">@color/screen_bg</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+    </style>
+
+    <style name="Widget.Custom.FloatingNavIndicator" parent="Widget.Material3.BottomNavigationView.ActiveIndicator">
+        <item name="android:color">@color/jade_forest</item>
+        <item name="android:width">50dp</item>
+        <item name="android:height">32dp</item>
     </style>
 
     <style name="Theme.AbsenSiswaku" parent="Base.Theme.AbsenSiswaku" />

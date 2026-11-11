@@ -38,10 +38,12 @@
             android:layout_height="64dp"
             android:background="@android:color/transparent"
             app:elevation="0dp"
+            app:itemActiveIndicatorStyle="@style/Widget.Custom.FloatingNavIndicator"
+            app:itemIconSize="22dp"
             app:itemIconTint="@color/nav_item_floating_color"
             app:itemRippleColor="#20FFFFFF"
             app:itemTextColor="@color/nav_item_floating_color"
-            app:labelVisibilityMode="labeled"
+            app:labelVisibilityMode="unlabeled"
             app:menu="@menu/menu_bottom_nav" />
 
     </com.google.android.material.card.MaterialCardView>

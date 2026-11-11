@@ -80,9 +80,15 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        ViewCompat.setOnApplyWindowInsetsListener(binding.main) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, 0)
+        ViewCompat.setOnApplyWindowInsetsListener(binding.main) { _, insets ->
+            val statusBars = insets.getInsets(WindowInsetsCompat.Type.statusBars())
+            val navBars = insets.getInsets(WindowInsetsCompat.Type.navigationBars())
+            binding.main.setPadding(navBars.left, statusBars.top, navBars.right, 0)
+
+            val baseMargin = (16 * resources.displayMetrics.density).toInt()
+            val lp = binding.cardFloatingNavContainer.layoutParams as android.view.ViewGroup.MarginLayoutParams
+            lp.bottomMargin = baseMargin + navBars.bottom
+            binding.cardFloatingNavContainer.layoutParams = lp
             insets
         }
 
