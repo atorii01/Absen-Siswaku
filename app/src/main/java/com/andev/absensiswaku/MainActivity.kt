@@ -120,34 +120,27 @@ class MainActivity : AppCompatActivity() {
 
     private fun initFragments(savedInstanceState: Bundle?) {
         val isGuru = sessionManager.getRole().equals("GURU", true)
-        presensiFragment = if (isGuru) WalasPresensiFragment() else PresensiFragment()
+        val existingPresensi = supportFragmentManager.findFragmentByTag("presensi")
+        presensiFragment = existingPresensi ?: if (isGuru) WalasPresensiFragment() else PresensiFragment()
 
         if (savedInstanceState == null) {
-            supportFragmentManager.beginTransaction()
-                .add(R.id.fragmentContainer, presensiFragment, "presensi")
-                .commit()
-            currentTabId = R.id.nav_presensi
-            binding.bottomNavigation.selectedItemId = R.id.nav_presensi
+            navigateToTab(R.id.nav_presensi)
         } else {
-            presensiFragment = supportFragmentManager.findFragmentByTag("presensi") ?: presensiFragment
             val visibleFragment = supportFragmentManager.fragments.firstOrNull { it.isVisible }
-            val restoredTabId = when (visibleFragment?.tag) {
+            val activeTabId = when (visibleFragment?.tag) {
                 "riwayat" -> R.id.nav_riwayat
                 "pengajuan" -> R.id.nav_pengajuan
                 "setelan" -> R.id.nav_setelan
                 else -> R.id.nav_presensi
             }
-            currentTabId = restoredTabId
-            binding.bottomNavigation.selectedItemId = restoredTabId
+            currentTabId = activeTabId
+            binding.bottomNavigation.selectedItemId = activeTabId
         }
     }
 
     private fun setupBottomNavigation() {
         binding.bottomNavigation.setOnItemSelectedListener { item ->
-            if (binding.bottomNavigation.selectedItemId == item.itemId &&
-                supportFragmentManager.findFragmentById(R.id.fragmentContainer) != null &&
-                currentTabId == item.itemId
-            ) {
+            if (currentTabId == item.itemId && supportFragmentManager.findFragmentById(R.id.fragmentContainer) != null) {
                 return@setOnItemSelectedListener true
             }
             navigateToTab(item.itemId)
@@ -194,7 +187,11 @@ class MainActivity : AppCompatActivity() {
                 R.id.nav_setelan -> setelanFragment
                 else -> return
             }
-            transaction.add(R.id.fragmentContainer, targetFragment, targetTag)
+            if (!targetFragment.isAdded) {
+                transaction.add(R.id.fragmentContainer, targetFragment, targetTag)
+            } else {
+                transaction.show(targetFragment)
+            }
         } else {
             transaction.show(targetFragment)
         }
