@@ -35,10 +35,26 @@ class SplashActivity : AppCompatActivity() {
         binding.tvAppSubtitle.startAnimation(textAnim)
         binding.tvFooterSplash.startAnimation(textAnim)
 
-        // 3. Pindah ke LoginActivity setelah durasi 1.8 detik
+        // 3. Pindah ke Halaman Utama jika sudah login, atau ke LoginActivity jika belum
         Handler(Looper.getMainLooper()).postDelayed({
-            val intent = Intent(this, LoginActivity::class.java)
-            startActivity(intent)
+            val pref = getSharedPreferences("PREF_SMKN8_SESSION", MODE_PRIVATE)
+            val sessionManager = com.andev.absensiswaku.data.pref.SessionManager(this)
+            val isLoggedIn = pref.getBoolean("KEY_IS_LOGGED_IN", false) || pref.getBoolean("is_logged_in", false) || sessionManager.isLoggedIn()
+
+            val targetIntent = if (isLoggedIn) {
+                val userRole = pref.getString("ROLE", "")?.takeIf { it.isNotEmpty() } ?: sessionManager.getRole()
+                if (userRole.equals("GURU_MAPEL", true)) {
+                    Intent(this, GuruMainActivity::class.java)
+                } else if (userRole.equals("GURU", true) || userRole.equals("WALI_KELAS", true) ||
+                    userRole.equals("SUPER_ADMIN", true) || userRole.equals("ADMIN", true)) {
+                    Intent(this, WalasMainActivity::class.java)
+                } else {
+                    Intent(this, MainActivity::class.java)
+                }
+            } else {
+                Intent(this, LoginActivity::class.java)
+            }
+            startActivity(targetIntent)
             @Suppress("DEPRECATION")
             overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
             finish()
