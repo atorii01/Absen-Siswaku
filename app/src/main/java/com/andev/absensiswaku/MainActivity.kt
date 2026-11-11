@@ -134,16 +134,16 @@ class MainActivity : AppCompatActivity() {
             navigateToTab(R.id.nav_presensi, animate = false)
             updateNavDockVisuals(R.id.nav_presensi, animate = false)
         } else {
-            val visibleFragment = supportFragmentManager.fragments.firstOrNull { it.isVisible }
-            val activeTabId = when (visibleFragment?.tag) {
-                "riwayat" -> R.id.nav_riwayat
-                "pengajuan" -> R.id.nav_pengajuan
-                "setelan" -> R.id.nav_setelan
-                else -> R.id.nav_presensi
-            }
-            currentTabId = activeTabId
-            updateNavDockVisuals(activeTabId, animate = false)
+            val restoredTabId = savedInstanceState.getInt("CURRENT_TAB_ID", R.id.nav_presensi)
+            currentTabId = restoredTabId
+            updateNavDockVisuals(restoredTabId, animate = false)
+            navigateToTab(restoredTabId, animate = false)
         }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putInt("CURRENT_TAB_ID", currentTabId)
     }
 
     private fun setupBottomNavigation() {

@@ -322,10 +322,10 @@ class RiwayatFragment : Fragment() {
                     call: Call<List<PengajuanIzinModel>>,
                     response: Response<List<PengajuanIzinModel>>
                 ) {
-                    if (!isAdded || _binding == null) return
+                    if (!isAdded || _binding == null || view == null) return
 
                     val rawIzin = response.body() ?: emptyList()
-                    viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
+                    lifecycleScope.launch(Dispatchers.Default) {
                         val mappedIzinList = rawIzin.map { item ->
                             val statusVerif = item.statusVerifikasi?.trim().orEmpty()
                             val jenis = item.jenisIzin?.trim().orEmpty().ifEmpty { "Izin" }
@@ -362,8 +362,8 @@ class RiwayatFragment : Fragment() {
                 }
 
                 override fun onFailure(call: Call<List<PengajuanIzinModel>>, t: Throwable) {
-                    if (!isAdded || _binding == null) return
-                    viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
+                    if (!isAdded || _binding == null || view == null) return
+                    lifecycleScope.launch(Dispatchers.Default) {
                         val combined = listPresensi.sortedByDescending { it.tanggal }
                         withContext(Dispatchers.Main) {
                             if (!isAdded || _binding == null) return@withContext

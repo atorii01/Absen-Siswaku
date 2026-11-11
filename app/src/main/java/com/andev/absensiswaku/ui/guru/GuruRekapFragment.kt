@@ -737,12 +737,14 @@ class GuruRekapFragment : Fragment() {
                     call: Call<List<SiswaMiniResponse>>,
                     response: Response<List<SiswaMiniResponse>>
                 ) {
+                    if (!isAdded || _binding == null) return
                     currentSiswaList = response.body().orEmpty()
                     // 2. Ambil Presensi Harian Hari Ini
                     loadPresensiToday(rombelId, meta)
                 }
 
                 override fun onFailure(call: Call<List<SiswaMiniResponse>>, t: Throwable) {
+                    if (!isAdded || _binding == null) return
                     currentSiswaList = emptyList()
                     loadPresensiToday(rombelId, meta)
                 }
@@ -758,6 +760,7 @@ class GuruRekapFragment : Fragment() {
                     call: Call<List<PresensiHarianResponse>>,
                     response: Response<List<PresensiHarianResponse>>
                 ) {
+                    if (!isAdded || _binding == null) return
                     val allPresensi = response.body().orEmpty()
                     presensiHariIniList = allPresensi.filter { it.idKelas == rombelId }
 
@@ -766,6 +769,7 @@ class GuruRekapFragment : Fragment() {
                 }
 
                 override fun onFailure(call: Call<List<PresensiHarianResponse>>, t: Throwable) {
+                    if (!isAdded || _binding == null) return
                     presensiHariIniList = emptyList()
                     loadIzinToday(rombelId, meta)
                 }
@@ -781,6 +785,7 @@ class GuruRekapFragment : Fragment() {
                     call: Call<List<PengajuanIzinResponse>>,
                     response: Response<List<PengajuanIzinResponse>>
                 ) {
+                    if (!isAdded || _binding == null) return
                     val allIzin = response.body().orEmpty()
                     // Query data izin murni mengambil pengajuan_izin?status_verifikasi=eq.Disetujui dan berlaku HARI INI
                     izinDisetujuiList = allIzin.filter { izin ->
@@ -800,6 +805,7 @@ class GuruRekapFragment : Fragment() {
                 }
 
                 override fun onFailure(call: Call<List<PengajuanIzinResponse>>, t: Throwable) {
+                    if (!isAdded || _binding == null) return
                     izinDisetujuiList = emptyList()
                     renderRealtimeData(meta)
                     loadRiwayatKelas(rombelId, meta, emptyList())
@@ -818,12 +824,14 @@ class GuruRekapFragment : Fragment() {
                     call: Call<List<RiwayatModel>>,
                     response: Response<List<RiwayatModel>>
                 ) {
+                    if (!isAdded || _binding == null) return
                     finishLoading()
                     val presensiHistory = response.body().orEmpty()
                     renderRiwayatData(meta, presensiHistory, allIzin)
                 }
 
                 override fun onFailure(call: Call<List<RiwayatModel>>, t: Throwable) {
+                    if (!isAdded || _binding == null) return
                     finishLoading()
                     renderRiwayatData(meta, emptyList(), allIzin)
                 }
@@ -831,11 +839,12 @@ class GuruRekapFragment : Fragment() {
     }
 
     private fun finishLoading() {
-        if (_binding == null) return
+        if (!isAdded || _binding == null) return
         binding.progressBarSiswa.visibility = View.GONE
     }
 
     private fun updateUIHeaders(meta: RombelMeta) {
+        if (!isAdded || _binding == null) return
         binding.tvSectionRealtimeTitle.text = "Kehadiran Realtime Kelas ${meta.namaKelas}"
         binding.tvCardNamaKelas.text = "Kelas ${meta.namaKelas}"
         binding.tvCardWaliKelas.text = "Wali Kelas: ${meta.walas} • ${meta.ruang}"
@@ -963,6 +972,7 @@ class GuruRekapFragment : Fragment() {
         presensiHistory: List<RiwayatModel>,
         allIzin: List<PengajuanIzinResponse>
     ) {
+        if (!isAdded || _binding == null) return
         val totalKapasitas = if (currentSiswaList.isNotEmpty()) currentSiswaList.size else meta.kuota
         val riwayatList = mutableListOf<RiwayatKelasItem>()
 

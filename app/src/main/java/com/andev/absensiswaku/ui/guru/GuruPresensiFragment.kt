@@ -195,6 +195,7 @@ class GuruPresensiFragment : Fragment() {
                     call: Call<List<RombelMapelResponse>>,
                     response: Response<List<RombelMapelResponse>>
                 ) {
+                    if (!isAdded || _binding == null) return
                     allRombelList = response.body().orEmpty()
 
                     // 2. Ambil Presensi Harian Hari Ini untuk Semua Rombel
@@ -202,6 +203,7 @@ class GuruPresensiFragment : Fragment() {
                 }
 
                 override fun onFailure(call: Call<List<RombelMapelResponse>>, t: Throwable) {
+                    if (!isAdded || _binding == null) return
                     allRombelList = emptyList()
                     finishLoading()
                     Toast.makeText(context, "Gagal memuat rombel: ${t.localizedMessage}", Toast.LENGTH_SHORT).show()
@@ -217,6 +219,7 @@ class GuruPresensiFragment : Fragment() {
                     call: Call<List<PresensiHarianResponse>>,
                     response: Response<List<PresensiHarianResponse>>
                 ) {
+                    if (!isAdded || _binding == null) return
                     presensiHariIniList = response.body().orEmpty()
 
                     // 3. Ambil Pengajuan Izin yang Disetujui
@@ -224,6 +227,7 @@ class GuruPresensiFragment : Fragment() {
                 }
 
                 override fun onFailure(call: Call<List<PresensiHarianResponse>>, t: Throwable) {
+                    if (!isAdded || _binding == null) return
                     presensiHariIniList = emptyList()
                     loadIzinDisetujui()
                 }
@@ -237,12 +241,14 @@ class GuruPresensiFragment : Fragment() {
                     call: Call<List<PengajuanIzinResponse>>,
                     response: Response<List<PengajuanIzinResponse>>
                 ) {
+                    if (!isAdded || _binding == null) return
                     finishLoading()
                     izinDisetujuiList = response.body().orEmpty()
                     calculateAggregation()
                 }
 
                 override fun onFailure(call: Call<List<PengajuanIzinResponse>>, t: Throwable) {
+                    if (!isAdded || _binding == null) return
                     finishLoading()
                     izinDisetujuiList = emptyList()
                     calculateAggregation()
@@ -251,13 +257,13 @@ class GuruPresensiFragment : Fragment() {
     }
 
     private fun finishLoading() {
-        if (_binding == null) return
+        if (!isAdded || _binding == null) return
         binding.progressBarLoading.visibility = View.GONE
         binding.swipeRefreshGuruPresensi.isRefreshing = false
     }
 
     private fun calculateAggregation() {
-        if (_binding == null) return
+        if (!isAdded || _binding == null) return
 
         val todayDate = getTodayDateString()
 

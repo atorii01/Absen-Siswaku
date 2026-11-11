@@ -98,7 +98,16 @@ class GuruMainActivity : AppCompatActivity() {
 
         if (savedInstanceState == null) {
             selectTab(R.id.nav_guru_presensi, animate = false)
+        } else {
+            val restoredTabId = savedInstanceState.getInt("CURRENT_TAB_ID", R.id.nav_guru_presensi)
+            currentTabId = restoredTabId
+            updateNavDockVisuals(restoredTabId, animate = false)
         }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putInt("CURRENT_TAB_ID", currentTabId)
     }
 
     private fun setupBottomNavigation() {
