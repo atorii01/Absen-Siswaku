@@ -97,8 +97,8 @@
     <color name="info_bg">#EFF4FF</color>
     <color name="info_border">#BFDBFE</color>
     <color name="info_text">#1E40AF</color>
-    <color name="verified_card_bg">#EBF5FF</color>
-    <color name="verified_card_border">#BAE6FD</color>
+    <color name="verified_card_bg">#EDF7F2</color>
+    <color name="verified_card_border">#B7E5BA</color>
 
     <!-- Actions & Buttons (Day) -->
     <color name="action_blue_bg">#EFF4FF</color>

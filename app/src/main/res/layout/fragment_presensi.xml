@@ -27,7 +27,7 @@
             android:orientation="vertical"
             android:paddingHorizontal="16dp"
             android:paddingTop="12dp"
-            android:paddingBottom="120dp">
+            android:paddingBottom="140dp">
 
             <!-- ================= 2a. TOP BAR & HEADER SISWA ================= -->
             <LinearLayout
@@ -712,7 +712,7 @@
                     android:layout_height="28dp"
                     android:contentDescription="Terverifikasi"
                     android:src="@drawable/ic_shield_check"
-                    app:tint="@color/secondary_blue" />
+                    app:tint="@color/jade_forest" />
 
                 <LinearLayout
                     android:layout_width="0dp"
