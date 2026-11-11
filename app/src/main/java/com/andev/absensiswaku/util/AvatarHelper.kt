@@ -15,6 +15,8 @@ import java.io.FileOutputStream
 
 object AvatarHelper {
 
+    private val avatarMemoryCache = androidx.collection.LruCache<String, Bitmap>(8)
+
     const val FILE_AVATAR_WALAS = "avatar_walas.jpg"
     const val FILE_AVATAR_GURU = "avatar_guru.jpg"
     const val FILE_AVATAR_ADMIN = "avatar_admin.jpg"
@@ -66,6 +68,7 @@ object AvatarHelper {
                 circularBitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
                 out.flush()
             }
+            avatarMemoryCache.put(filename, circularBitmap)
             circularBitmap
         } catch (e: Exception) {
             e.printStackTrace()
@@ -77,6 +80,7 @@ object AvatarHelper {
      * Menghapus file foto profil kustom
      */
     fun deleteAvatarPhoto(context: Context, filename: String): Boolean {
+        avatarMemoryCache.remove(filename)
         return try {
             val file = File(context.filesDir, filename)
             if (file.exists()) file.delete() else true
@@ -102,12 +106,19 @@ object AvatarHelper {
         imageView: ImageView,
         placeholderRes: Int = R.drawable.ic_avatar
     ) {
+        val cached = avatarMemoryCache.get(filename)
+        if (cached != null && !cached.isRecycled) {
+            imageView.setImageBitmap(cached)
+            return
+        }
+
         try {
             val file = File(context.filesDir, filename)
             if (file.exists() && file.length() > 0) {
                 val bitmap = BitmapFactory.decodeFile(file.absolutePath)
                 if (bitmap != null) {
                     val circular = getCircularBitmap(bitmap)
+                    avatarMemoryCache.put(filename, circular)
                     imageView.setImageBitmap(circular)
                     return
                 }

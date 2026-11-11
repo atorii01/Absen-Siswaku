@@ -92,13 +92,6 @@ class RiwayatFragment : Fragment() {
         binding.swipeRefreshRiwayat.setOnRefreshListener {
             loadSemuaRiwayat(force = true)
         }
-
-        MotionUtils.animateStaggeredEntrance(
-            binding.llRiwayatTitleRow,
-            binding.scrollMonthSelector,
-            binding.cardStatistikKehadiran,
-            binding.cardExportLaporan
-        )
     }
 
     override fun onResume() {
