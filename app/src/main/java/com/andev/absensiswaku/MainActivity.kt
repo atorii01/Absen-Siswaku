@@ -230,7 +230,9 @@ class MainActivity : AppCompatActivity() {
         // Hanya hapus sesi jika activity benar-benar di-finish, bukan saat perubahan konfigurasi (rotasi layar/ganti tema)
         if (isFinishing) {
             val pref = getSharedPreferences("PREF_SMKN8_SESSION", Context.MODE_PRIVATE)
-            val isRemembered = pref.getBoolean("KEY_REMEMBER_DEVICE", false)
+            val isRemembered = pref.getBoolean("KEY_REMEMBER_DEVICE", false) ||
+                    pref.getBoolean("KEY_REMEMBER_ME", false) ||
+                    pref.getBoolean("KEY_REMEMBER", false)
             // Jika tidak memilih "Ingat di perangkat ini", bersihkan sesi saat keluar aplikasi
             if (!isRemembered && ::sessionManager.isInitialized) {
                 sessionManager.clearSession()
