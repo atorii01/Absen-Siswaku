@@ -74,6 +74,12 @@ class WalasLaporanFragment : Fragment() {
         setupRecyclerView()
         setupFilterChips()
         setupExportPdfButton()
+
+        binding.swipeRefreshWalasLaporan.setColorSchemeResources(R.color.primary_teal)
+        binding.swipeRefreshWalasLaporan.setOnRefreshListener {
+            loadDataFromSupabase()
+        }
+
         loadSessionData()
 
         MotionUtils.animateStaggeredEntrance(
@@ -360,6 +366,7 @@ class WalasLaporanFragment : Fragment() {
 
     private fun processAndFilterAttendanceData() {
         if (!isAdded || _binding == null) return
+        binding.swipeRefreshWalasLaporan.isRefreshing = false
 
         val sdfIso = SimpleDateFormat("yyyy-MM-dd", Locale.US)
         val today = Date()

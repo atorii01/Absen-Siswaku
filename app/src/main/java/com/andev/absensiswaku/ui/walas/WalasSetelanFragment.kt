@@ -482,7 +482,7 @@ class WalasSetelanFragment : Fragment() {
                         val selesaiStr = (config.jamMasukSelesai ?: "06:40").take(5)
                         val pulangStr = (config.jamPulang ?: "15:00").take(5)
                         binding.tvJamMasuk.text = "$mulaiStr - $selesaiStr WIB"
-                        binding.tvJamPulang.text = "$pulangStr WIB"
+                        binding.tvJamPulang.text = "Masuk Saja"
                     }
                 }
 

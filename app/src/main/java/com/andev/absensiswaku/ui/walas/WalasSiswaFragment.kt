@@ -78,6 +78,12 @@ class WalasSiswaFragment : Fragment() {
         setupFormEntri()
         setupRecyclerView()
         setupSearchAndFilterChips()
+
+        binding.swipeRefreshWalasSiswa.setColorSchemeResources(R.color.primary_teal)
+        binding.swipeRefreshWalasSiswa.setOnRefreshListener {
+            loadDataSiswaFromSupabase()
+        }
+
         loadDataSiswaFromSupabase()
 
         MotionUtils.animateStaggeredEntrance(
@@ -478,6 +484,7 @@ class WalasSiswaFragment : Fragment() {
                 ) {
                     if (!isAdded || _binding == null) return
                     binding.progressBarLoadingSiswa.visibility = View.GONE
+                    binding.swipeRefreshWalasSiswa.isRefreshing = false
 
                     val listSiswa = if (response.isSuccessful && !response.body().isNullOrEmpty()) {
                         response.body()!!
@@ -520,6 +527,7 @@ class WalasSiswaFragment : Fragment() {
                 override fun onFailure(call: Call<List<SiswaKelolaResponse>>, t: Throwable) {
                     if (!isAdded || _binding == null) return
                     binding.progressBarLoadingSiswa.visibility = View.GONE
+                    binding.swipeRefreshWalasSiswa.isRefreshing = false
 
                     val listSiswa = createInitialFallbackStudents()
                     siswaAdapter.submitList(listSiswa)

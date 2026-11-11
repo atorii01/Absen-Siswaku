@@ -151,6 +151,14 @@ class PengajuanFragment : Fragment() {
         setupActionButtons()
         updateDateDisplays()
 
+        binding.swipeRefreshPengajuan.setColorSchemeResources(R.color.primary_teal)
+        binding.swipeRefreshPengajuan.setOnRefreshListener {
+            setupHeaderData()
+            view.postDelayed({
+                _binding?.swipeRefreshPengajuan?.isRefreshing = false
+            }, 800)
+        }
+
         MotionUtils.animateStaggeredEntrance(
             binding.cardHeaderFormulir,
             binding.cardJenisKetidakhadiran,

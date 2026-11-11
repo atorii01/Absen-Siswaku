@@ -73,6 +73,12 @@ class AdminRekapFragment : Fragment() {
         setupCheckboxFilter()
         setupRecyclerViewHistory()
         setupExportButtons()
+
+        binding.swipeRefreshAdminRekap.setColorSchemeResources(R.color.primary_teal)
+        binding.swipeRefreshAdminRekap.setOnRefreshListener {
+            loadDataFromSupabase()
+        }
+
         loadDataFromSupabase()
     }
 
@@ -382,6 +388,7 @@ class AdminRekapFragment : Fragment() {
 
     private fun calculateMetrics(todayDate: String) {
         if (_binding == null) return
+        binding.swipeRefreshAdminRekap.isRefreshing = false
 
         val totalRombel = allRombelList.size.takeIf { it > 0 } ?: 10
         val totalSiswa = allSiswaForExport.size.takeIf { it > 0 } ?: 357 // Total standar SMKN 8 Jakarta

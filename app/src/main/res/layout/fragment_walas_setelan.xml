@@ -526,13 +526,13 @@
                             android:textColor="@color/text_primary"
                             android:textSize="13sp"
                             android:textStyle="bold"
-                            tools:text="15:00 WIB" />
+                            tools:text="Masuk Saja" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="2dp"
-                            android:text="Presensi Pulang"
+                            android:text="Skema Presensi"
                             android:textColor="@color/text_secondary"
                             android:textSize="10sp" />
                     </LinearLayout>

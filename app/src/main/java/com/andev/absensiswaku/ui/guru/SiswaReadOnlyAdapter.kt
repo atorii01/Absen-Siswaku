@@ -89,12 +89,7 @@ class SiswaReadOnlyAdapter(
                 else -> "-"
             }
 
-            val pulangText = if (item.waktuPulang.isNotBlank() && item.waktuPulang != "-") {
-                val p = item.waktuPulang.take(5)
-                " • Pulang: ${if (p.endsWith("WIB")) p else "$p WIB"}"
-            } else ""
-
-            binding.tvNisnWaktu.text = "NISN: ${item.nisn} • $jamMasukFormatted$pulangText"
+            binding.tvNisnWaktu.text = "NISN: ${item.nisn} • $jamMasukFormatted"
 
             // Badge status berwarna: Hadir (Hijau), Terlambat (Kuning), Izin (Biru), Sakit (Merah/Oranye), Alpa (Merah)
             when (item.status.uppercase()) {

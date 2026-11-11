@@ -171,10 +171,33 @@ class PresensiFragment : Fragment() {
         binding.swipeRefreshPresensi.setColorSchemeResources(R.color.primary_teal)
         binding.swipeRefreshPresensi.setOnRefreshListener {
             checkDailyPresensiStatus()
+            updateOfflineBannerUI()
             startLocationUpdates()
             view?.postDelayed({
                 _binding?.swipeRefreshPresensi?.isRefreshing = false
             }, 1200)
+        }
+
+        binding.btnSyncOfflineNow.setOnClickListener {
+            val c = context ?: return@setOnClickListener
+            if (!com.andev.absensiswaku.util.NetworkUtils.isNetworkAvailable(c)) {
+                Toast.makeText(c, "Tidak ada koneksi internet. Presensi tetap tersimpan aman di HP.", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            binding.btnSyncOfflineNow.isEnabled = false
+            binding.btnSyncOfflineNow.text = "Menyinkronkan..."
+            com.andev.absensiswaku.util.OfflinePresensiManager.syncPendingPresensi(c) { success, failed ->
+                if (!isAdded || _binding == null) return@syncPendingPresensi
+                binding.btnSyncOfflineNow.isEnabled = true
+                binding.btnSyncOfflineNow.text = "Sinkron"
+                updateOfflineBannerUI()
+                if (success > 0) {
+                    Toast.makeText(c, "✓ $success Presensi offline berhasil disinkronkan ke server!", Toast.LENGTH_LONG).show()
+                    checkDailyPresensiStatus()
+                } else if (failed > 0) {
+                    Toast.makeText(c, "Sebagian presensi belum dapat diunggah, akan dicoba kembali saat koneksi stabil.", Toast.LENGTH_SHORT).show()
+                }
+            }
         }
 
         MotionUtils.animateStaggeredEntrance(
@@ -190,7 +213,20 @@ class PresensiFragment : Fragment() {
         super.onResume()
         setupHeaderData()
         checkDailyPresensiStatus()
+        updateOfflineBannerUI()
         syncOfflinePresensiIfNeeded()
+    }
+
+    private fun updateOfflineBannerUI() {
+        if (!isAdded || _binding == null) return
+        val ctx = context ?: return
+        val count = com.andev.absensiswaku.util.OfflinePresensiManager.getPendingCount(ctx)
+        if (count > 0) {
+            binding.cardOfflineQueueBanner.visibility = View.VISIBLE
+            binding.tvOfflineBannerTitle.text = "$count Presensi Menunggu Sinkron"
+        } else {
+            binding.cardOfflineQueueBanner.visibility = View.GONE
+        }
     }
 
     private fun syncOfflinePresensiIfNeeded() {
@@ -198,11 +234,16 @@ class PresensiFragment : Fragment() {
         if (com.andev.absensiswaku.util.NetworkUtils.isNetworkAvailable(ctx) &&
             com.andev.absensiswaku.util.OfflinePresensiManager.getPendingCount(ctx) > 0) {
             com.andev.absensiswaku.util.OfflinePresensiManager.syncPendingPresensi(ctx) { success, _ ->
-                if (success > 0 && isAdded && _binding != null) {
-                    Toast.makeText(ctx, "✓ $success Presensi offline berhasil disinkronkan ke server!", Toast.LENGTH_LONG).show()
-                    checkDailyPresensiStatus()
+                if (isAdded && _binding != null) {
+                    updateOfflineBannerUI()
+                    if (success > 0) {
+                        Toast.makeText(ctx, "✓ $success Presensi offline berhasil disinkronkan ke server!", Toast.LENGTH_LONG).show()
+                        checkDailyPresensiStatus()
+                    }
                 }
             }
+        } else {
+            updateOfflineBannerUI()
         }
     }
 
@@ -896,18 +937,14 @@ class PresensiFragment : Fragment() {
                 return@applyBounceEffect
             }
 
-            if (isPulangMode) {
-                sendPresensiPulangData()
-            } else {
-                val calendar = Calendar.getInstance(TimeZone.getTimeZone("Asia/Jakarta"))
-                val hour = calendar.get(Calendar.HOUR_OF_DAY)
-                val minute = calendar.get(Calendar.MINUTE)
-                val currentMinuteOfDay = hour * 60 + minute
+            val calendar = Calendar.getInstance(TimeZone.getTimeZone("Asia/Jakarta"))
+            val hour = calendar.get(Calendar.HOUR_OF_DAY)
+            val minute = calendar.get(Calendar.MINUTE)
+            val currentMinuteOfDay = hour * 60 + minute
 
-                val statusPresensi = if (currentMinuteOfDay <= JAM_BATAS_MINUTES) "Hadir" else "Terlambat"
+            val statusPresensi = if (currentMinuteOfDay <= JAM_BATAS_MINUTES) "Hadir" else "Terlambat"
 
-                sendPresensiData(statusPresensi)
-            }
+            sendPresensiData(statusPresensi)
         }
     }
 
@@ -1047,6 +1084,8 @@ class PresensiFragment : Fragment() {
             text = "✓ Presensi Hari Ini Selesai"
             setBackgroundColor(ContextCompat.getColor(ctx, R.color.btn_disabled_bg))
         }
+
+        updateOfflineBannerUI()
 
         val dialogTitle = if (isOffline) "✓ Presensi Tersimpan Offline" else "✓ Presensi Berhasil!"
         val dialogMessage = if (isOffline) {

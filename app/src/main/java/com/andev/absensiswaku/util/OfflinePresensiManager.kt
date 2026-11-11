@@ -152,7 +152,10 @@ object OfflinePresensiManager {
                         }
                     })
             } else {
-                val cleanData = item.filterKeys { !it.startsWith("_") }
+                val cleanData = item.filterKeys { !it.startsWith("_") }.toMutableMap()
+                if (!cleanData.containsKey("id") || cleanData["id"]?.toString().isNullOrBlank()) {
+                    cleanData["id"] = java.util.UUID.randomUUID().toString()
+                }
                 SupabaseClient.instance.simpanPresensi(cleanData).enqueue(object : Callback<ResponseBody> {
                     override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
                         processedCount++

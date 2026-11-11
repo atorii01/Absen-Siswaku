@@ -83,6 +83,11 @@ class RiwayatFragment : Fragment() {
         setupRecyclerView()
         setupExportPdfButton()
 
+        binding.swipeRefreshRiwayat.setColorSchemeResources(R.color.primary_teal)
+        binding.swipeRefreshRiwayat.setOnRefreshListener {
+            loadSemuaRiwayat()
+        }
+
         MotionUtils.animateStaggeredEntrance(
             binding.llRiwayatTitleRow,
             binding.scrollMonthSelector,
@@ -251,6 +256,7 @@ class RiwayatFragment : Fragment() {
 
                 override fun onFailure(call: Call<List<RiwayatModel>>, t: Throwable) {
                     if (!isAdded || _binding == null) return
+                    binding.swipeRefreshRiwayat.isRefreshing = false
                     fetchIzinAndCombine(siswaIdInt, walasName, listPresensi)
                 }
             })
@@ -335,6 +341,9 @@ class RiwayatFragment : Fragment() {
     }
 
     private fun combineAndApplyLists(presensiList: List<RiwayatModel>, izinList: List<RiwayatModel>) {
+        if (_binding != null) {
+            binding.swipeRefreshRiwayat.isRefreshing = false
+        }
         val combined = (presensiList + izinList).sortedByDescending { it.tanggal }
         allRiwayatList = combined
         applyMonthFilter(selectedMonthIndex)
@@ -690,7 +699,7 @@ class RiwayatFragment : Fragment() {
 
         val jamPulang = item.displayJamPulang
         dialogBinding.tvJamPulangDetail.text = if (jamPulang == "-" || jamPulang.isEmpty()) {
-            if (statusText.equals("Izin", true) || statusText.equals("Sakit", true)) "Dispensasi Harian" else "Belum Pulang"
+            if (statusText.equals("Izin", true) || statusText.equals("Sakit", true)) "Dispensasi Harian" else "Selesai (Tercatat)"
         } else {
             if (jamPulang.endsWith("WIB")) jamPulang else "$jamPulang WIB"
         }

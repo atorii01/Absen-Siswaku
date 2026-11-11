@@ -814,7 +814,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="BATAS AKHIR PRESENSI PULANG: 15:00 WIB"
+                        android:text="SKEMA PRESENSI: HANYA SAAT MASUK (PAGI)"
                         android:textColor="@color/text_secondary"
                         android:textSize="11.5sp"
                         android:textStyle="bold" />

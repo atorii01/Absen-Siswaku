@@ -372,7 +372,7 @@ class AdminSetelanFragment : Fragment() {
 
         binding.tvJamMasukResmi.text = formatJamTampilan(jamMasukMulai)
         binding.tvBatasToleransi.text = formatJamTampilan(jamMasukSelesai)
-        binding.tvJamPulangLabel.text = "BATAS AKHIR PRESENSI PULANG: $jamPulang WIB"
+        binding.tvJamPulangLabel.text = "SKEMA PRESENSI: HANYA SAAT MASUK (PAGI)"
 
         // Switch proteksi dari server jika preferensi lokal belum diubah pengguna
         config.antiFakeGps?.let {
@@ -621,19 +621,19 @@ class AdminSetelanFragment : Fragment() {
                     0 -> {
                         binding.tvJamMasukResmi.text = "05 : 30"
                         binding.tvBatasToleransi.text = "06 : 40"
-                        binding.tvJamPulangLabel.text = "BATAS AKHIR PRESENSI PULANG: 15:00 WIB"
+                        binding.tvJamPulangLabel.text = "SKEMA PRESENSI: HANYA SAAT MASUK (PAGI)"
                         showSnack("Jadwal Standar Senin - Kamis diterapkan.")
                     }
                     1 -> {
                         binding.tvJamMasukResmi.text = "05 : 30"
                         binding.tvBatasToleransi.text = "06 : 30"
-                        binding.tvJamPulangLabel.text = "BATAS AKHIR PRESENSI PULANG: 11:30 WIB"
+                        binding.tvJamPulangLabel.text = "SKEMA PRESENSI: HANYA SAAT MASUK (PAGI)"
                         showSnack("Jadwal Khusus Hari Jumat diterapkan.")
                     }
                     2 -> {
                         binding.tvJamMasukResmi.text = "06 : 00"
                         binding.tvBatasToleransi.text = "07 : 00"
-                        binding.tvJamPulangLabel.text = "BATAS AKHIR PRESENSI PULANG: 13:30 WIB"
+                        binding.tvJamPulangLabel.text = "SKEMA PRESENSI: HANYA SAAT MASUK (PAGI)"
                         showSnack("Jadwal Khusus Bulan Ramadhan diterapkan.")
                     }
                     3 -> {

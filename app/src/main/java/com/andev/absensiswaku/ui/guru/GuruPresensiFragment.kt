@@ -59,6 +59,11 @@ class GuruPresensiFragment : Fragment() {
         setupSearchAndFilterChips()
         setupLiveSyncButton()
 
+        binding.swipeRefreshGuruPresensi.setColorSchemeResources(R.color.primary_teal)
+        binding.swipeRefreshGuruPresensi.setOnRefreshListener {
+            loadDataPresensiGlobal(isRefreshing = true)
+        }
+
         loadDataPresensiGlobal()
 
         MotionUtils.animateStaggeredEntrance(
@@ -248,6 +253,7 @@ class GuruPresensiFragment : Fragment() {
     private fun finishLoading() {
         if (_binding == null) return
         binding.progressBarLoading.visibility = View.GONE
+        binding.swipeRefreshGuruPresensi.isRefreshing = false
     }
 
     private fun calculateAggregation() {
